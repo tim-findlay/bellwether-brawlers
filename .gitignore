@@ -1,0 +1,17 @@
+# macOS
+.DS_Store
+
+# Editors
+.vscode/
+.idea/
+
+# Local AI tooling state (not part of the site)
+.claude/settings.local.json
+.claude-flow/
+
+# Personal photos of real people — never commit/publish (future portrait assets live here)
+character photos/
+
+# Misc
+*.log
+node_modules/
