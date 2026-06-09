@@ -65,6 +65,7 @@ async function boot() {
   };
   audio.setEnabled(G.settings.sfx);
 
+  window.__G = G;                         // dev: inspectable from the drive harness
   G.screens.title = makeTitle(G);
   G.screens.menu = makeMenu(G);
   G.screens.select = makeSelect(G);
@@ -73,8 +74,10 @@ async function boot() {
 
   bootEl.classList.add('done');
 
-  // dev: balance harness behind a flag — never loaded in normal play
-  const simN = new URLSearchParams(location.search).get('sim');
+  // dev flags — never active in normal play
+  const qp = new URLSearchParams(location.search);
+  G.devEvent = qp.get('event') || null;             // ?event=<id> forces an event next roll
+  const simN = qp.get('sim');
   if (simN) {
     const { runSim } = await import('./dev/sim.js');
     runSim(parseInt(simN, 10) || 10, G);

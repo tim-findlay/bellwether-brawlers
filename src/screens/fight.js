@@ -48,6 +48,7 @@ export function makeFight(G) {
       const c2 = p.mode === '2p' ? new PlayerController(G.input, P2MAP) : new AIController(G.settings.difficulty, G.rng);
       world = new FightWorld({ cfgs, controllers: [c1, c2], fx: G.fx, audio: G.audio, rng: G.rng, settings: G.settings });
       events = new EventDirector(world, EVENTS, { enabled: G.settings.events, difficulty: G.settings.difficulty });
+      if (G.devEvent) events.force(G.devEvent);
       roundNum = 1;
       wins = [0, 0];
       paused = false;

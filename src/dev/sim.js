@@ -127,6 +127,14 @@ export async function runSim(N, G, { seed = 1337, log = console.log } = {}) {
   log(`[sim] stall-bot win rate: ${results.stallBotWinRate}% (gate: <=55%)`);
   log(`[sim] GATES: band=${results.gates.band ? 'PASS' : 'FAIL'} stall=${results.gates.stall ? 'PASS' : 'FAIL'}`);
   window.__SIM_RESULTS = results;
+  let pre = document.getElementById('simout');
+  if (!pre) {
+    pre = document.createElement('pre');
+    pre.id = 'simout';
+    pre.style.display = 'none';
+    document.body.appendChild(pre);
+  }
+  pre.textContent = JSON.stringify(results);
   drawResults(G, results);
   return results;
 }

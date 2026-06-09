@@ -24,6 +24,13 @@ export class EventDirector {
     this.active = null;
     this.stageOverride = null;
     this.nextRoll = this.world.frame + 480 + ((this.world.rng() * 240) | 0);   // first roll ~8-12s in
+    if (this.forcedId) this.nextRoll = this.world.frame + 90;
+  }
+
+  // dev flag (?event=<id>): force a specific event to fire next roll
+  force(id) {
+    this.forcedId = id;
+    this.nextRoll = this.world.frame + 90;
   }
 
   superActive() {
@@ -66,10 +73,17 @@ export class EventDirector {
       (!d.requiresCharacter || roster.includes(d.requiresCharacter)));
     if (!eligible.length) return;
 
-    const total = eligible.reduce((s, d) => s + (d.weight || 1), 0);
-    let pick = w.rng() * total;
-    let def = eligible[0];
-    for (const d of eligible) { pick -= (d.weight || 1); if (pick <= 0) { def = d; break; } }
+    let def;
+    if (this.forcedId) {
+      def = this.defs.find(d => d.id === this.forcedId &&
+        (!d.requiresCharacter || roster.includes(d.requiresCharacter)));
+      if (!def) { this.forcedId = null; return; }
+    } else {
+      const total = eligible.reduce((s, d) => s + (d.weight || 1), 0);
+      let pick = w.rng() * total;
+      def = eligible[0];
+      for (const d of eligible) { pick -= (d.weight || 1); if (pick <= 0) { def = d; break; } }
+    }
 
     this.firedThisRound++;
     if (def.oncePerRound) this.usedThisRound.add(def.id);
