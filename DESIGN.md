@@ -60,10 +60,10 @@ See BALANCE.md (canonical for numbers and the telegraph rule). Soft archetype wh
 
 ## The roster
 
-*Display names are first names only. Stats: HP / speed / jump / weight.*
+*Display names are first names only. Stats: HP / speed (world-px per frame) / jump impulse / weight.*
 
 ### BEN — "The Big Boss" — long-range bully (space control)
-110 / 2.9 / 12 / 1.25 — longest normals in the game; wins by deciding where the fight happens. **His fullscreen answer is Wingspan range, not fireballs.**
+110 / 1.39 / 5.3 / 1.25 — longest normals in the game; wins by deciding where the fight happens. **His fullscreen answer is Wingspan range, not fireballs.**
 - **Light — Pistachio Flick:** fastest long poke (range 78), 5 dmg.
 - **Heavy — Wingspan:** huge arc, range 96, 12 dmg, 16f start — the wall.
 - **Sp1 — Hawk Toss:** **lobbed** football on a long cooldown — a conditioning tool that punishes predictable jumps and walks, loses to patient ground play. 9 dmg.
@@ -72,7 +72,7 @@ See BALANCE.md (canonical for numbers and the telegraph rule). Soft archetype wh
 - *Counterplay:* slow up close; rushdown inside his range turns him off.
 
 ### TIM — "The Operator" — tempo all-rounder with status tricks
-100 / 3.2 / 13 / 1.0 — honest mid-range kit that **steals turns**, never a steroid.
+100 / 1.54 / 5.6 / 1.0 — honest mid-range kit that **steals turns**, never a steroid.
 - **Light — Quick Sync:** 4 dmg, fast. **Heavy — Hard Deadline:** 10 dmg chop.
 - **Sp1 — Prompt Injection:** a slow **ink-outlined cursed e-mail** (dithered pixel shimmer, no glow), 7 dmg + **reverses movement for 1.2s** — and the reversal **ends early the moment Tim lands another hit** (one stolen turn, never a sequence). Victim sees flipped arrows + "REVERSED! (block still works)". Blocked = no status.
 - **Sp2 — Zulu Time:** he winds the watch back: **both special cooldowns reset instantly** and his next hit gains +2. Tempo theft, not speed.
@@ -80,33 +80,33 @@ See BALANCE.md (canonical for numbers and the telegraph rule). Soft archetype wh
 - *Counterplay:* no armor, no parry — don't get clipped by the e-mail and he's merely honest.
 
 ### ADRIAN — "The Walking Hazard" — chaos rushdown + accidental traps
-92 / 3.5 / 14 / 0.95
+86 / 1.68 / 5.9 / 0.95
 - **Light — Toothbrush Jab:** 4 dmg, very fast. **Heavy — Pivot Table:** 9 dmg, hits both sides.
 - **Sp1 — Clumsy Charge:** stumbling lunge, 11 dmg, crosses up on hit; **on whiff he trips** (1s self-knockdown).
-- **Sp2 — Coffee Spill:** puddle persists 6s; opponent who steps in slips (4 dmg + short slide-stun). Adrian is immune — he knows where he spilled it.
+- **Sp2 — Coffee Spill:** puddle persists ~4s; opponent who steps in slips (4 dmg + short slide-stun). Adrian is immune — he knows where he spilled it.
 - **Super — FULL AUDIT:** flailing multi-hit rush, 20 dmg — **he trips at the end even on hit** (0.5s vulnerable).
 - *Counterplay:* whiff-bait the charge; respect the puddle; hit him first.
 
 ### RICHY — "The Market" — dual-projectile momentum zoner
-96 / 3.1 / 13 / 1.0 — the candles oppose: **BLOCK the bull, JUMP the bear.**
-- **Light — Bid:** 4 dmg. **Heavy — Short Squeeze:** 10 dmg, drags the opponent closer.
-- **Sp1 — Bull Run:** tall green candle (sign-green `#3f5a40`, palette not neon) **angled upward — it clips jumpers**. 8 dmg knock-up. Block it.
-- **Sp2 — Bear Raid:** low red candle (brick `#c4452e`) rolling along the floor, 7 dmg knockdown. Jump it.
+96 / 1.49 / 5.6 / 1.0 — the candles oppose: **BLOCK the bull, JUMP the bear.**
+- **Light — Bid:** 5 dmg. **Heavy — Short Squeeze:** 10 dmg, drags the opponent closer.
+- **Sp1 — Bull Run:** tall green candle (sign-green `#3f5a40`, palette not neon) **angled upward — it clips jumpers**. 9 dmg knock-up. Block it.
+- **Sp2 — Bear Raid:** low red candle (brick `#c4452e`) rolling along the floor, 8 dmg knockdown. Jump it.
 - **Shared lock:** throwing either candle locks **both** for 45f — there is always a walk-forward window per cycle.
 - **Signature — Diversified Portfolio:** alternations grant +1 dmg (cap +3) **only when the previous candle hit or was blocked** — pot-shots at air earn nothing. "DIVERSIFIED +N!" tag on payoff.
 - **Super — TO THE MOON:** three telegraphed chart columns erupt across the opponent's zone; **only the first column that connects deals damage** (9) — the rest whiff past. Floor markers, stand in the gaps.
 - *Counterplay:* each candle has a distinct answer; inside mid-range he's average.
 
 ### NICK — "The Concierge" — teleport mixup glass cannon
-85 / 3.9 / 15 / 0.85 — fastest, deadliest, flimsiest.
-- **Light — Name Drop:** 4 dmg, 3f startup. **Heavy — Fund Structure:** 9 dmg.
+85 / 1.87 / 6.2 / 0.85 — fastest, deadliest, flimsiest.
+- **Light — Name Drop:** 5 dmg, 3f startup. **Heavy — Fund Structure:** 10 dmg.
 - **Sp1 — Status Match:** 12f visible wind-up shimmer, then reappears behind the opponent (fixed arrival spot — heavy it on reaction). No damage; the mixup engine.
 - **Sp2 — Points Redemption:** fan of three cards, 3 dmg each; chips once (per-move chip rule) — not a stall engine.
 - **Super — LIFETIME PLATINUM:** 4s lounge access: **2px brass card-frame outline + confetti ticks** (no aura/glow), +40% speed, +3 dmg per hit, builds no meter while active.
 - *Counterplay:* 85 HP — two reads end him; the teleport arrival is fixed and punishable.
 
 ### ABI — "The Gatekeeper" — defensive counter-puncher
-90 / 3.4 / 14 / 0.9 — controls the calendar, **not** the projectile lanes.
+90 / 1.63 / 5.9 / 0.9 — controls the calendar, **not** the projectile lanes.
 - **Light — Reschedule:** 4 dmg. **Heavy — Double-Booked:** 9 dmg, fast.
 - **Sp1 — Calendar Block:** 20f **melee-only** parry stance ("DECLINED!"): parried melee → 12 dmg counter knockdown. Projectiles pass right through it — she schedules meetings, she doesn't field fireballs. Whiff = 25f recovery.
 - **Sp2 — House Rosé:** lobbed wine glass, 7 dmg + 20% slow 2s.
@@ -114,8 +114,8 @@ See BALANCE.md (canonical for numbers and the telegraph rule). Soft archetype wh
 - *Counterplay (written, as required):* pressure her through last orders — one hit cancels the heal; the silence delays your specials, it doesn't delete them. She has no fast fullscreen threat; make her whiff the parry.
 
 ### MIKE — "The Site Manager" — armored grappler tank
-125 / 2.5 / 11 / 1.45
-- **Light — Hard Hat:** 6 dmg. **Heavy — Wrecking Swing:** 14f start, 13 dmg, **1 hit of armor** during the swing.
+110 / 1.2 / 5.1 / 1.45
+- **Light — Hard Hat:** 6 dmg. **Heavy — Wrecking Swing:** 14f start, 10 dmg, **1 hit of armor** during the swing.
 - **Sp1 — Scaffold Slam:** 16f wind-up with a big "UNBLOCKABLE!" flash → short-range command grab, 14 dmg slam. **Whiffs against airborne or non-actionable opponents.**
 - **Sp2 — Demolition Day:** stomp → expanding shockwave both sides, 10 dmg — **and it clanks (destroys) any projectiles inside the radius**: his answer to the candle wall.
 - **Super — WRECKING BALL:** high sweep one way, low drag back the other; stay grounded for pass one, jump pass two. 20 dmg, once.
@@ -123,10 +123,10 @@ See BALANCE.md (canonical for numbers and the telegraph rule). Soft archetype wh
 - *Counterplay:* outrun him; never get cornered; jump the grab wind-up.
 
 ### SEELYE — "The Pitmaster" — setplay that collects inside the round
-104 / 2.8 / 12 / 1.15 — the debt is collected **this** round, not next match.
-- **Light — Term Sheet:** 5 dmg. **Heavy — Leverage:** 11 dmg, applies **LIEN** (big tag over the head).
+110 / 1.5 / 5.3 / 1.15 — the debt is collected **this** round, not next match.
+- **Light — Term Sheet:** 6 dmg. **Heavy — Leverage:** 13 dmg, applies **LIEN** (big tag over the head).
 - **LIEN:** Seelye's next special on a marked opponent deals **+4** and shows "LIEN COLLECTED!" — heavy → special is his core loop and it resolves in seconds.
-- **Sp1 — Brisket Bomb:** lobbed bomb: **6 dmg on direct hit**, then a 3s ember zone with burn ticks — herding tool with immediate teeth.
+- **Sp1 — Brisket Bomb:** lobbed bomb: **9 dmg on direct hit**, then a 3s ember zone with burn ticks — herding tool with immediate teeth.
 - **Sp2 — Dad Reflexes:** brief one-handed catch stance: **absorbs any projectile** for meter (+20). The cast's only projectile catch — uniquely his.
 - **Super — LOW & SLOW:** the offset smoker blankets the opponent's half in drifting smoke for 5s, ticking burn inside; it drifts slowly — walking out is always possible but cedes ground.
 - *Counterplay:* dodge the lobs and pressure him before zones stack; his fast threat is short-ranged.
@@ -153,6 +153,8 @@ Settings toggle (**ON** default). First roll 8s into a round, then every 12–18
 ## CPU
 
 Archetype-aware profiles from character data (`ai` hints). Difficulty (Easy/Normal/Hard) scales reaction delay, mistake rate, event mash. Default Normal.
+
+Competence floor (all difficulties, scaled by reaction/mistake rate): only swing buttons that can reach (mirrors hitbox geometry), punish whiffed recovery, jump unblockables (they whiff vs airborne), never blind-cast parry/catch stances, never zone into your own corner, and kite armored/grab bruisers when faster with a ranged tool. Balance numbers in BALANCE.md assume this floor.
 
 ## Out of scope (this milestone)
 

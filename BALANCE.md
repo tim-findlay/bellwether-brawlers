@@ -13,7 +13,8 @@
 
 ## Numbers doctrine
 
-- HP band: 85 (Nick) – 125 (Mike). Speed band: 2.5 – 3.9, inverse-correlated with HP/weight.
+- HP band: 85 (Nick) – 110 (Ben/Mike/Seelye). Speed band: 1.2 (Mike) – 1.87 (Nick) world-px per frame, inverse-correlated with HP/weight.
+- **Every move declares `startup`/`active`/`recover`.** A special without them never fires its behavior and never finishes (its total resolves to NaN) — the fighter just stands there until hit. The engine deliberately has no fallback; a fieldless special shows up in the sim as a dead kit slot.
 - A full super ≈ 18–22 dmg (≤ 25% of an average bar). Command grab 14. **No single interaction above 25 dmg** — multi-part supers enforce this structurally (TO THE MOON: only the first connecting column hits).
 - **Meter:** gain = 80% damage dealt + 50% damage taken; cost 100; **persists across rounds, resets each match**. A winning round (~100 dealt / ~60 taken) ≈ one full bar — first supers typically appear in round 2, roughly once a round thereafter.
 - **Chip:** 15% of the move's total damage, applied once per move instance, min 1.
@@ -27,12 +28,25 @@
 1. Every fighter's aggregate win rate within **42–58%**.
 2. **Stall-bot sanity check:** a runaway/turtle AI profile must not outperform the standard profile by more than noise — if stalling sims better than fighting, the anti-stall rules above have a hole.
 
+The harness is only as honest as its CPUs. Normal AI: picks buttons that can actually connect (reach-aware, mirrors the hitbox geometry), punishes whiffed recovery, blocks or jumps incoming attacks reactively (unblockables are **jumped** — they whiff vs airborne), never blind-casts a parry/catch stance, won't zone itself into a corner, and kites armored/grab bruisers when faster with a ranged tool. A kit slot the CPU can't use appears here as a dead spot in the win matrix — treat that as a finding, not noise.
+
 CPU sims are blind to human-feel issues (mash events, control reversal, frustration). Those are governed by the doctrine rules above, not the win-rate gate; first human playtest should specifically poke: Urgent Underwriting in 2P, reversal feel, Abi/Nick stall attempts.
 
 ## Current results
 
-*(populated by the harness before ship — see README for how to run it)*
+Ship-gate runs 2026-06-10 — seed 1337, events ON, Normal CPUs, two independent samples:
 
-| Fighter | Aggregate win rate |
-|---------|--------------------|
-| TBD     | TBD                |
+| Fighter | N=30 aggregate | N=40 aggregate |
+|---------|----------------|----------------|
+| BEN     | 49.8%          | 45.9%          |
+| TIM     | 54.8%          | 52.9%          |
+| ADRIAN  | 51.2%          | 51.2%          |
+| RICHY   | 47.9%          | 44.1%          |
+| NICK    | 43.3%          | 47.1%          |
+| ABI     | 50.2%          | 55.7%          |
+| MIKE    | 51.7%          | 53.0%          |
+| SEELYE  | 51.2%          | 50.0%          |
+
+Both runs: **band 42–58% PASS** · **stall-bot ≤0.1% PASS** (gate ≤55%). N = games per
+ordered pairing (n=420/560 per fighter, 95% CI ≈ ±5). `?sim=10` stays the quick smoke
+check, but tune against N≥30 — at N=10 the CI is ±8 and the edges coin-flip.
