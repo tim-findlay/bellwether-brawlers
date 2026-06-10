@@ -7,7 +7,9 @@
 
 # Local AI tooling state (not part of the site)
 .claude/settings.local.json
+.claude/scheduled_tasks.lock
 .claude-flow/
+.playwright-mcp/
 
 # Personal photos of real people — never commit/publish (future portrait assets live here)
 character photos/
