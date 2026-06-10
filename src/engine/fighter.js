@@ -282,13 +282,16 @@ export class Fighter {
     const a = this.attack;
     const m = a.move;
     a.frame++;
-    const total = m.startup + (m.active || 0) + m.recover;
+    // Missing frame fields clamp to 0 (instant cast) instead of NaN-ing the
+    // total, which froze the fighter in the attack forever. BALANCE.md still
+    // requires real startup/active/recover on every move.
+    const total = (m.startup || 0) + (m.active || 0) + (m.recover || 0);
 
     if (m.travel && a.frame <= m.startup + (m.active || 0)) {
       this.x += this.facing * (m.travel / (m.startup + (m.active || 0)));
     }
 
-    if (!a.fired && a.frame >= m.startup) {
+    if (!a.fired && a.frame >= (m.startup || 0)) {
       a.fired = true;
       this.world.fire(this, a);
     }

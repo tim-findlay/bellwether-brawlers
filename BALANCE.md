@@ -14,7 +14,7 @@
 ## Numbers doctrine
 
 - HP band: 85 (Nick) – 110 (Ben/Mike/Seelye). Speed band: 1.2 (Mike) – 1.87 (Nick) world-px per frame, inverse-correlated with HP/weight.
-- **Every move declares `startup`/`active`/`recover`.** A special without them never fires its behavior and never finishes (its total resolves to NaN) — the fighter just stands there until hit. The engine deliberately has no fallback; a fieldless special shows up in the sim as a dead kit slot.
+- **Every move declares `startup`/`active`/`recover`.** The engine clamps missing fields to 0 (instant cast) rather than freezing the fighter, but a 0-frame special is wrong on purpose — it has no commitment, no telegraph, no counterplay window. Declare real frames; the sim flags undertuned throws as dead kit slots.
 - A full super ≈ 18–22 dmg (≤ 25% of an average bar). Command grab 14. **No single interaction above 25 dmg** — multi-part supers enforce this structurally (TO THE MOON: only the first connecting column hits).
 - **Meter:** gain = 80% damage dealt + 50% damage taken; cost 100; **persists across rounds, resets each match**. A winning round (~100 dealt / ~60 taken) ≈ one full bar — first supers typically appear in round 2, roughly once a round thereafter.
 - **Chip:** 15% of the move's total damage, applied once per move instance, min 1.
