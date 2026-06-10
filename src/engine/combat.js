@@ -87,8 +87,9 @@ export class FightWorld {
       if (att.cfg.hooks?.preHit) dmg = att.cfg.hooks.preHit(att, def, dmg, hb.slot, m);
 
       const chipDmg = att.attack && !att.attack.chipped ? Math.max(1, Math.round((m.totalDmg || m.dmg) * 0.15)) : 0;
+      const dir = Math.sign(def.x - att.x) || att.facing;     // knockback away from the attacker (matters for both-sides moves)
       const res = def.takeHit({
-        dmg, kb: m.kb, dir: att.facing, launcher: m.launcher,
+        dmg, kb: m.kb, dir, launcher: m.launcher,
         status: m.applyStatus, unblockable: m.unblockable, chipDmg,
       });
 
@@ -224,7 +225,7 @@ export class FightWorld {
           f.takeHit({ dmg: 4, kb: 3, dir: f.x < z.x ? -1 : 1, unblockable: true });
           this.fx.text(f.x, f.y - 60, 'SLIP!', '#7a4a3a');
         } else if (z.type === 'ember' || z.type === 'smoke') {
-          if (!f.hasStatus('burn')) f.applyStatus('burn', 90, { amount: 1 });
+          if (!f.hasStatus('burn')) f.applyStatus('burn', 90, { amount: z.burn || 1 });
           else f.statuses.get('burn').dur = Math.max(f.statuses.get('burn').dur, 60);
         }
       }
@@ -398,7 +399,7 @@ const BEHAVIORS = {
     const half = def.x > STAGE_W / 2 ? 1 : -1;
     w.addZone({
       type: 'smoke', x: half > 0 ? STAGE_W - 110 : 110, w: 200, life: m.dur || 300,
-      drift: half * 0.25, owner: f, ownerImmune: true,
+      drift: half * 0.25, owner: f, ownerImmune: true, burn: m.burn || 1,
     });
     w.audio.play('jet');
   },

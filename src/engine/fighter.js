@@ -371,6 +371,7 @@ export class Fighter {
     if (a.hasHit && !multi) return null;
     if (multi && a.frame < (a.nextHitAt || 0)) return null;
     const reach = m.range || 30;
+    if (m.bothSides) return { x: this.x, y: this.y - 34, w: reach * 1.7, h: 30, move: m, slot: a.slot };
     return { x: this.x + this.facing * (reach * 0.55), y: this.y - 34, w: reach, h: 30, move: m, slot: a.slot };
   }
 
