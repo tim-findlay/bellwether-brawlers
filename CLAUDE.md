@@ -2,7 +2,7 @@
 
 ## What this is
 
-A lightly pixelated browser fighting game (HTML5 canvas + vanilla JS ES modules) deployed as a static site to GitHub Pages. The repo is named `desk-warriors` (historical); the game is **Bellwether Battlers**.
+A lightly pixelated browser fighting game (HTML5 canvas + vanilla JS ES modules) deployed as a static site to GitHub Pages. The repo is `bellwether-brawlers` (renamed from `desk-warriors` 2026-06-10; local checkouts may still use the old folder name); the game is **Bellwether Battlers**.
 
 ## Hard rules
 

@@ -2,7 +2,7 @@
 
 A polished, lightly pixelated office fighting game starring your coworkers — eight genuinely different fighters, three British stages, random office events, and a CPU-vs-CPU balance harness. Pure HTML5 canvas + vanilla JavaScript ES modules. **No framework, no bundler, no build step** — the only external resource is web fonts from the Google Fonts CDN (graceful system fallbacks).
 
-**Play it live:** https://tim-findlay.github.io/desk-warriors/
+**Play it live:** https://tim-findlay.github.io/bellwether-brawlers/ *(repo is currently private — Pages serves once it's public again)*
 
 > A parody fighting game. Every face, move, stage and grudge is editable — see [Adding content](#adding-content).
 
