@@ -14,6 +14,7 @@ A lightly pixelated browser fighting game (HTML5 canvas + vanilla JS ES modules)
 - **Display names are first names only.**
 - **Not neon.** Warm paper/ink palette, daylight stages, no glows/bloom/scanlines. Diegetic light is fine.
 - Keep files under 500 lines. Frame-rate logic is fixed-timestep 60 Hz — never tie gameplay to rAF rate.
+- **Engine change policy.** Combat semantics and anything feel-affecting (hit resolution, stun/knockback/armor rules, movement physics, new move kinds) need Tim's explicit sign-off first. Defect fixes with a reproducible repro and before/after evidence, and changes that move hardcoded values into data, are allowed without asking — but must re-pass the BALANCE.md sim gates and be called out explicitly, never buried. Structural rewrites only on request.
 - DESIGN.md and BALANCE.md are the source of truth for kits, numbers and fairness rules. Change docs and code together; BALANCE.md is canonical where they conflict.
 
 ## Workflow
