@@ -1,161 +1,199 @@
 # BELLWETHER BATTLERS — Design Document
 
-*v2 redesign of the Desk Warriors prototype. Repo name stays `desk-warriors`; the game is **Bellwether Battlers**. Revised after adversarial design review (balance, fun, feasibility panels).*
+*v3 — the platform-fighter pivot. Brawlhalla is the movement reference. Supersedes the v2 health-bar fighter design; BALANCE.md stays canonical for numbers where the two could drift.*
 
 ## Vision
 
-A polished, fair, genuinely deep fighting game starring the office, in a **warm, lightly pixelated, Saturday-morning-sprite** style — daylight palettes, paper-and-ink UI, chunky-but-readable pixels. **Not neon.** Every fighter is a real archetype with a signature mechanic; every strong move is telegraphed and has counterplay; random office events spice rounds without deciding them.
+A movement-first platform fighter starring the office. Run, dash-jump, double-jump and air-dodge around floating stages; knock your colleagues past the blast zones to take their three stocks. Every fighter keeps their v2 identity — archetype, specials, super — and gains a full aerial kit. Warm paper-and-ink look, now **near-HD**: smooth ink-outlined characters with posterized shading and real limb animation. **Not neon.** Daylight stages, diegetic light only, no glows.
+
+**Display names are first names only — no last names anywhere in game content** (including incidental art: signage, boarding passes, nameplates).
+
+## The core rules
+
+- **Match:** 1v1, **3 stocks** each, untimed. No rounds, no clock. Lose all three stocks, lose the match.
+- **The only KO is a ring-out.** Cross a blast zone (all four sides) and you lose a stock.
+- **Composure gauge:** the health bar survives as a launch-resistance gauge. It drains as you take hits and never kills — the emptier it is, the farther every hit sends you. Capacity is the old HP stat (85–110): tanks resist launches instead of out-lasting attrition. Refills only on stock loss — there is no heal-by-waiting. *Single design-level exception:* ABI's PUB O'CLOCK regen (see her entry) — it makes her opponent engage, the opposite of camping, and any hit cancels it.
+- **Knockback** scales with the move's power and how empty the victim's gauge is, divided by weight (formula and bands in BALANCE.md). Hitstun scales with knockback. No juggle limit — aerial strings are the game now.
+- **Respawn:** ink-burst KO, then you descend from centre-top riding an office chair — invulnerable until you act (hard cap 3 s).
+- **No block.** One **Dodge** button: spot dodge on the ground (tap a direction for a dodge-step), **air dodge** with a directional impulse in the air — once per airtime, your recovery's third resource after the two jumps. All dodges share one cooldown. Chip damage, blockstun and facing-dependent block are gone.
+- **No ledge-grab.** Like Brawlhalla, you recover by flying back over the stage; soft platforms catch you from above.
+- **Meter & supers stay:** 0–100, gain = 80% of gauge damage dealt + 50% taken, persists across stocks, resets each match. Damage supers are retuned to launch toward blast zones; utility supers (LIFETIME PLATINUM, PUB O'CLOCK, LOW & SLOW) keep their v2 roles.
+- **Statuses** survive with worded callouts and duration bars (slow, haste, burn, reversed, silence, lien, dmgUp, nextHit; caps in BALANCE.md). Burn drains the gauge but can never take a stock.
+- **Dropped from v2, deliberately (do not port):** block/chip/blockstun, the knockdown/get-up state machine and its okizeme rules, the 1-hit juggle limit, rounds, the 60 s timer and the timeout rule. Two small fixed-frame *states* (not statuses) replace knockdown: **self-stagger** (non-actionable and fully vulnerable — the punish window, Adrian's tax; the one thing that "misses" it is an unparryable, which whiffs vs non-actionable fighters by its own rule) and the **hazard stagger** (brief, never comboable, with recovery invulnerability — hazard losers only).
+
+## Movement (the heart of the game)
+
+Universal constants live in **`src/data/physics.js`**; per-character movement numbers (run, jump impulses, fall max, weight, gauge) live in that fighter's `src/data/characters/<id>.js` within the bands BALANCE.md sets. The engine reads, never hard-codes. Starting values in BALANCE.md; canonical after the Phase-1 graybox playtest.
+
+- **Run** with acceleration and friction; per-character top speed.
+- **Dash:** double-tap a direction *on the ground* (tap window and cooldown in BALANCE.md; air double-taps do nothing) — a speed burst. **Dash-jump** keeps the momentum for a long flat arc.
+- **Double jump:** everyone has two jumps; impulses per character.
+- **Air drift:** separate air acceleration and max air speed.
+- **Fast-fall:** *hold* down while descending (~2.5× fall, cancels on hit). A fast-falling fighter **lands on** soft platforms.
+- **Drop-through:** a *fresh down tap* while standing on a soft platform (attack presses take precedence: down+Light on a platform is just a Light). After a drop, soft-platform collision is ignored for a grace window (BALANCE.md).
+- **Air dodge:** i-frames + a directional impulse; once per airtime, refreshed on landing or respawn; doubles as recovery.
+- Feel floor: 5-frame coyote time, 6-frame input buffer (jump/dodge/attacks), per-aerial landing lag, per-character fall speed (gravity is global).
+
+Fixed-timestep 60 Hz logic is unchanged. Never tie gameplay to rAF rate.
+
+## Controls
+
+Physical key positions (`KeyboardEvent.code`), US labels. All bound keys `preventDefault`ed in play. Menus: confirm F/K/Enter, back Esc; 20-frame input lockout on screen transitions.
+
+| Action | P1 | P2 | Notes |
+|--------|----|----|-------|
+| Move | A / D | ← / → | double-tap on the ground = dash |
+| Jump | W | ↑ | key-down edge in air = double jump; *held* = aims up-air |
+| Down | S | ↓ | fast-fall (hold) · drop-through (tap) · aims down-air |
+| Light / aerials | F | K | + held direction in air = n/s/u/d-air |
+| Heavy | G | L | ground-only kill commit |
+| Special 1 / 2 | H / J | ; / ' | per-move `air` flag in data |
+| Dodge | V | / | spot · step · air dodge |
+| Super | Space | Enter | full meter |
+
+**Jump-key rule (canonical):** double jump triggers on the key-down *edge* while airborne; aerial aim reads the *held* directions on the frame Light is pressed — so up-air is "keep W held (e.g. from your jump), press Light", and a fresh mid-air W tap is always a double jump.
 
 ## Art direction
 
-- **Rendering:** fixed-timestep 60 Hz logic; world drawn to a 480×270 offscreen buffer scaled 2× to a 960×540 canvas with `imageSmoothingEnabled = false` → light pixelation without 8-bit mush. UI text drawn crisp at full res in pixel fonts.
-- **Type:** `Pixelify Sans` (titles, banners), `Silkscreen` (HUD numbers, labels), `Barlow Condensed` (menus, body).
-- **Palette:** warm paper `#f2e9d8`, ink `#2b2620`, brick `#c4452e`, corporate navy `#27425f`, brass `#c9a227`. Each stage owns its own daylight palette. **Warm diegetic light sources are fine; additive bloom / outer glow never.** Effect colours come from the stage/character palettes, not saturated primaries.
-- **Fighters:** stylised drawn pixel bodies (suit colours sampled from the real photos) with **photo heads**: circular-cropped, lightly pixelated, 2px ink outline ring. Full headshot on select cards and win screen. Abi & Seelye fall back to drawn cartoon heads until their photos land in `assets/headshots/`.
+- **Fidelity:** near-HD ink-outline characters (~128 px source height) with flat posterized shading — "Brawlhalla, faintly pixel-flavoured". The 480×270 pixel buffer retires; the world draws at full canvas resolution through the camera. Palette and fonts carry over from v2 (paper `#f2e9d8`, ink `#2b2620`, brick, navy, brass; Pixelify Sans / Silkscreen / Barlow Condensed).
+- **Animation rig:** one shared procedural 2D skeleton (torso, head, two-segment arms and legs) drawn as ink-outlined limbs. Keyframed pose cycles shared by the cast: idle breathing, run cycle (legs pump, arms swing), jump tuck, fall splay, fast-fall dive, dash lean, dodge roll, hitstun flail, launch tumble, KO ink-burst, plus per-move swing poses tagged in character data. Characters are proportions + palette + **outfit layers** riding the rig (coat, satchel, scarf, hardhat…) with secondary motion — coat-tails and bag-sway sell the momentum.
+- **Heads are drawn**, same style and grid as the body. The real photos live on select cards and win screens only (`assets/headshots/<id>.png`, manifest + drawn fallback, drop-in rule unchanged).
+- **Camera:** follows the fighters' midpoint, zooms continuously to frame both with padding, clamps to per-stage bounds, eased follow; screenshake composes on top. Off-screen fighters get an edge arrow until they recover or KO.
 
 ## Architecture (ES modules, zero build)
 
 ```
-index.html                 entry point (canvas + <script type="module" src="src/main.js">)
-assets/headshots/<id>.png  drop-in portraits, id-keyed manifest, graceful fallback
-src/main.js                boot, fixed-timestep loop, screen router (with transition input lockout)
-src/engine/                input (KeyboardEvent.code, buffered), fighter FSM, combat,
-                           effects, audio (WebAudio synth), assets, events, ai
-src/render/                draw.js (world compositor + fighter bodies), hud.js
-src/screens/               title, menu (mode/settings/help), select, fight, results
-src/data/                  characters.js, stages.js, events.js  ← all content lives here
-src/dev/sim.js             headless balance harness (?sim=N), dynamically imported, dev-only
+index.html                    entry point
+assets/headshots/<id>.png     drop-in portraits (select/win screens)
+src/main.js                   boot, fixed-timestep loop, screen router
+src/data/physics.js           ← universal movement & knockback constants
+src/data/characters/<id>.js   one fighter per file (+ index.js roster);
+                              per-character stats live here
+src/data/stages.js            visuals + GEOMETRY: slab, soft platforms,
+                              spawns, respawn, camera bounds, blast zones
+src/data/events.js            stage hazards (reworked office events)
+src/engine/movement.js        momentum physics, platform collision, fighter FSM
+src/engine/camera.js          follow/zoom/clamp + shake composition
+src/engine/combat.js          knockback/stocks + ported move-kind dispatch,
+                              statuses, hooks (preHit / onProjectileResolved)
+src/engine/ai/                navigation, tactics, recovery, edge-guard
+src/engine/                   input, effects, audio, assets, events (ported)
+src/render/rig.js             skeleton, pose cycles, outfit layers
+src/render/draw.js, hud.js    world compositor, gauge/stock/meter HUD
+src/screens/                  title, menu, select, fight, results (ported)
+src/dev/sim.js                balance harness (?sim=N)
+src/dev/graybox.js            Phase-1 movement playground (?graybox)
 ```
 
-**Data-driven rule:** adding a fighter, stage, or event = adding one object to `src/data/*` (plus optional headshot PNG). Stages compose a small primitive vocabulary (bands, props, oscillators) rather than bespoke engine code. The only conditional content is Berlin's Mike-only trigger, expressed as data (`requiresCharacter: 'mike'`).
+**Data-driven rule unchanged:** adding a fighter, stage or hazard = adding data (+ optional headshot). Engine code never hard-codes content — and v3 fixes v2's violations (floor/wall constants move from `fighter.js` into stage data; projectile/zone shapes move from `draw.js` into data). **Files stay under 500 lines** — the `characters/<id>.js` and `ai/` splits exist to keep it that way.
 
-## Universal systems
+**Dev flags:** `?sim=N` (balance harness), `?graybox` (movement playground), `?event=<id>` (force a hazard). All dynamically imported, never in normal play paths.
 
-- **Controls** — bindings use **physical key positions** (`KeyboardEvent.code`), shown here as US labels; all bound keys are `preventDefault`ed during play:
+## Build plan (canonical sequencing)
 
-| Action   | P1    | P2    |
-|----------|-------|-------|
-| Move     | A / D | ← / → |
-| Jump     | W     | ↑     |
-| Block    | S     | ↓     |
-| Light    | F     | K     |
-| Heavy    | G     | L     |
-| Special 1| H     | ;     |
-| Special 2| J     | '     |
-| Super    | Space | Enter |
+Five phases, small rollbackable commits throughout; the page must load clean after every commit.
 
-  **Menus:** confirm = F (P1), K (P2), or Enter; back = Esc. Every screen transition clears pressed-key state and ignores input for 20 frames — a buffered super press can never skip a results screen or trigger an accidental rematch. Esc = pause (controls overlay); HELP on the main menu.
-- **Input buffer:** 6-frame press buffer consumed on the first actionable frame.
-- **Meter:** 0–100, **persists across rounds, resets each match**. Gain: 80% of damage dealt, 50% of damage taken. A winning round (~100 dealt / ~60 taken) ≈ one full bar → expect supers about once a round from round 2. Super costs 100.
-- **Blocking:** hold block, facing-dependent (attacks from behind connect). **Chip is 15% of a move's total damage per move *instance* (min 1)** — multi-hit moves chip once, so chip-and-run stall doesn't scale with hit count.
-- **Wake-up rules:** knockdown (40f) and get-up (12f) are fully invulnerable; **command grabs and unblockables whiff against non-actionable opponents** — okizeme unblockable setups don't exist. Timed zone supers still respect get-up invulnerability.
-- **Statuses** (engine-level): stun, slow, haste, burn (DoT), silence, reversed, damage-buff, lien. **Every status announces itself in words above the victim's head** ("SILENCED!", "REVERSED! (block still works)", "LIEN!") with a duration bar — no icon-only vocabulary.
-- **Juggle limit:** 1 hit on airborne opponents.
-- **Rounds:** 60s, first to 2 wins. Timeout winner = **higher percentage of max HP**; equal % = draw → extra round.
-- **Polish:** hitstop (light 3f / heavy 6f / special 8f / super 12f), screenshake on heavy+, KO slow-mo, paper-slab banners, rematch flow, per-character win tally in localStorage. Select cards carry each fighter's one-line **counterplay tip** so party players learn the answers where they pick.
+1. **Graybox movement playground** — new movement core + `physics.js` + flat slab/soft platforms/training dummy behind `?graybox`. **HARD STOP: Tim playtests and tunes the feel. No further phase starts until he signs off; the surviving `physics.js` values then become canonical in BALANCE.md.**
+2. **World** — camera, real stage geometry, blast zones, stocks, respawn chair, HUD v3.
+3. **Characters in pairs** — Ben+Tim, Adrian+Richy, Nick+Abi, Mike+Seelye; aerials, rig outfits, retuned specials. Playable after each pair.
+4. **AI** — navigation, recovery, edge-guarding, Easy/Normal/Hard.
+5. **Content & gates** — hazards rework, music (incl. the Seelye trigger), random card, help text; then the full sim-gate run and BALANCE.md results.
 
-## Balance philosophy
-
-See BALANCE.md (canonical for numbers and the telegraph rule). Soft archetype wheel — zoning pressures tanks, rushdown beats zoning, tanks punish rushdown — as difficulty, not destiny. CPU-vs-CPU sim gate: every fighter 42–58% aggregate, **plus a stall-bot sanity check** (a runaway profile must not beat the cast average by more than chance).
+**Port list (carry from v2):** move-kind dispatch, statuses + callouts, hooks, input buffering, FX (hitstop/shake/slow-mo/particles), audio synth bank, EventDirector, screens/router, headshot pipeline, localStorage tallies, sim harness skeleton. **Drop list:** see core rules.
 
 ## The roster
 
-*Display names are first names only. Stats: HP / speed (world-px per frame) / jump impulse / weight.*
+*Stats: gauge / run speed / weight (fall class). Per-character numbers in character data; bands in BALANCE.md. Every fighter: ground Light + Heavy (kept from v2), four aerials (Light + direction), two specials (per-move `air` flag), super. Recovery strength is a balance axis — who gets a recovery special is deliberate.*
 
-### BEN — "The Big Boss" — long-range bully (space control)
-110 / 1.39 / 5.3 / 1.25 — longest normals in the game; wins by deciding where the fight happens. **His fullscreen answer is Wingspan range, not fireballs.**
-- **Light — Pistachio Flick:** fastest long poke (range 78), 5 dmg.
-- **Heavy — Wingspan:** huge arc, range 96, 12 dmg, 16f start — the wall.
-- **Sp1 — Hawk Toss:** **lobbed** football on a long cooldown — a conditioning tool that punishes predictable jumps and walks, loses to patient ground play. 9 dmg.
-- **Sp2 — Off the Lip:** office-chair surf lunge, 8 dmg launcher; minus on block.
-- **Super — TWELFTH MAN:** 30f stadium-roar windup → unblockable cone bellow, 18 dmg + wall-carry. Whiffs entirely against airborne or knocked-down opponents — jump the roar.
-- *Counterplay:* slow up close; rushdown inside his range turns him off.
+### BEN — "The Big Boss" — long-range bully
+110 / 2.8 / 1.25 (fast-faller) — Paynter trench coat, Chelsea boots. Decides where the fight happens.
+- Kept: Pistachio Flick, Wingspan, **Hawk Toss** (air-usable lob), **Off the Lip** (chair-surf lunge — now his air recovery), **TWELFTH MAN** (unparryable roar cone; grounded, whiffs vs airborne — jump the roar).
+- Aerials: *Air Clearance* (nair sweep) · *Long Reach* (the game's longest side-air) · *Pistachio Pop* (uair) · **L-Plate Drop** (dair spike — the London licence is in progress).
+- *Counterplay:* huge but slow; get inside the wingspan and stay there. His recovery is one straight lunge — wait for it.
 
-### TIM — "The Operator" — tempo all-rounder with status tricks
-100 / 1.54 / 5.6 / 1.0 — honest mid-range kit that **steals turns**, never a steroid.
-- **Light — Quick Sync:** 4 dmg, fast. **Heavy — Hard Deadline:** 10 dmg chop.
-- **Sp1 — Prompt Injection:** a slow **ink-outlined cursed e-mail** (dithered pixel shimmer, no glow), 7 dmg + **reverses movement for 1.2s** — and the reversal **ends early the moment Tim lands another hit** (one stolen turn, never a sequence). Victim sees flipped arrows + "REVERSED! (block still works)". Blocked = no status.
-- **Sp2 — Zulu Time:** he winds the watch back: **both special cooldowns reset instantly** and his next hit gains +2. Tempo theft, not speed.
-- **Super — AGI MOMENT:** screen dims, dash-through auto-combo, 22 dmg; jump the dash.
-- *Counterplay:* no armor, no parry — don't get clipped by the e-mail and he's merely honest.
+### TIM — "The Operator" — tempo all-rounder
+100 / 3.1 / 1.0 — brown satchel cross-body over the suit; clean-shaven. Steals turns, not stocks.
+- Kept: Quick Sync, Hard Deadline, **Prompt Injection** (air-usable cursed e-mail; reversal ends on his next hit), **Zulu Time** (resets special cooldowns, next hit +2), **AGI MOMENT** (dash-through auto-combo; jump the dash).
+- Aerials: *Sync Spin* (satchel 360 nair) · *Satchel Swing* (sair) · **The Drop** (uair bass pulse — EDM canon) · *Deadline Drop* (dair spike).
+- *Counterplay:* no recovery special — his jumps are honest; edge-guard him hard and don't get clipped by the e-mail.
 
-### ADRIAN — "The Walking Hazard" — chaos rushdown + accidental traps
-86 / 1.68 / 5.9 / 0.95
-- **Light — Toothbrush Jab:** 4 dmg, very fast. **Heavy — Pivot Table:** 9 dmg, hits both sides.
-- **Sp1 — Clumsy Charge:** stumbling lunge, 11 dmg, crosses up on hit; **on whiff he trips** (1s self-knockdown).
-- **Sp2 — Coffee Spill:** puddle persists ~4s; opponent who steps in slips (4 dmg + short slide-stun). Adrian is immune — he knows where he spilled it.
-- **Super — FULL AUDIT:** flailing multi-hit rush, 20 dmg — **he trips at the end even on hit** (0.5s vulnerable).
-- *Counterplay:* whiff-bait the charge; respect the puddle; hit him first.
+### ADRIAN — "The Walking Hazard" — chaos rushdown
+86 / 3.4 / 0.95 — fuelled by Nero flat whites.
+- Kept: Toothbrush Jab, Pivot Table, **Clumsy Charge** (air-usable lunge recovery — self-staggers on a botched landing), **Nero Spill** (the coffee puddle, now on whichever platform it lands; Adrian immune), **FULL AUDIT** (multi-hit flail; self-staggers at the end even on hit).
+- Aerials: *Panic Flail* (nair, both sides) · *Overreach* (sair) · *Up-and-Over* (uair) · **Faceplant** (dair spike; self-stagger on a whiffed landing).
+- *Counterplay:* whiff-bait everything; his own kit fights him. (Self-stagger: non-actionable and fully vulnerable — the punish window, defined in core rules.)
 
-### RICHY — "The Market" — dual-projectile momentum zoner
-96 / 1.49 / 5.6 / 1.0 — the candles oppose: **BLOCK the bull, JUMP the bear.**
-- **Light — Bid:** 5 dmg. **Heavy — Short Squeeze:** 10 dmg, drags the opponent closer.
-- **Sp1 — Bull Run:** tall green candle (sign-green `#3f5a40`, palette not neon) **angled upward — it clips jumpers**. 9 dmg knock-up. Block it.
-- **Sp2 — Bear Raid:** low red candle (brick `#c4452e`) rolling along the floor, 8 dmg knockdown. Jump it.
-- **Shared lock:** throwing either candle locks **both** for 45f — there is always a walk-forward window per cycle.
-- **Signature — Diversified Portfolio:** alternations grant +1 dmg (cap +3) **only when the previous candle hit or was blocked** — pot-shots at air earn nothing. "DIVERSIFIED +N!" tag on payoff.
-- **Super — TO THE MOON:** three telegraphed chart columns erupt across the opponent's zone; **only the first column that connects deals damage** (9) — the rest whiff past. Floor markers, stand in the gaps.
-- *Counterplay:* each candle has a distinct answer; inside mid-range he's average.
+### RICHY — "The Market" — dual-candle zoner
+96 / 3.0 / 1.0 — meme connoisseur, Excel macro artisan. The candles oppose: **dodge the Bull, jump the Bear.**
+- Kept: Bid, Short Squeeze (drags closer — scarier near edges), **Bull Run** (air-usable, angled up — clips jumpers), **Bear Raid** (rolls along the surface it lands on), the candle lock (**both candles share one 45-frame cooldown** — there is always a walk-forward window per cycle), **Diversified Portfolio** (+1 *gauge damage* per Bull/Bear alternation that connects, cap +3), **TO THE MOON** (three columns from the main stage; first connecting column only, retuned to launch).
+- Aerials: *Portfolio Spin* (nair) · **Meme Slap** (sair, freshly printed) · *Pump* (uair mini-candle) · *Crash Out* (dair spike).
+- *Counterplay:* no recovery special and average air speed — get him off stage and the market closes.
 
-### NICK — "The Concierge" — teleport mixup glass cannon
-85 / 1.87 / 6.2 / 0.85 — fastest, deadliest, flimsiest.
-- **Light — Name Drop:** 5 dmg, 3f startup. **Heavy — Fund Structure:** 10 dmg.
-- **Sp1 — Status Match:** 12f visible wind-up shimmer, then reappears behind the opponent (fixed arrival spot — heavy it on reaction). No damage; the mixup engine.
-- **Sp2 — Points Redemption:** fan of three cards, 3 dmg each; chips once (per-move chip rule) — not a stall engine.
-- **Super — LIFETIME PLATINUM:** 4s lounge access: **2px brass card-frame outline + confetti ticks** (no aura/glow), +40% speed, +3 dmg per hit, builds no meter while active.
-- *Counterplay:* 85 HP — two reads end him; the teleport arrival is fixed and punishable.
+### NICK — "The Concierge" — teleport glass cannon
+85 / 3.7 / 0.85 (floaty) — fastest, deadliest, flimsiest.
+- Kept: Name Drop, Fund Structure, **Status Match** (now air-usable — *the* recovery teleport; fixed arrival, punishable), **Points Redemption** (card fan), **LIFETIME PLATINUM** (+speed/+damage, builds no meter).
+- Aerials: *Velvet Rope* (nair) · *Card Fan* (sair) · *Upgrade* (uair) · *Check-Out* (dair spike).
+- *Counterplay:* 85 gauge means everything launches him early; the teleport arrival is a written invitation.
 
 ### ABI — "The Gatekeeper" — defensive counter-puncher
-90 / 1.63 / 5.9 / 0.9 — controls the calendar, **not** the projectile lanes.
-- **Light — Reschedule:** 4 dmg. **Heavy — Double-Booked:** 9 dmg, fast.
-- **Sp1 — Calendar Block:** 20f **melee-only** parry stance ("DECLINED!"): parried melee → 12 dmg counter knockdown. Projectiles pass right through it — she schedules meetings, she doesn't field fireballs. Whiff = 25f recovery.
-- **Sp2 — House Rosé:** lobbed wine glass, 7 dmg + 20% slow 2s.
-- **Super — PUB O'CLOCK:** "LAST ORDERS!" — an immediate 0-dmg shove, opponent's specials/super **locked for 3.5s** (padlock over their pips, "SPECIALS LOCKED" banner; their cooldowns keep ticking underneath), and Abi **regens 2 HP/s for 5s — cancelled the instant she takes any damage, chip included**.
-- *Counterplay (written, as required):* pressure her through last orders — one hit cancels the heal; the silence delays your specials, it doesn't delete them. She has no fast fullscreen threat; make her whiff the parry.
+90 / 3.3 / 0.9 — festival wristbands and a packed holiday tote.
+- Kept: Reschedule, Double-Booked, **Calendar Block** (ground melee-only parry — extra precious in a blockless game; projectiles pass through), **House Rosé** (air-usable lob, 20% slow), **PUB O'CLOCK** (banner: **"LAST ORDERS!"** — shove + opponent's specials locked 3.5 s + composure regen 2/s for 5 s, cancelled by any hit. *The one exception to "refills only on stock loss"; see core rules.*).
+- Aerials: **Wristband Whirl** (nair) · *Tote Swing* (sair) · *Confetti Pop* (uair) · **Baggage Drop** (dair suitcase spike).
+- *Counterplay:* pressure through Last Orders — one hit cancels the regen; bait the parry, it does nothing to projectiles or grabs.
 
 ### MIKE — "The Site Manager" — armored grappler tank
-110 / 1.2 / 5.1 / 1.45
-- **Light — Hard Hat:** 6 dmg. **Heavy — Wrecking Swing:** 14f start, 10 dmg, **1 hit of armor** during the swing.
-- **Sp1 — Scaffold Slam:** 16f wind-up with a big "UNBLOCKABLE!" flash → short-range command grab, 14 dmg slam. **Whiffs against airborne or non-actionable opponents.**
-- **Sp2 — Demolition Day:** stomp → expanding shockwave both sides, 10 dmg — **and it clanks (destroys) any projectiles inside the radius**: his answer to the candle wall.
-- **Super — WRECKING BALL:** high sweep one way, low drag back the other; stay grounded for pass one, jump pass two. 20 dmg, once.
-- **Home turf:** Berlin Trip gives +12% damage, +0.3 speed.
-- *Counterplay:* outrun him; never get cornered; jump the grab wind-up.
+110 / 2.4 / 1.45 (fastest faller) — Manchester United scarf, worn with hi-vis.
+- Kept: Hard Hat, Wrecking Swing (1-hit armor — armor rules in BALANCE.md), **Scaffold Slam** (grounded unparryable command grab; whiffs vs airborne — jump the wind-up), **Demolition Day** (shockwave that destroys any projectiles it meets), **WRECKING BALL** (high sweep one way, low return drag the other — dodge under the first pass, jump the second), Berlin home-turf buff (+12% damage, +0.3 run).
+- Aerials: *Site Sweep* (nair) · *Girder Swing* (sair) · **Header** (uair — top of the league) · **Demolition Drop** (dair, 1-hit armor, slow, brutal spike).
+- *Counterplay:* worst recovery in the game by design — no recovery special, heaviest fall. Knock him off and guard the edge.
 
-### SEELYE — "The Pitmaster" — setplay that collects inside the round
-110 / 1.5 / 5.3 / 1.15 — the debt is collected **this** round, not next match.
-- **Light — Term Sheet:** 6 dmg. **Heavy — Leverage:** 13 dmg, applies **LIEN** (big tag over the head).
-- **LIEN:** Seelye's next special on a marked opponent deals **+4** and shows "LIEN COLLECTED!" — heavy → special is his core loop and it resolves in seconds.
-- **Sp1 — Brisket Bomb:** lobbed bomb: **9 dmg on direct hit**, then a 3s ember zone with burn ticks — herding tool with immediate teeth.
-- **Sp2 — Dad Reflexes:** brief one-handed catch stance: **absorbs any projectile** for meter (+20). The cast's only projectile catch — uniquely his.
-- **Super — LOW & SLOW:** the offset smoker blankets the opponent's half in drifting smoke for 5s, ticking burn inside; it drifts slowly — walking out is always possible but cedes ground.
-- *Counterplay:* dodge the lobs and pressure him before zones stack; his fast threat is short-ranged.
+### SEELYE — "The Pitmaster" — setplay collector, new dad
+110 / 3.0 / 1.15 — running on no sleep and good smoke.
+- Kept: Term Sheet, Leverage (applies **LIEN**: his next special on the marked target +4, "LIEN COLLECTED!"), **Brisket Bomb** (lob + ember zone on the platform it lands on), **Dad Reflexes** (projectile catch → +20 meter), **LOW & SLOW** (drifting smoke blankets half the stage; walk out or cede ground).
+- Aerials: *Tongs Out* (nair) · **Fresh One** (sair — a lobbed diaper; on hit: 1 s slow, callout **"STINKED!"**) · *Smoke Ring* (uair) · *Brisket Drop* (dair spike).
+- *Counterplay:* dodge the lobs, fight him before the zones stack, and don't let the lien resolve.
 
-## Stages (player-selectable; distinct palette + 3-layer parallax)
+## Stages (1–3 player-selectable; Berlin event-only)
 
-Composed from data primitives (sky band, silhouette band, prop list, oscillating props), not bespoke code.
+All: blast zones on four sides, no walls, no ledge-grab; soft platforms reachable with jump → double-jump, high platforms need a dash-jump or a platform hop. Layouts per the approved wireframes; all platforms are **static** — any sway is backdrop art, never collision.
 
-1. **THE OFFICE** — cool morning light. Window-wall skyline / glass meeting rooms + plants / desk islands with monitors. Palette: slate blue `#aebfd1`, glass `#5b7185`, carpet `#4a5a58`, post-it accents.
-2. **BUCKINGHAM PALACE FORECOURT** — bright stone daylight. Facade + flag / black-and-gold gates with one blinking, unbothered guard / bollards. Palette: stone `#d9cba8`, brass, guard red `#b3402e`, sky `#9db8d9`.
-3. **THE BELLWETHER ARMS** — golden-hour pub exterior. Terraced silhouettes / brick pub, warm (diegetic, not bloomed) windows, chalkboard / swinging hanging sign, pavement. Palette: brick `#7a4a3a`, window amber `#e8b14f`, sign green `#3f5a40`.
-4. **BERLIN — EVENT ONLY** — blue evening, Brandenburg Gate + TV tower silhouettes. Palette: night blue `#2a3550`, sandstone `#c8b89a`. Only via Mike's BERLIN TRIP; returns automatically.
+1. **THE OFFICE** — the tournament stage. Symmetric tri-plat: desk-island main slab, two low shelf platforms, one high cable-tray platform. Cool morning palette.
+2. **PALACE FORECOURT** — the zoner's stage. Widest, flattest main slab; two gate-rail platforms above the edges. Longest survival off the sides.
+3. **THE BELLWETHER ARMS** — the scrappy local. Asymmetric: awning + hanging-sign platforms stacked on the pub side, a bench platform on the other. Golden hour, warm diegetic windows — and the chalkboard always reads **"☀ 30°C · THURSDAY · 6PM"**.
+4. **BERLIN — EVENT ONLY** — the gate. One wide, high drop-through platform on the Brandenburg silhouette (columns are backdrop, no collision). Arrives only via Mike's BERLIN TRIP and leaves with it.
 
-## Random events
+## Stage hazards (the office events, reworked)
 
-Settings toggle (**ON** default). First roll 8s into a round, then every 12–18s; max 2 per round; never in the final 5s; never during a super; klaxon + banner telegraph ≥ 1s. Symmetric or dodgeable; never match-deciding.
+Settings toggle (ON default). The EventDirector survives; pacing re-anchors to stocks: first roll ~10 s in, then spaced rolls, capped per stock-fall, suppressed while a super is active. Doctrine (canonical in BALANCE.md): **always telegraphed ≥ 1 s, never kill-class knockback, never pushing toward a blast zone, symmetric or dodgeable, never match-deciding.**
 
-1. **URGENT UNDERWRITING** — deal alert, both freeze, "SUBMIT!" mash (light). Winner: +5 HP, +15 meter. Loser: **a brief shove-stagger with get-up invulnerability — never comboable**. CPU mash starts after a human-beatable, difficulty-scaled delay. Once per round. Total swing ≈ one jab, as the doctrine demands.
-2. **THE WAVE** — direction arrow + rising chant → stadium wave shoves grounded fighters ~180px (2 dmg). Jump to ride it.
-3. **SPIN CLASS STAMPEDE** — three riderless spin bikes roll across at staggered times, 5 dmg + comic tumble. Jumpable.
-4. **FIRE DRILL** — assembly marker at one edge; **window computed at runtime** (worst-case walk distance / slowest fighter speed + 0.75s); ground hazards inside the marker are cleared; anyone in hitstun/knockdown during the final second is forgiven. Missing roll call: 6 dmg, **no stun**.
-5. **BERLIN TRIP** (Mike in match; ~once per match) — "MIKE'S OFF TO BERLIN!", boarding-pass swoosh, 12s Berlin crossfade, home-turf buff, "WILLKOMMEN" stinger, swoosh back.
+1. **URGENT UNDERWRITING** — triggers only when both fighters are grounded; freeze + "SUBMIT!" mash. Winner **+20 meter** (no gauge reward); loser gets a brief hazard stagger (never comboable, invulnerable on recovery).
+2. **THE WAVE** — chant + arrow, then the wave shoves grounded fighters **toward centre stage** (2 gauge). Jump to ride it.
+3. **SPIN CLASS STAMPEDE** — riderless bikes cross the main slab at staggered times; jumpable, platform-avoidable.
+4. **FIRE DRILL** — assembly marker on the main slab; runtime-computed window; misses cost 6 gauge, no stun, never near a blast zone.
+5. **BERLIN TRIP** (Mike in match, ~once per match) — full mid-match geometry swap to the gate stage: triggers only while both fighters stand on the main slab; the crossfade repositions both onto the gate slab at equivalent footing, then back the same way. Home-turf buff while abroad. *Porting note: the v2 boarding-pass art shows a surname — v3 art must read first-name only (e.g. "MIKE · SEAT 1A").*
+
+## Audio
+
+All WebAudio synthesis — **zero audio files, zero licensing risk** on a public repo.
+
+- **Music (new in v3):** a procedural arcade-fighter loop (driving bass arpeggio, brass-ish stabs) with per-stage variation. **If Seelye is in the match, the entire soundtrack switches to a 90s boom-bap groove** — swung drums, dusty hats, deep bass.
+- **SFX:** the 26-entry synth bank carries over; new entries: jump, double-jump, land, dodge whoosh, dash, spike thunk, blast-zone KO, stock-lost sting, respawn chair descent.
+
+## UI & screens
+
+- **HUD:** composure bars in the v2 paper-plate style (green → amber → brick as they drain), **3 desk-chair stock pips** per side, meter bar, special cooldown pips, status word-callouts projected through the camera. No timer.
+- **Select:** grid + a **"?" random card** on the opponent pick (CPU or P2). Cards keep photos, archetype, counterplay tip, win tally.
+- **Help/menus:** rewritten for v3 verbs — run/dash/double-jump/fast-fall/dodge/recovery, stocks and blast zones. Pause (Esc) overlay unchanged.
+- **Results:** winner photo + stocks remaining; rematch flow and localStorage win tally carry over.
 
 ## CPU
 
-Archetype-aware profiles from character data (`ai` hints). Difficulty (Easy/Normal/Hard) scales reaction delay, mistake rate, event mash. Default Normal.
+Three difficulties — **Easy / Normal / Hard** — scaling reaction delay, mistake rate, super willingness, and the new v3 knobs: recovery-mixup quality, edge-guard aggression, resource discipline. Default Normal.
 
-Competence floor (all difficulties, scaled by reaction/mistake rate): only swing buttons that can reach (mirrors hitbox geometry), punish whiffed recovery, jump unblockables (they whiff vs airborne), never blind-cast parry/catch stances, never zone into your own corner, and kite armored/grab bruisers when faster with a ranged tool. Balance numbers in BALANCE.md assume this floor.
+New capability layers (all difficulties, scaled): **navigation** (per-stage platform graph: run/jump/drop-through routes), **recovery** (drift back, double jump at the right height, air dodge last, kit recovery special if available), **edge-guarding** (hold the edge, wait out dodges, or go out for the spike — budgeted against its own resources).
+
+Competence floor (the sim assumes this): never burn the double jump early off-stage, always attempt recovery, never spike with no jumps left, fast-fall out of juggles, jump telegraphed unparryables (they whiff vs airborne), respect parry/catch stances. A kit slot the CPU can't use shows up as a dead spot in the win matrix — that's a finding, not noise.
 
 ## Out of scope (this milestone)
 
-Mobile/touch controls, online play, replays, second supers, training mode.
+Mobile/touch, gamepads, online play, replays, training mode, 3–4 player, second supers.

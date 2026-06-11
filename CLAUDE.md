@@ -20,8 +20,8 @@ A lightly pixelated browser fighting game (HTML5 canvas + vanilla JS ES modules)
 ## Workflow
 
 - **Small, focused commits.** One logical change per commit.
-- **Always verify after changes:** serve locally, open the page, confirm no console errors and the title screen renders. For gameplay changes, also run the balance sim (`?sim=10`) and re-check the 42–58% band + stall gate before shipping.
-- Dev flags: `?sim=N` (balance harness, dynamically imported), `?event=<id>` (force an event next roll). Keep them out of normal play paths.
+- **Always verify after changes:** serve locally, open the page, confirm no console errors and the title screen renders. For gameplay changes, also run the balance sim (`?sim=10`) and re-check the 42–58% band + the anti-camp/ledge-stall gates (BALANCE.md) before shipping.
+- Dev flags: `?sim=N` (balance harness, dynamically imported), `?graybox` (movement playground), `?event=<id>` (force a hazard next roll). Keep them out of normal play paths.
 
 ## Deployment
 
