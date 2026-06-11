@@ -10,6 +10,7 @@
 .claude/scheduled_tasks.lock
 .claude-flow/
 .playwright-mcp/
+.superpowers/
 
 # Personal photos of real people — never commit/publish (future portrait assets live here)
 character photos/
