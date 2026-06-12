@@ -668,6 +668,22 @@ test('dash-jump carries full dash speed into the air', () => {
   step(b, { right: true }, 10);
   assert.ok(Math.abs(b.vx) > b.airMax);                    // excess momentum persists awhile
 });
+
+test('holding the opposite direction mid-dash cannot reverse the dash', () => {
+  const b = landed();
+  step(b, { dashRight: true, right: true }, 2);
+  step(b, { left: true }, 4);                              // fight the dash
+  assert.ok(b.vx > 0, 'dash direction is latched at dash start');
+  assert.equal(b.state, 'dash');
+});
+```
+
+And append to the assertions in `tests/physics.test.mjs` (inside the existing test):
+
+```js
+  assert.equal(PHYS.AIR_MOMENTUM_DECAY, 0.985);
+  assert.equal(PHYS.GROUND_DEADZONE, 0.05);
+});
 ```
 
 - [ ] **Step 2: Run both files; FAIL.**
@@ -694,14 +710,20 @@ test('dash-jump carries full dash speed into the air', () => {
     ```js
     const dashDir = (intent.dashRight ? 1 : 0) - (intent.dashLeft ? 1 : 0);
     if (dashDir !== 0 && this.grounded && this.dashT === 0 && this.dashCd === 0 && !this.dodging) {
-      this.facing = dashDir; this.dashT = PHYS.DASH_DURATION; this._setState('dash');
+      this.facing = dashDir; this.dashDir = dashDir;       // latch: dash is not steerable
+      this.dashT = PHYS.DASH_DURATION; this._setState('dash');
     }
     ```
+    Plus three small movement.js fixes that landed as review findings on Task 3 (docs+code together, engine-change policy "values into data"):
+    - Constructor: add `this.dashDir = 1;` next to `this.facing = 1;`
+    - In `_horizontal`'s dash branch, change `this.vx = this.facing * this.dashSpeed;` to `this.vx = this.dashDir * this.dashSpeed;` — otherwise holding the opposite direction mid-dash reverses the dash at full speed via the live `facing` update.
+    - Replace the two magic numbers with data constants: `this.vx *= 0.985;` → `this.vx *= PHYS.AIR_MOMENTUM_DECAY;` and `Math.abs(this.vx) < 0.05` → `Math.abs(this.vx) < PHYS.GROUND_DEADZONE`. Add to `src/data/physics.js`: `AIR_MOMENTUM_DECAY: 0.985,  // per-frame decay of vx above AIR_MAX (dash-jump arc length)` and `GROUND_DEADZONE: 0.05,    // |vx| snap-to-zero threshold under friction`. Add matching rows to BALANCE.md's "physics.js — graybox starting values" table (same commit — BALANCE.md is canonical for numbers).
+
     (`_horizontal` already handles the dash override and cooldown from Task 3; `_jumps` already handles the carry from Task 5.)
 
 - [ ] **Step 4: Run; all PASS** — `node --test 'tests/*.test.mjs'`.
 
-- [ ] **Step 5: Commit** — `git commit -am "Phase 1: dash via grounded double-tap, dash-jump carry; Input.doubleTapped + dodge keys"`
+- [ ] **Step 5: Commit** — `git add -A && git commit -m "Phase 1: dash via grounded double-tap (latched dir), dash-jump carry; Input.doubleTapped + dodge keys; momentum/deadzone constants to data"` (includes BALANCE.md table rows).
 
 ---
 
@@ -839,7 +861,7 @@ test('a body on stage is not out', () => {
 
 *(Note `y - this.h > z.bottom`: you are out the bottom when your head clears it; and out the top only when your feet clear it — generous on the way up, strict on the way down, the platform-fighter convention.)*
 
-- [ ] **Step 4: Run; all PASS** — full suite: `node --test 'tests/*.test.mjs'` → expect 30 passing tests (26 movement + 3 input + 1 physics).
+- [ ] **Step 4: Run; all PASS** — full suite: `node --test 'tests/*.test.mjs'` → expect 31 passing tests (27 movement + 3 input + 1 physics).
 
 - [ ] **Step 5: Commit** — `git commit -am "Phase 1: blast-zone exit detection"`
 
