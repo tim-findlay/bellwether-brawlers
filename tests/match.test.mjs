@@ -94,4 +94,18 @@ test('same-tick double-KO with stocks left costs one stock each, both ride chair
   assert.equal(m.players[0].stocks, STOCKS - 1);
   assert.equal(m.players[1].stocks, STOCKS - 1);
   assert.ok(m.players[0].respawn && m.players[1].respawn);
+  assert.deepEqual(m.events, [{ type: 'ko', player: 0 }, { type: 'ko', player: 1 }]);
+});
+
+test('mixed-stock double-KO: gameover is always the final event, winner correct', () => {
+  for (const loser of [0, 1]) {
+    const m = newMatch();
+    m.players[loser].stocks = 1;
+    m.players[0].body.x = STAGE.blast.left - 5;
+    m.players[1].body.x = STAGE.blast.right + 5;
+    step(m);
+    assert.equal(m.over, true);
+    assert.equal(m.winner, 1 - loser);
+    assert.equal(m.events.at(-1).type, 'gameover');
+  }
 });

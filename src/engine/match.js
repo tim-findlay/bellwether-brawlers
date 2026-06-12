@@ -40,7 +40,8 @@ export class MatchState {
       this.events.push({ type: 'gameover', winner: -1 });
       return;
     }
-    for (const i of out) this._ko(this.players[i], i);
+    for (const i of out.sort((a, b) => this.players[b].stocks - this.players[a].stocks))
+      this._ko(this.players[i], i);
   }
 
   _ko(p, i) {
