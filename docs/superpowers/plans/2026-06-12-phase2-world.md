@@ -6,7 +6,7 @@
 
 **Architecture:** Two new pure-logic engine modules (`camera.js`, `match.js`) tested headlessly like `movement.js`; stage geometry lands as data in `stages.js` with structural sanity tests; a new `versus.js` screen composes MovementBody + MatchState + Camera and draws geometry-fidelity stages (real art arrives with the rig in Phase 3+). The graybox's intent adapter is promoted to `src/engine/input.js` as its permanent home.
 
-**Tech Stack:** Vanilla JS ES modules, zero build, zero deps. Tests: `node --test 'tests/*.test.mjs'` (suite currently 37 green; this plan ends at 64).
+**Tech Stack:** Vanilla JS ES modules, zero build, zero deps. Tests: `node --test 'tests/*.test.mjs'` (suite currently 37 green; this plan ends at 63).
 
 **Spec:** `DESIGN.md` + `BALANCE.md` v3 (BALANCE canonical; physics values frozen 2026-06-12). Stage layouts per the four approved wireframes (DESIGN "Stages"). Conventions identical to the Phase-1 plan: y = feet, slabs solid, platforms one-way, 60 Hz, plan-verbatim TDD, work on `main`, page loads clean after every commit, no Co-Authored-By trailer, never push until wrap-up.
 
@@ -623,6 +623,7 @@ Plus input-adapter hardening from the Task 4 review (same commit):
   assert.equal(buildIntent(ctl, inp, P1MAP).jump, true);    // last buffered frame
   inp.beginFrame();
   assert.equal(buildIntent(ctl, inp, P1MAP).jump, false);   // window expired: PHYS owns the length
+  release(inp, 'KeyD');
   for (let f = 0; f < 15; f++) inp.beginFrame();            // clear the tap window
   press(inp, 'KeyD'); inp.beginFrame(); release(inp, 'KeyD');
   for (let f = 0; f < 4; f++) inp.beginFrame();
@@ -704,7 +705,7 @@ Also add one line inside the `layout personalities are pinned` test (chair must 
 
 If Step 2 exposed any OTHER defect, fix minimally and report it.
 
-- [ ] **Step 4: Run; all PASS** — full suite 64/64.
+- [ ] **Step 4: Run; all PASS** — full suite 63/63.
 
 - [ ] **Step 5: Commit** — `git add tests/match.test.mjs tests/stages.test.mjs tests/camera.test.mjs tests/input.test.mjs src/engine/match.js src/engine/camera.js src/engine/input.js src/data/stages.js DESIGN.md && git commit -m "Phase 2: double-KO draw rule; pin chair/match-over/layouts; camera + input hardening"`
 
@@ -872,14 +873,14 @@ export function makeVersus(G) {
   - Lose three stocks → "GAME! P2 WINS" + [R] rematch works; Esc pauses; Q quits to title.
   - `?graybox=palace`, `?graybox=pub`, `?graybox=berlin` each load with their distinct layout.
   - Regressions: `?graybox` (no value) still the flat playground; bare `index.html` → title; `?sim=10` → v2 gates pass.
-- [ ] **Step 4: Full suite** — `node --test 'tests/*.test.mjs'` → 64/64 (no engine changes in this task).
+- [ ] **Step 4: Full suite** — `node --test 'tests/*.test.mjs'` → 63/63 (no engine changes in this task).
 - [ ] **Step 5: Commit** — `git add src/screens/versus.js src/main.js && git commit -m "Phase 2: versus screen — stages, camera, stocks, chair, HUD v3 behind ?graybox=<stage>"`
 
 ---
 
 ### Task 8: Wrap-up
 
-- [ ] **Step 1: Full verification** — suite 64/64; `wc -l` on every new/modified file < 500; the Task 7 checklist green.
+- [ ] **Step 1: Full verification** — suite 63/63; `wc -l` on every new/modified file < 500; the Task 7 checklist green.
 - [ ] **Step 2: Push** — `git push`.
 - [ ] **Step 3: STOP for Tim.** Phase 2 is a checkpoint, not a hard gate: hand Tim `?graybox=office|palace|pub|berlin`, ask him to feel the camera (ease/zoom speed, padding) and the stage sizes/blast distances. Two specific review flags to put in front of him: palace currently has the TIGHTEST side-blast room (430px from slab edge) despite DESIGN calling it longest-side-survival (widening its blast to left 370 / right 2030 restores the ordering if he agrees), the pub P2 spawn sits visually under the bench, and the double-KO rule is currently a DRAW (winner -1) — confirm or pick sudden-death. Confirm before Phase 3 (characters in pairs) is planned. Camera knobs (`pad`, `ease`, `maxZoom`) are constructor options — tune in `versus.js`'s `new Camera(...)` call if he has notes; if any survive tuning, consider promoting them to `PHYS`.
 
