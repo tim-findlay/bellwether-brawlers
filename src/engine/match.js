@@ -28,11 +28,19 @@ export class MatchState {
 
   update(intents) {
     if (this.over) return;
+    const out = [];
     this.players.forEach((p, i) => {
       if (p.respawn) { this._chair(p, intents[i]); return; }
       p.body.update(intents[i], this.stage);
-      if (p.body.out) this._ko(p, i);
+      if (p.body.out) out.push(i);
     });
+    if (out.length === 2 && this.players.every(p => p.stocks === 1)) {
+      this.players.forEach(p => p.stocks--);                // simultaneous final-stock KO:
+      this.over = true; this.winner = -1;                   // a DRAW — Tim to confirm
+      this.events.push({ type: 'gameover', winner: -1 });
+      return;
+    }
+    for (const i of out) this._ko(this.players[i], i);
   }
 
   _ko(p, i) {

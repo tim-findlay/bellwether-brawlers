@@ -38,3 +38,60 @@ test('the survivor keeps playing while the other rides the chair', () => {
   step(m, IDLE, { right: true }, 30);
   assert.ok(m.players[1].body.x > x1, 'P2 still moves');
 });
+
+test('chair: descends over CHAIR_DESCENT frames, releases on first act after arrival', () => {
+  const m = newMatch();
+  m.players[0].body.x = STAGE.blast.left - 5;
+  step(m);                                                  // KO -> chair starts
+  step(m, { jump: true }, IDLE, 10);                        // acting DURING descent: ignored
+  assert.ok(m.players[0].respawn, 'still riding mid-descent');
+  step(m, IDLE, IDLE, CHAIR_DESCENT);                       // arrive
+  assert.ok(Math.abs(m.players[0].respawn.y - STAGE.respawn.y) < 1e-9, 'hovering at the respawn point');
+  step(m, { jump: true });                                  // act -> release
+  assert.equal(m.players[0].respawn, null);
+  assert.equal(m.players[0].body.x, STAGE.respawn.x);
+  assert.equal(m.players[0].stocks, STOCKS - 1);
+});
+
+test('chair: hard cap forces release with no input', () => {
+  const m = newMatch();
+  m.players[0].body.x = STAGE.blast.left - 5;
+  step(m);
+  step(m, IDLE, IDLE, RESPAWN_CAP + 1);
+  assert.equal(m.players[0].respawn, null, 'released by the cap');
+});
+
+test('losing the last stock ends the match with the right winner', () => {
+  const m = newMatch();
+  m.players[1].stocks = 1;
+  m.players[1].body.x = STAGE.blast.right + 5;
+  step(m);
+  assert.equal(m.over, true);
+  assert.equal(m.winner, 0);
+  assert.deepEqual(m.events.at(-1), { type: 'gameover', winner: 0 });
+  const x = m.players[0].body.x;
+  step(m, { right: true }, IDLE, 10);                       // frozen after game over
+  assert.equal(m.players[0].body.x, x);
+});
+
+test('same-tick double-KO on final stocks is a draw, one event', () => {
+  const m = newMatch();
+  m.players[0].stocks = 1; m.players[1].stocks = 1;
+  m.players[0].body.x = STAGE.blast.left - 5;
+  m.players[1].body.x = STAGE.blast.right + 5;
+  step(m);
+  assert.equal(m.over, true);
+  assert.equal(m.winner, -1);
+  assert.deepEqual(m.events, [{ type: 'gameover', winner: -1 }]);
+});
+
+test('same-tick double-KO with stocks left costs one stock each, both ride chairs', () => {
+  const m = newMatch();
+  m.players[0].body.x = STAGE.blast.left - 5;
+  m.players[1].body.x = STAGE.blast.right + 5;
+  step(m);
+  assert.equal(m.over, false);
+  assert.equal(m.players[0].stocks, STOCKS - 1);
+  assert.equal(m.players[1].stocks, STOCKS - 1);
+  assert.ok(m.players[0].respawn && m.players[1].respawn);
+});

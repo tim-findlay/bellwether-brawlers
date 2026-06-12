@@ -1,6 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { Input, P1MAP, P2MAP, buildIntent, PlayerController } from '../src/engine/input.js';
+import { PHYS } from '../src/data/physics.js';
 
 // drive key events without a DOM
 const press = (inp, code) => { if (!inp.held[code]) inp.pending.add(code); inp.held[code] = true; };
@@ -44,4 +45,17 @@ test('buildIntent maps controller state to a MovementBody intent', () => {
   assert.equal(i.jump, true);                              // buffered
   assert.equal(i.dodge, false);
   assert.equal(i.dashRight, false);                        // single tap, no dash
+  release(inp, 'KeyW');
+  for (let f = 0; f < PHYS.INPUT_BUFFER; f++) inp.beginFrame();
+  assert.equal(buildIntent(ctl, inp, P1MAP).jump, true);    // last buffered frame
+  inp.beginFrame();
+  assert.equal(buildIntent(ctl, inp, P1MAP).jump, false);   // window expired: PHYS owns the length
+  release(inp, 'KeyD');
+  for (let f = 0; f < 15; f++) inp.beginFrame();            // clear the tap window
+  press(inp, 'KeyD'); inp.beginFrame(); release(inp, 'KeyD');
+  for (let f = 0; f < 4; f++) inp.beginFrame();
+  press(inp, 'KeyD'); inp.beginFrame();
+  const i2 = buildIntent(ctl, inp, P1MAP);
+  assert.equal(i2.dashRight, true);                         // adapter wires doubleTapped -> dash
+  assert.equal(i2.dashLeft, false);
 });

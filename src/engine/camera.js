@@ -19,6 +19,7 @@ export class Camera {
 
   // Desired framing for target points; pure, no state change.
   target(points) {
+    if (!points.length) return { x: this.x, y: this.y, zoom: this.zoom };  // never NaN-poison the lerp
     let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
     for (const p of points) {
       minX = Math.min(minX, p.x); maxX = Math.max(maxX, p.x);

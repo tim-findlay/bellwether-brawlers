@@ -245,7 +245,7 @@ export const STAGES = [
     // BERLIN — the gate (event-only)
     geometry: {
       slabs: [{ x: 890, y: 790, w: 620, h: 70 }],
-      platforms: [{ x: 1040, y: 640, w: 320 }],  // gate roof: wide, high (dash-jump or double-jump)
+      platforms: [{ x: 1040, y: 640, w: 320 }],  // gate roof: wide, high (double-jump territory)
       spawns: [{ x: 1030, y: 790 }, { x: 1370, y: 790 }],
       respawn: { x: 1200, y: 725 },
       cameraBounds: { x: 320, y: 60, w: 1760, h: 1300 },

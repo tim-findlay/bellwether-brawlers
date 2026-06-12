@@ -72,3 +72,12 @@ test('apply sets the canvas transform with shake composed as an offset', () => {
   assert.equal(tx, c.viewW / 2 - c.x * c.zoom + 7);
   assert.equal(ty, c.viewH / 2 - c.y * c.zoom - 3);
 });
+
+test('an empty target list leaves the camera where it is (no NaN poisoning)', () => {
+  const c = cam();
+  for (let i = 0; i < 30; i++) c.update([{ x: 700, y: 400 }]);
+  const { x, y, zoom } = c;
+  c.update([]);
+  assert.ok(Number.isFinite(c.x) && Number.isFinite(c.y));
+  assert.equal(c.x, x); assert.equal(c.y, y); assert.equal(c.zoom, zoom);
+});

@@ -155,7 +155,7 @@ Five phases, small rollbackable commits throughout; the page must load clean aft
 
 ## Stages (1–3 player-selectable; Berlin event-only)
 
-All: blast zones on four sides, no walls, no ledge-grab; soft platforms reachable with jump → double-jump, high platforms need a dash-jump or a platform hop. Layouts per the approved wireframes; all platforms are **static** — any sway is backdrop art, never collision.
+All: blast zones on four sides, no walls, no ledge-grab; soft platforms reachable with jump → double-jump, high platforms need a double jump or a platform hop. Layouts per the approved wireframes; all platforms are **static** — any sway is backdrop art, never collision.
 
 1. **THE OFFICE** — the tournament stage. Symmetric tri-plat: desk-island main slab, two low shelf platforms, one high cable-tray platform. Cool morning palette.
 2. **PALACE FORECOURT** — the zoner's stage. Widest, flattest main slab; two gate-rail platforms above the edges. Longest survival off the sides.

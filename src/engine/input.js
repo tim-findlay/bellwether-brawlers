@@ -11,7 +11,7 @@ export const BACK_CODE = 'Escape';
 
 const PREVENT = new Set([...Object.values(P1MAP), ...Object.values(P2MAP), 'Escape']);
 
-export const BUFFER_FRAMES = 6;
+export const BUFFER_FRAMES = PHYS.INPUT_BUFFER;
 
 export class Input {
   constructor() {
@@ -104,6 +104,9 @@ export class PlayerController {
   update() {}
 }
 
+// NOTE: `ctl.reversed` swaps held left/right but NOT the dash double-taps
+// below (raw key codes). Whether a reversed player's dash should reverse is
+// an open Phase-3 combat decision — Tim's call. Do not "fix" silently.
 // Adapter: one MovementBody intent per logic tick from a PlayerController.
 // Promoted from the Phase-1 graybox; the versus/fight screens share it.
 export function buildIntent(ctl, input, map) {
