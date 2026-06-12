@@ -84,7 +84,12 @@ async function boot() {
     return;
   }
 
-  G.go('title');
+  if (qp.has('graybox')) {
+    const { makeGraybox } = await import('./dev/graybox.js');
+    G.screens.graybox = makeGraybox(G);
+  }
+
+  G.go(qp.has('graybox') ? 'graybox' : 'title');
 
   let last = performance.now();
   let acc = 0;
