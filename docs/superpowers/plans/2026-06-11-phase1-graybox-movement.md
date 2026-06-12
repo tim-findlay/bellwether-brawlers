@@ -703,6 +703,22 @@ test('double jump after coyote expiry cancels a still-live dash', () => {
   assert.equal(b.airJumps, 0, 'air jump consumed (not coyote)');
   assert.equal(b.dashT, 0, 'double jump kills the dash');
 });
+
+test('drop-through clears stale coyote time', () => {
+  const b = onPlatform();
+  b.coyoteT = 3;                                           // stale window from a prior edge slip
+  step(b, { down: true, downTapped: true });
+  step(b, { jump: true });
+  assert.equal(b.airJumps, 0, 'jump after a deliberate drop is the air jump');
+});
+
+test('jump wins a same-tick drop + jump', () => {
+  const b = onPlatform();
+  step(b, { down: true, downTapped: true, jump: true });
+  assert.equal(b.grounded, false);
+  assert.equal(b.airJumps, 1, 'full ground jump, double jump preserved');
+  assert.ok(b.vy < -MID.jumpImpulse * PHYS.DOUBLE_JUMP_FACTOR, 'full impulse, not the weaker air jump');
+});
 ```
 
 And append to the assertions in `tests/physics.test.mjs` (inside the existing test):
@@ -741,6 +757,10 @@ And append to the assertions in `tests/physics.test.mjs` (inside the existing te
       this.dashT = PHYS.DASH_DURATION; this._setState('dash');
     }
     ```
+    Plus two fixes from the Task 6 review (drop-through trigger in `update()`):
+    - Add `!intent.jump` to the drop guard (`grounded && onPlatform && intent.downTapped && !intent.jump && !this.dodging`) — **jump wins a same-tick drop+jump**; otherwise the drop fires first and the jump silently becomes the weaker air jump.
+    - Add `this.coyoteT = 0;` inside the drop block — a deliberate drop must not leave a stale coyote window that turns the next air jump into a free ground jump.
+
     Plus two defect fixes from the Task 5 review (both have repros; called out per the engine-change policy, not buried):
     - **Coyote off-by-one:** `update()` decrements `coyoteT` before `_jumps` reads it, so the real window is 4 frames, not the 5 that BALANCE.md/`PHYS.COYOTE_FRAMES` promise. Fix: DELETE `if (this.coyoteT > 0) this.coyoteT--;` from the top timer block and insert it immediately AFTER the `if (!this.dodging) { ... }` block closes (before the `prevBottom` line), with the comment `// after _jumps reads it: 5 means 5`. The boundary test above pins both edges.
     - **Double jump must cancel a live dash:** mirror the dash-clear into `_jumps`' air branch — after `this.vy = -this.stats.jumpImpulse * PHYS.DOUBLE_JUMP_FACTOR;` add `if (this.dashT > 0) { this.dashT = 0; this.dashCd = PHYS.DASH_COOLDOWN; this.vx *= PHYS.DASH_JUMP_CARRY; }` (same line the ground branch already has). Otherwise a dash carried off a ledge keeps overriding `vx` straight through the double jump.
@@ -892,7 +912,7 @@ test('a body on stage is not out', () => {
 
 *(Note `y - this.h > z.bottom`: you are out the bottom when your head clears it; and out the top only when your feet clear it — generous on the way up, strict on the way down, the platform-fighter convention.)*
 
-- [ ] **Step 4: Run; all PASS** — full suite: `node --test 'tests/*.test.mjs'` → expect 33 passing tests (29 movement + 3 input + 1 physics).
+- [ ] **Step 4: Run; all PASS** — full suite: `node --test 'tests/*.test.mjs'` → expect 35 passing tests (31 movement + 3 input + 1 physics).
 
 - [ ] **Step 5: Commit** — `git commit -am "Phase 1: blast-zone exit detection"`
 
