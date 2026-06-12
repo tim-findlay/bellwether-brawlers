@@ -180,3 +180,82 @@ test('drop-through from a platform cannot drop through the main slab', () => {
   step(b, { down: true, downTapped: true });
   assert.equal(b.grounded, true);                          // slabs are solid; nothing happens
 });
+
+test('dash bursts at dashSpeed for DASH_DURATION, then cools down', () => {
+  const b = landed();
+  step(b, { dashRight: true, right: true });
+  assert.equal(b.state, 'dash');
+  assert.ok(Math.abs(b.vx - b.dashSpeed) < 1e-9);
+  step(b, { right: true }, PHYS.DASH_DURATION);
+  assert.equal(b.state, 'run');
+  assert.equal(b.dashCd, PHYS.DASH_COOLDOWN - 1);
+  step(b, { dashRight: true, right: true });               // inside cooldown: ignored
+  assert.notEqual(b.state, 'dash');
+});
+
+test('air double-taps never dash', () => {
+  const b = new MovementBody(MID, { x: 640, y: 300 });
+  step(b, { dashRight: true, right: true });
+  assert.notEqual(b.state, 'dash');
+});
+
+test('dash-jump carries full dash speed into the air', () => {
+  const b = landed();
+  step(b, { dashRight: true, right: true }, 3);
+  step(b, { jump: true, right: true });
+  assert.equal(b.grounded, false);
+  assert.ok(Math.abs(b.vx) >= b.dashSpeed * PHYS.DASH_JUMP_CARRY - 0.01);
+  step(b, { right: true }, 10);
+  assert.ok(Math.abs(b.vx) > b.airMax);                    // excess momentum persists awhile
+});
+
+test('holding the opposite direction mid-dash cannot reverse the dash', () => {
+  const b = landed();
+  step(b, { dashRight: true, right: true }, 2);
+  step(b, { left: true }, 4);                              // fight the dash
+  assert.ok(b.vx > 0, 'dash direction is latched at dash start');
+  assert.equal(b.state, 'dash');
+});
+
+test('coyote boundary: free on airborne tick 5, spends the double jump on tick 6', () => {
+  const run = (airTicks) => {
+    const b = new MovementBody(MID, { x: 396, y: 690 });
+    step(b, IDLE, 10);
+    let guard = 0;
+    while (b.grounded && guard++ < 120) step(b, { left: true });
+    step(b, IDLE, airTicks - 1);
+    step(b, { jump: true });                               // jump on airborne tick `airTicks`
+    return b.airJumps;
+  };
+  assert.equal(run(PHYS.COYOTE_FRAMES), 1);                // tick 5: still a free ground jump
+  assert.equal(run(PHYS.COYOTE_FRAMES + 1), 0);            // tick 6: double jump spent
+});
+
+test('double jump after coyote expiry cancels a still-live dash', () => {
+  const b = new MovementBody(MID, { x: 370, y: 690 });     // near the slab's left corner
+  step(b, IDLE, 10);
+  step(b, { dashLeft: true, left: true });                 // dash off the edge
+  let guard = 0;
+  while (b.grounded && guard++ < 10) step(b, { left: true });
+  assert.ok(b.dashT > 0, 'dash still live at ground loss');
+  step(b, IDLE, PHYS.COYOTE_FRAMES);                       // outlive the coyote window
+  step(b, { jump: true });
+  assert.equal(b.airJumps, 0, 'air jump consumed (not coyote)');
+  assert.equal(b.dashT, 0, 'double jump kills the dash');
+});
+
+test('drop-through clears stale coyote time', () => {
+  const b = onPlatform();
+  b.coyoteT = 3;                                           // stale window from a prior edge slip
+  step(b, { down: true, downTapped: true });
+  step(b, { jump: true });
+  assert.equal(b.airJumps, 0, 'jump after a deliberate drop is the air jump');
+});
+
+test('jump wins a same-tick drop + jump', () => {
+  const b = onPlatform();
+  step(b, { down: true, downTapped: true, jump: true });
+  assert.equal(b.grounded, false);
+  assert.equal(b.airJumps, 1, 'full ground jump, double jump preserved');
+  assert.ok(b.vy < -MID.jumpImpulse * PHYS.DOUBLE_JUMP_FACTOR, 'full impulse, not the weaker air jump');
+});

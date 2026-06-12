@@ -1,8 +1,8 @@
 // Keyboard input keyed by PHYSICAL position (KeyboardEvent.code) so layouts
 // like QWERTZ/AZERTY keep working. Logic-frame edge detection + press buffer.
 
-export const P1MAP = { left: 'KeyA', right: 'KeyD', up: 'KeyW', down: 'KeyS', light: 'KeyF', heavy: 'KeyG', s1: 'KeyH', s2: 'KeyJ', super: 'Space' };
-export const P2MAP = { left: 'ArrowLeft', right: 'ArrowRight', up: 'ArrowUp', down: 'ArrowDown', light: 'KeyK', heavy: 'KeyL', s1: 'Semicolon', s2: 'Quote', super: 'Enter' };
+export const P1MAP = { left: 'KeyA', right: 'KeyD', up: 'KeyW', down: 'KeyS', light: 'KeyF', heavy: 'KeyG', s1: 'KeyH', s2: 'KeyJ', super: 'Space', dodge: 'KeyV' };
+export const P2MAP = { left: 'ArrowLeft', right: 'ArrowRight', up: 'ArrowUp', down: 'ArrowDown', light: 'KeyK', heavy: 'KeyL', s1: 'Semicolon', s2: 'Quote', super: 'Enter', dodge: 'Slash' };
 
 export const CONFIRM_CODES = ['KeyF', 'KeyK', 'Enter'];
 export const BACK_CODE = 'Escape';
@@ -17,6 +17,7 @@ export class Input {
     this.pending = new Set();
     this.pressedNow = new Set();
     this.pressFrame = {};
+    this.prevPressFrame = {};
     this.consumed = {};
     this.frame = 0;
     this.lock = 0;              // screen-transition lockout frames
@@ -43,7 +44,7 @@ export class Input {
     }
     this.pressedNow = this.pending;
     this.pending = new Set();
-    for (const k of this.pressedNow) this.pressFrame[k] = this.frame;
+    for (const k of this.pressedNow) { this.prevPressFrame[k] = this.pressFrame[k]; this.pressFrame[k] = this.frame; }
   }
 
   // Screen transitions: drop everything pending and ignore input briefly so a
@@ -53,6 +54,7 @@ export class Input {
     this.pending.clear();
     this.pressedNow = new Set();
     this.pressFrame = {};
+    this.prevPressFrame = {};
     this.consumed = {};
   }
 
@@ -71,6 +73,12 @@ export class Input {
   consume(code) {
     const pf = this.pressFrame[code];
     if (pf !== undefined) this.consumed[code] = pf;
+  }
+
+  doubleTapped(code, win = 12) {
+    if (!this.pressedNow.has(code)) return false;
+    const prev = this.prevPressFrame[code];
+    return prev !== undefined && this.frame - prev <= win;
   }
 }
 

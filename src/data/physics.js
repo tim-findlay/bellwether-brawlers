@@ -26,4 +26,6 @@ export const PHYS = {
   AIR_DODGE_IMPULSE: 4.5,
   DROP_THROUGH_GRACE: 8,    // frames of soft-platform collision ignored after a drop
   HITSTUN_PER_KB: 2.4,      // unused until Phase 2 combat; lives here per doctrine
+  AIR_MOMENTUM_DECAY: 0.985, // per-frame decay of vx above AIR_MAX (dash-jump arc length)
+  GROUND_DEADZONE: 0.05,    // |vx| snap-to-zero threshold under friction
 };

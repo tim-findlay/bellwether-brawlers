@@ -12,7 +12,7 @@ export class MovementBody {
     this.w = 36; this.h = 96;    // near-HD capsule footprint
     this.x = spawn.x; this.y = spawn.y;
     this.vx = 0; this.vy = 0;
-    this.facing = 1;
+    this.facing = 1; this.dashDir = 1;
     this.grounded = false;
     this.onPlatform = false;     // grounded specifically on a one-way platform
     this.state = 'air';          // idle | run | dash | dodge | airdodge | air
@@ -47,14 +47,21 @@ export class MovementBody {
     if (this.dashCd > 0) this.dashCd--;
     if (this.dodgeCd > 0) this.dodgeCd--;
     if (this.dropT > 0) this.dropT--;
-    if (this.coyoteT > 0) this.coyoteT--;
 
     // drop-through: fresh tap, only on one-way platforms (slabs are solid)
-    if (this.grounded && this.onPlatform && intent.downTapped && !this.dodging) {
+    // jump wins a same-tick drop+jump (guard: !intent.jump)
+    if (this.grounded && this.onPlatform && intent.downTapped && !intent.jump && !this.dodging) {
       this.grounded = false; this.onPlatform = false;
+      this.coyoteT = 0;
       this.dropT = PHYS.DROP_THROUGH_GRACE;
       this.y += 1;
       this._setState('air');
+    }
+
+    const dashDir = (intent.dashRight ? 1 : 0) - (intent.dashLeft ? 1 : 0);
+    if (dashDir !== 0 && this.grounded && this.dashT === 0 && this.dashCd === 0 && !this.dodging) {
+      this.facing = dashDir; this.dashDir = dashDir;       // latch: dash is not steerable
+      this.dashT = PHYS.DASH_DURATION; this._setState('dash');
     }
 
     this._dodges(intent);
@@ -63,6 +70,7 @@ export class MovementBody {
       this._jumps(intent);
       this._gravity(intent);
     }
+    if (this.coyoteT > 0) this.coyoteT--;   // after _jumps reads it: 5 means 5
 
     const prevBottom = this.y;
     this.x += this.vx;
@@ -83,7 +91,7 @@ export class MovementBody {
 
     if (this.dashT > 0) {                       // dash overrides steering (Task 7)
       this.dashT--;
-      this.vx = this.facing * this.dashSpeed;
+      this.vx = this.dashDir * this.dashSpeed;
       if (this.dashT === 0) { this.dashCd = PHYS.DASH_COOLDOWN; this._setState(this.grounded ? 'run' : 'air'); }
       return;
     }
@@ -96,7 +104,7 @@ export class MovementBody {
         this._setState('run');
       } else {
         this.vx *= PHYS.RUN_FRICTION;
-        if (Math.abs(this.vx) < 0.05) this.vx = 0;
+        if (Math.abs(this.vx) < PHYS.GROUND_DEADZONE) this.vx = 0;
         this._setState('idle');
       }
     } else {
@@ -105,7 +113,7 @@ export class MovementBody {
         this.vx = Math.abs(this.vx + dir * PHYS.AIR_ACCEL) > max && Math.sign(this.vx + dir * PHYS.AIR_ACCEL) === dir
           ? dir * max : this.vx + dir * PHYS.AIR_ACCEL;
       }
-      if (Math.abs(this.vx) > max) this.vx *= 0.985;   // momentum carry decays, never clamps
+      if (Math.abs(this.vx) > max) this.vx *= PHYS.AIR_MOMENTUM_DECAY;   // momentum carry decays, never clamps
       this._setState('air');
     }
   }
@@ -120,6 +128,7 @@ export class MovementBody {
     } else if (this.airJumps > 0) {
       this.airJumps--;
       this.vy = -this.stats.jumpImpulse * PHYS.DOUBLE_JUMP_FACTOR;
+      if (this.dashT > 0) { this.dashT = 0; this.dashCd = PHYS.DASH_COOLDOWN; this.vx *= PHYS.DASH_JUMP_CARRY; }
       this.consumedJump = true;
       this._setState('air');
     }

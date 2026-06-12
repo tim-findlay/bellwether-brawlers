@@ -47,6 +47,7 @@
 | INPUT_BUFFER | 6f | HITSTUN_PER_KB | 2.4 |
 | DODGE_COOLDOWN | 72f | STEP_DODGE_IMPULSE | 3.5 |
 | DROP_THROUGH_GRACE | 8f soft-plat collision ignored after a drop | | |
+| AIR_MOMENTUM_DECAY | 0.985 | GROUND_DEADZONE | 0.05 |
 
 Dash initiates grounded-only (air double-taps do nothing); dash-jump carries the momentum airborne. Fast-fall (down held) lands **on** soft platforms; drop-through needs a fresh tap (DESIGN.md, Movement).
 
