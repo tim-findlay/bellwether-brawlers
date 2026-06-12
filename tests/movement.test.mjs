@@ -65,3 +65,44 @@ test('air drift is capped below run speed and cannot brake excess momentum insta
   step(b, { right: true });
   assert.ok(b.vx > b.airMax && b.vx < 8);                 // decays, not clamped
 });
+
+test('a falling body lands on the slab top and stays', () => {
+  const b = new MovementBody(MID, { x: 640, y: 690 });    // 10px above slab top
+  step(b, IDLE, 30);
+  assert.equal(b.y, 700);
+  assert.equal(b.grounded, true);
+  assert.equal(b.vy, 0);
+  assert.equal(b.state, 'idle');
+});
+
+test('landing resets air resources', () => {
+  const b = new MovementBody(MID, { x: 640, y: 690 });
+  b.airJumps = 0; b.airDodgeOk = false; b.fastFalling = true;
+  step(b, { down: true }, 30);
+  assert.equal(b.airJumps, 1);
+  assert.equal(b.airDodgeOk, true);
+  assert.equal(b.fastFalling, false);
+});
+
+test('slabs are solid from the side', () => {
+  const b = new MovementBody(MID, { x: 340, y: 740 });    // left of slab, below its top
+  b.vx = 10;
+  step(b, { right: true }, 6);
+  assert.ok(b.x + b.w / 2 <= 380 + 0.01);                 // pushed out at the face
+});
+
+test('slabs are solid from below', () => {
+  const b = new MovementBody(MID, { x: 640, y: 880 });    // under the slab (top 700, h 60 -> bottom 760)
+  b.vy = -20;
+  step(b, IDLE, 4);
+  assert.ok(b.y - b.h >= 760 - 0.01);                     // head bumped at the underside
+  assert.ok(b.vy >= 0);
+});
+
+test('walking off an edge starts coyote time and airtime', () => {
+  const b = new MovementBody(MID, { x: 396, y: 690 });
+  step(b, IDLE, 30);                                      // land near the left edge
+  step(b, { left: true }, 30);                            // run off
+  assert.equal(b.grounded, false);
+  // coyoteT was set the frame ground was lost (asserted indirectly in Task 5's coyote-jump test)
+});

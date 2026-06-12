@@ -103,7 +103,43 @@ export class MovementBody {
   }
   _jumps(intent) {}        // Task 5
   _dodges(intent) {}       // Task 8
-  _collide(stage, prevBottom) {}  // Task 4
+  _collide(stage, prevBottom) {
+    const hw = this.w / 2;
+    const wasGrounded = this.grounded;
+    this.grounded = false; this.onPlatform = false;
+
+    for (const s of stage.slabs) {
+      const overlapX = this.x + hw > s.x && this.x - hw < s.x + s.w;
+      if (!overlapX) continue;
+      // land on top
+      if (this.vy >= 0 && prevBottom <= s.y && this.y >= s.y) { this._land(s.y); continue; }
+      // inside the slab body? resolve smallest axis
+      const top = s.y, bottom = s.y + s.h;
+      if (this.y > top && this.y - this.h < bottom) {
+        if (this.vy < 0 && this.y - this.h <= bottom && prevBottom - this.h >= bottom - 1) {
+          this.y = bottom + this.h; this.vy = 0;          // head bump from below
+        } else {
+          const fromLeft = this.x < s.x + s.w / 2;        // side push-out
+          this.x = fromLeft ? s.x - hw : s.x + s.w + hw;
+          this.vx = 0;
+        }
+      }
+    }
+
+    if (this.dropT <= 0) for (const p of stage.platforms) {
+      const overlapX = this.x + hw > p.x && this.x - hw < p.x + p.w;
+      if (overlapX && this.vy >= 0 && prevBottom <= p.y && this.y >= p.y) { this._land(p.y); this.onPlatform = true; }
+    }
+
+    if (wasGrounded && !this.grounded && this.vy >= 0) this.coyoteT = PHYS.COYOTE_FRAMES;
+  }
+
+  _land(top) {
+    this.y = top; this.vy = 0; this.grounded = true;
+    this.airJumps = 1; this.airDodgeOk = true; this.fastFalling = false;
+    if (this.state === 'air' || this.state === 'airdodge') this._setState('idle');
+  }
+
   _blast(stage) {}         // Task 9
 
   _setState(s) { if (this.state !== s) { this.state = s; this.stateT = 0; } }
