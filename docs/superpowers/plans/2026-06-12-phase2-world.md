@@ -1,5 +1,7 @@
 # Phase 2: World — Camera, Stage Geometry, Stocks, HUD v3 — Implementation Plan
 
+> Executed through commit 60788c7 (2026-06-12): Tasks 1–7 complete, 64/64 tests, all per-task reviews passed. Remaining: the Tim checkpoint (camera feel, stage sizes, palace blast room, pub spawn, double-KO draw rule).
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Real stage geometry for the four approved layouts, a dynamic follow/zoom camera, 3-stock ring-out matches with the respawn chair, and the v3 HUD — playable as a movement "versus" build via `?graybox=<stageId>`, with the v2 game untouched.
@@ -37,7 +39,7 @@
 - Modify: `src/data/stages.js` (append geometry to each stage object + new exports; v2 visual fields untouched)
 - Test: `tests/stages.test.mjs`
 
-- [ ] **Step 1: Write the failing tests** — `tests/stages.test.mjs`:
+- [x] **Step 1: Write the failing tests** — `tests/stages.test.mjs`:
 
 ```js
 import { test } from 'node:test';
@@ -108,9 +110,9 @@ test('berlin stays event-only; the other three are selectable', () => {
 });
 ```
 
-- [ ] **Step 2: Run; expect failure** — `node --test tests/stages.test.mjs` → FAIL (`STAGE_IDS_V3` not exported).
+- [x] **Step 2: Run; expect failure** — `node --test tests/stages.test.mjs` → FAIL (`STAGE_IDS_V3` not exported).
 
-- [ ] **Step 3: Implement.** In `src/data/stages.js`, add a `geometry` field to each of the four stage objects and two exports at the bottom. Geometry values (world units; each stage's personality per the approved wireframes — Office symmetric tri-plat, Palace widest/flattest, Pub asymmetric, Berlin one wide high plat):
+- [x] **Step 3: Implement.** In `src/data/stages.js`, add a `geometry` field to each of the four stage objects and two exports at the bottom. Geometry values (world units; each stage's personality per the approved wireframes — Office symmetric tri-plat, Palace widest/flattest, Pub asymmetric, Berlin one wide high plat):
 
 ```js
 // THE OFFICE — symmetric tri-plat (the tournament stage)
@@ -166,9 +168,9 @@ export function geometryOf(id) { return stageById(id)?.geometry ?? null; }
 
 *(Height sanity, frozen physics: low plats sit 110–112 above their slab — double-jump territory; Office top plat is 98 above the low plats and Pub's sign is 98 above the awning — single jump from a platform; Pub's bench is 70 — single jump from the slab; Berlin's roof is 150 — dash-jump or double-jump. The reachability test enforces ≤ 190.)*
 
-- [ ] **Step 4: Run; expect pass** — `node --test tests/stages.test.mjs` → 7 PASS; full suite 44/44.
+- [x] **Step 4: Run; expect pass** — `node --test tests/stages.test.mjs` → 7 PASS; full suite 44/44.
 
-- [ ] **Step 5: Commit** — `git add src/data/stages.js tests/stages.test.mjs && git commit -m "Phase 2: stage geometry for the four layouts, with structural sanity tests"`
+- [x] **Step 5: Commit** — `git add src/data/stages.js tests/stages.test.mjs && git commit -m "Phase 2: stage geometry for the four layouts, with structural sanity tests"`
 
 ---
 
@@ -178,7 +180,7 @@ export function geometryOf(id) { return stageById(id)?.geometry ?? null; }
 - Create: `src/engine/camera.js`
 - Test: `tests/camera.test.mjs`
 
-- [ ] **Step 1: Failing tests** — `tests/camera.test.mjs`:
+- [x] **Step 1: Failing tests** — `tests/camera.test.mjs`:
 
 ```js
 import { test } from 'node:test';
@@ -219,9 +221,9 @@ test('minZoom defaults to exactly bounds-fit', () => {
 });
 ```
 
-- [ ] **Step 2: Run; expect failure** (module not found).
+- [x] **Step 2: Run; expect failure** (module not found).
 
-- [ ] **Step 3: Implement** — `src/engine/camera.js`:
+- [x] **Step 3: Implement** — `src/engine/camera.js`:
 
 ```js
 // Camera — pure framing math for the v3 world. Follows targets, zooms to fit,
@@ -259,9 +261,9 @@ export class Camera {
 }
 ```
 
-- [ ] **Step 4: Run; expect pass** — 4 PASS; full suite 48/48.
+- [x] **Step 4: Run; expect pass** — 4 PASS; full suite 48/48.
 
-- [ ] **Step 5: Commit** — `git add src/engine/camera.js tests/camera.test.mjs && git commit -m "Phase 2: camera framing and zoom-to-fit math"`
+- [x] **Step 5: Commit** — `git add src/engine/camera.js tests/camera.test.mjs && git commit -m "Phase 2: camera framing and zoom-to-fit math"`
 
 ---
 
@@ -269,7 +271,7 @@ export class Camera {
 
 **Files:** Modify `src/engine/camera.js`, append to `tests/camera.test.mjs`.
 
-- [ ] **Step 1: Failing tests** (append):
+- [x] **Step 1: Failing tests** (append):
 
 ```js
 test('update eases toward the target and converges', () => {
@@ -311,9 +313,9 @@ test('apply sets the canvas transform with shake composed as an offset', () => {
 });
 ```
 
-- [ ] **Step 2: Run; new tests FAIL** (`c.update is not a function`).
+- [x] **Step 2: Run; new tests FAIL** (`c.update is not a function`).
 
-- [ ] **Step 3: Implement** (append methods to the class):
+- [x] **Step 3: Implement** (append methods to the class):
 
 ```js
   update(points) {
@@ -351,9 +353,9 @@ test('apply sets the canvas transform with shake composed as an offset', () => {
   static reset(ctx) { ctx.setTransform(1, 0, 0, 1, 0, 0); }
 ```
 
-- [ ] **Step 4: Run; all PASS** — full suite 52/52.
+- [x] **Step 4: Run; all PASS** — full suite 52/52.
 
-- [ ] **Step 5: Commit** — `git commit -am "Phase 2: camera eased follow, bounds clamp, world/screen transforms"`
+- [x] **Step 5: Commit** — `git commit -am "Phase 2: camera eased follow, bounds clamp, world/screen transforms"`
 
 ---
 
@@ -363,7 +365,7 @@ test('apply sets the canvas transform with shake composed as an offset', () => {
 - Modify: `src/engine/input.js` (add `buildIntent`), `src/dev/graybox.js` (use it; export `drawBody`/`PRESETS`)
 - Test: append one test to `tests/input.test.mjs`
 
-- [ ] **Step 1: Failing test** (append to `tests/input.test.mjs`):
+- [x] **Step 1: Failing test** (append to `tests/input.test.mjs`):
 
 ```js
 import { buildIntent, PlayerController } from '../src/engine/input.js';
@@ -383,9 +385,9 @@ test('buildIntent maps controller state to a MovementBody intent', () => {
 
 (Adjust the existing import line to include `buildIntent` and `PlayerController` rather than adding a duplicate import.)
 
-- [ ] **Step 2: Run; FAIL** (`buildIntent` not exported).
+- [x] **Step 2: Run; FAIL** (`buildIntent` not exported).
 
-- [ ] **Step 3: Implement.** In `src/engine/input.js` (add `import { PHYS } from '../data/physics.js';` at the top):
+- [x] **Step 3: Implement.** In `src/engine/input.js` (add `import { PHYS } from '../data/physics.js';` at the top):
 
 ```js
 // Adapter: one MovementBody intent per logic tick from a PlayerController.
@@ -404,9 +406,9 @@ export function buildIntent(ctl, input, map) {
 
 In `src/dev/graybox.js`: delete the local `intentFor`, import `{ P1MAP, P2MAP, PlayerController, buildIntent }` from `../engine/input.js`, change the `drive()` call to `buildIntent(ctl, G.input, map)`, and remove the now-unused `PHYS` import; hoist `drawBody` out of the closure as `export function drawBody(c, b, color) { ... }` (same body, takes the 2d context as its first arg) and export `PRESETS` (already exported) — `makeGraybox` calls `drawBody(c, b2, BRICK)` etc.
 
-- [ ] **Step 4: Run; all PASS** — full suite 53/53. Also `node --check src/dev/graybox.js`.
+- [x] **Step 4: Run; all PASS** — full suite 53/53. Also `node --check src/dev/graybox.js`.
 
-- [ ] **Step 5: Commit** — `git add -A && git commit -m "Phase 2: promote buildIntent to engine/input.js; graybox shares it and exports drawBody"`
+- [x] **Step 5: Commit** — `git add -A && git commit -m "Phase 2: promote buildIntent to engine/input.js; graybox shares it and exports drawBody"`
 
 ---
 
@@ -416,7 +418,7 @@ In `src/dev/graybox.js`: delete the local `intentFor`, import `{ P1MAP, P2MAP, P
 - Create: `src/engine/match.js`
 - Test: `tests/match.test.mjs`
 
-- [ ] **Step 1: Failing tests** — `tests/match.test.mjs`:
+- [x] **Step 1: Failing tests** — `tests/match.test.mjs`:
 
 ```js
 import { test } from 'node:test';
@@ -461,9 +463,9 @@ test('the survivor keeps playing while the other rides the chair', () => {
 });
 ```
 
-- [ ] **Step 2: Run; FAIL** (module not found).
+- [x] **Step 2: Run; FAIL** (module not found).
 
-- [ ] **Step 3: Implement** — `src/engine/match.js`:
+- [x] **Step 3: Implement** — `src/engine/match.js`:
 
 ```js
 // MatchState — v3 stocks/ring-out/respawn rules. Pure logic: no rendering,
@@ -530,9 +532,9 @@ export class MatchState {
 }
 ```
 
-- [ ] **Step 4: Run; all PASS** — full suite 56/56.
+- [x] **Step 4: Run; all PASS** — full suite 56/56.
 
-- [ ] **Step 5: Commit** — `git add src/engine/match.js tests/match.test.mjs && git commit -m "Phase 2: MatchState — stocks, ring-out KO, survivor keeps playing"`
+- [x] **Step 5: Commit** — `git add src/engine/match.js tests/match.test.mjs && git commit -m "Phase 2: MatchState — stocks, ring-out KO, survivor keeps playing"`
 
 ---
 
@@ -540,7 +542,7 @@ export class MatchState {
 
 **Files:** Modify nothing (the code landed in Task 5); append tests pinning the sequence.
 
-- [ ] **Step 1: Failing-or-pinning tests** (append to `tests/match.test.mjs`):
+- [x] **Step 1: Failing-or-pinning tests** (append to `tests/match.test.mjs`):
 
 ```js
 test('chair: descends over CHAIR_DESCENT frames, releases on first act after arrival', () => {
@@ -652,9 +654,9 @@ test('an empty target list leaves the camera where it is (no NaN poisoning)', ()
 });
 ```
 
-- [ ] **Step 2: Run** — the chair/match-over tests may already pass (code landed in Task 5); the personality test must pass against the Task-1 data as committed. Any failure = genuine defect — investigate before touching anything.
+- [x] **Step 2: Run** — the chair/match-over tests may already pass (code landed in Task 5); the personality test must pass against the Task-1 data as committed. Any failure = genuine defect — investigate before touching anything.
 
-- [ ] **Step 3: One guarded implementation change** (fold-forward from the Task 5 review — double-KO on final stocks corrupted the winner; rule chosen: **draw**, flagged for Tim at the Task 8 checkpoint). Replace `MatchState.update` in `src/engine/match.js` with:
+- [x] **Step 3: One guarded implementation change** (fold-forward from the Task 5 review — double-KO on final stocks corrupted the winner; rule chosen: **draw**, flagged for Tim at the Task 8 checkpoint). Replace `MatchState.update` in `src/engine/match.js` with:
 
 ```js
   update(intents) {
@@ -705,9 +707,9 @@ Also add one line inside the `layout personalities are pinned` test (chair must 
 
 If Step 2 exposed any OTHER defect, fix minimally and report it.
 
-- [ ] **Step 4: Run; all PASS** — full suite 63/63.
+- [x] **Step 4: Run; all PASS** — full suite 63/63.
 
-- [ ] **Step 5: Commit** — `git add tests/match.test.mjs tests/stages.test.mjs tests/camera.test.mjs tests/input.test.mjs src/engine/match.js src/engine/camera.js src/engine/input.js src/data/stages.js DESIGN.md && git commit -m "Phase 2: double-KO draw rule; pin chair/match-over/layouts; camera + input hardening"`
+- [x] **Step 5: Commit** — `git add tests/match.test.mjs tests/stages.test.mjs tests/camera.test.mjs tests/input.test.mjs src/engine/match.js src/engine/camera.js src/engine/input.js src/data/stages.js DESIGN.md && git commit -m "Phase 2: double-KO draw rule; pin chair/match-over/layouts; camera + input hardening"`
 
 ---
 
@@ -717,7 +719,7 @@ If Step 2 exposed any OTHER defect, fix minimally and report it.
 - Create: `src/screens/versus.js`
 - Modify: `src/main.js` (extend the graybox flag block)
 
-- [ ] **Step 0: Event-order defect fix first** (fold-forward from the Task 6 review; the screen below consumes `match.events` and assumes gameover is terminal — in a mixed-stock double-KO it currently isn't in one index order). In `src/engine/match.js`, change the final line of `update()` to process the final-stock player last:
+- [x] **Step 0: Event-order defect fix first** (fold-forward from the Task 6 review; the screen below consumes `match.events` and assumes gameover is terminal — in a mixed-stock double-KO it currently isn't in one index order). In `src/engine/match.js`, change the final line of `update()` to process the final-stock player last:
 
 ```js
     for (const i of out.sort((a, b) => this.players[b].stocks - this.players[a].stocks))
@@ -745,7 +747,7 @@ Run (red on the new test before the sort, green after; suite becomes 64/64), com
 
 The rest of this task has no unit tests — visual shell over tested logic; verify with the Playwright checklist in Step 3.
 
-- [ ] **Step 1: Implement `src/screens/versus.js`:**
+- [x] **Step 1: Implement `src/screens/versus.js`:**
 
 ```js
 // v3 match screen (Phase 2): MovementBody + MatchState + Camera on real stage
@@ -877,7 +879,7 @@ export function makeVersus(G) {
 }
 ```
 
-- [ ] **Step 2: Wire the flag in `src/main.js`** — replace the Phase-1 graybox block with:
+- [x] **Step 2: Wire the flag in `src/main.js`** — replace the Phase-1 graybox block with:
 
 ```js
   const gb = qp.get('graybox');                       // null = absent, '' = flat playground
@@ -892,22 +894,22 @@ export function makeVersus(G) {
   G.go(gb === null ? 'title' : (gb === '' ? 'graybox' : 'versus'), gb ? { stageId: gb } : undefined);
 ```
 
-- [ ] **Step 3: Playwright verification** (serve with `python3 -m http.server <port>`; screenshots OUTSIDE the repo):
+- [x] **Step 3: Playwright verification** (serve with `python3 -m http.server <port>`; screenshots OUTSIDE the repo):
   - `?graybox=office`: stage-name banner, sky gradient, slab + 3 platforms, dashed blast border, two bodies on spawns, two HUD plates with full green bars + 3 chair pips each. Console clean (3 known 404s OK).
   - Movement: run P1 toward P2 → camera zooms in as they close; run apart → zooms out; nothing outside `cameraBounds` ever visible.
   - Ring-out: run P1 off the left edge past the dashes → shake + "STOCK LOST!" banner, P1's pip empties, the chair descends from the top, pressing a key after arrival drops P1 onto it.
   - Lose three stocks → "GAME! P2 WINS" + [R] rematch works; Esc pauses; Q quits to title.
   - `?graybox=palace`, `?graybox=pub`, `?graybox=berlin` each load with their distinct layout.
   - Regressions: `?graybox` (no value) still the flat playground; bare `index.html` → title; `?sim=10` → v2 gates pass.
-- [ ] **Step 4: Full suite** — `node --test 'tests/*.test.mjs'` → 64/64 (Step 0 added one test; the screen adds none).
-- [ ] **Step 5: Commit** — `git add src/screens/versus.js src/main.js && git commit -m "Phase 2: versus screen — stages, camera, stocks, chair, HUD v3 behind ?graybox=<stage>"`
+- [x] **Step 4: Full suite** — `node --test 'tests/*.test.mjs'` → 64/64 (Step 0 added one test; the screen adds none).
+- [x] **Step 5: Commit** — `git add src/screens/versus.js src/main.js && git commit -m "Phase 2: versus screen — stages, camera, stocks, chair, HUD v3 behind ?graybox=<stage>"`
 
 ---
 
 ### Task 8: Wrap-up
 
-- [ ] **Step 1: Full verification** — suite 64/64; `wc -l` on every new/modified file < 500; the Task 7 checklist green.
-- [ ] **Step 2: Push** — `git push`.
+- [x] **Step 1: Full verification** — suite 64/64; `wc -l` on every new/modified file < 500; the Task 7 checklist green.
+- [x] **Step 2: Push** — `git push`.
 - [ ] **Step 3: STOP for Tim.** Phase 2 is a checkpoint, not a hard gate: hand Tim `?graybox=office|palace|pub|berlin`, ask him to feel the camera (ease/zoom speed, padding) and the stage sizes/blast distances. Two specific review flags to put in front of him: palace currently has the TIGHTEST side-blast room (430px from slab edge) despite DESIGN calling it longest-side-survival (widening its blast to left 370 / right 2030 restores the ordering if he agrees), the pub P2 spawn sits visually under the bench, and the double-KO rule is currently a DRAW (winner -1) — confirm or pick sudden-death; in a mixed-stock double-KO the winner still loses a stock and ends parked on a frozen chair (cosmetic — confirm). Confirm before Phase 3 (characters in pairs) is planned. Camera knobs (`pad`, `ease`, `maxZoom`) are constructor options — tune in `versus.js`'s `new Camera(...)` call if he has notes; if any survive tuning, consider promoting them to `PHYS`.
 
 ---
