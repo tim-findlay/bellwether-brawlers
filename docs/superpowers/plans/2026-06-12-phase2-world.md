@@ -780,7 +780,7 @@ export function makeVersus(G) {
   - Lose three stocks → "GAME! P2 WINS" + [R] rematch works; Esc pauses; Q quits to title.
   - `?graybox=palace`, `?graybox=pub`, `?graybox=berlin` each load with their distinct layout.
   - Regressions: `?graybox` (no value) still the flat playground; bare `index.html` → title; `?sim=10` → v2 gates pass.
-- [ ] **Step 4: Full suite** — `node --test 'tests/*.test.mjs'` → 59/59 (no engine changes in this task).
+- [ ] **Step 4: Full suite** — `node --test 'tests/*.test.mjs'` → 60/60 (no engine changes in this task).
 - [ ] **Step 5: Commit** — `git add src/screens/versus.js src/main.js && git commit -m "Phase 2: versus screen — stages, camera, stocks, chair, HUD v3 behind ?graybox=<stage>"`
 
 ---
