@@ -579,7 +579,36 @@ test('losing the last stock ends the match with the right winner', () => {
 });
 ```
 
-- [ ] **Step 2: Run** — the descent/release test may already pass (code landed in Task 5); the run must be green or red ONLY on genuine sequencing mismatches. If any fail, the implementation (not the test) is wrong — investigate before touching anything.
+Also append this to `tests/stages.test.mjs` (fold-forward from the Task 1 review — the structural tests verifiably pass even if a platform drifts 300px; this pins the approved layouts):
+
+```js
+test('layout personalities are pinned', () => {
+  const cx = (s) => s.x + s.w / 2;
+  const off = geometryOf('office'), pal = geometryOf('palace'),
+        pub = geometryOf('pub'), ber = geometryOf('berlin');
+  const oc = cx(off.slabs[0]);                                  // office: mirror symmetry
+  assert.equal(cx(off.platforms[0]) + cx(off.platforms[1]), oc * 2);
+  assert.equal(cx(off.platforms[2]), oc);
+  assert.equal(off.spawns[0].x + off.spawns[1].x, oc * 2);
+  for (const g of [off, pub, ber])                              // palace: widest, flat, mirrored
+    assert.ok(pal.slabs[0].w > g.slabs[0].w, 'palace slab is the widest');
+  assert.equal(pal.platforms[0].y, pal.platforms[1].y);
+  assert.equal(cx(pal.platforms[0]) + cx(pal.platforms[1]), cx(pal.slabs[0]) * 2);
+  const [awning, sign, bench] = pub.platforms;                  // pub: stacked side + low bench
+  assert.ok(sign.x >= awning.x && sign.x + sign.w <= awning.x + awning.w, 'sign over the awning');
+  assert.ok(sign.y < awning.y && bench.y > awning.y);
+  assert.equal(cx(ber.platforms[0]), cx(ber.slabs[0]));         // berlin: roof centred, high
+  assert.ok(ber.slabs[0].y - ber.platforms[0].y > 104.5, 'roof above single-jump rise');
+  for (const g of [off, pal, pub, ber]) {                       // respawn inside blast (else
+    assert.ok(g.respawn.x > g.blast.left && g.respawn.x < g.blast.right);   // chair release = insta-KO)
+    assert.ok(g.respawn.y > g.blast.top && g.respawn.y < g.blast.bottom);
+  }
+});
+```
+
+And two comment/doc corrections in the same commit (frozen physics: a dash-jump adds horizontal speed only — it cannot reach a high platform): in `src/data/stages.js`, berlin's geometry comment becomes `// gate roof: wide, high (double-jump territory)`; in `DESIGN.md` §Stages, "high platforms need a dash-jump or a platform hop" becomes "high platforms need a double jump or a platform hop".
+
+- [ ] **Step 2: Run** — the chair/match-over tests may already pass (code landed in Task 5); the personality test must pass against the Task-1 data as committed. Any failure = genuine defect — investigate before touching anything.
 
 - [ ] **Step 3: No new implementation expected.** If Step 2 exposed a real defect, fix minimally and report it.
 
