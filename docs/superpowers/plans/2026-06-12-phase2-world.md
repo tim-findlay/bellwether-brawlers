@@ -1,6 +1,6 @@
 # Phase 2: World — Camera, Stage Geometry, Stocks, HUD v3 — Implementation Plan
 
-> Executed through commit 60788c7 (2026-06-12): Tasks 1–7 complete, 64/64 tests, all per-task reviews passed. Remaining: the Tim checkpoint (camera feel, stage sizes, palace blast room, pub spawn, double-KO draw rule).
+> Executed through commit 60788c7 (2026-06-12): Tasks 1–7 complete, 64/64 tests, all per-task reviews passed. Checkpoint passed 2026-06-12: camera feel, stage sizes, palace blast room, pub spawn, and the double-KO draw rule all confirmed as-is. Plan fully executed.
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
@@ -910,7 +910,7 @@ export function makeVersus(G) {
 
 - [x] **Step 1: Full verification** — suite 64/64; `wc -l` on every new/modified file < 500; the Task 7 checklist green.
 - [x] **Step 2: Push** — `git push`.
-- [ ] **Step 3: STOP for Tim.** Phase 2 is a checkpoint, not a hard gate: hand Tim `?graybox=office|palace|pub|berlin`, ask him to feel the camera (ease/zoom speed, padding) and the stage sizes/blast distances. Two specific review flags to put in front of him: palace currently has the TIGHTEST side-blast room (430px from slab edge) despite DESIGN calling it longest-side-survival (widening its blast to left 370 / right 2030 restores the ordering if he agrees), the pub P2 spawn sits visually under the bench, and the double-KO rule is currently a DRAW (winner -1) — confirm or pick sudden-death; in a mixed-stock double-KO the winner still loses a stock and ends parked on a frozen chair (cosmetic — confirm). Confirm before Phase 3 (characters in pairs) is planned. Camera knobs (`pad`, `ease`, `maxZoom`) are constructor options — tune in `versus.js`'s `new Camera(...)` call if he has notes; if any survive tuning, consider promoting them to `PHYS`.
+- [x] **Step 3: STOP for Tim.** Phase 2 is a checkpoint, not a hard gate: hand Tim `?graybox=office|palace|pub|berlin`, ask him to feel the camera (ease/zoom speed, padding) and the stage sizes/blast distances. Two specific review flags to put in front of him: palace currently has the TIGHTEST side-blast room (430px from slab edge) despite DESIGN calling it longest-side-survival (widening its blast to left 370 / right 2030 restores the ordering if he agrees), the pub P2 spawn sits visually under the bench, and the double-KO rule is currently a DRAW (winner -1) — confirm or pick sudden-death; in a mixed-stock double-KO the winner still loses a stock and ends parked on a frozen chair (cosmetic — confirm). Confirm before Phase 3 (characters in pairs) is planned. Camera knobs (`pad`, `ease`, `maxZoom`) are constructor options — tune in `versus.js`'s `new Camera(...)` call if he has notes; if any survive tuning, consider promoting them to `PHYS`.
 
 ---
 
