@@ -608,6 +608,30 @@ test('layout personalities are pinned', () => {
 
 And two comment/doc corrections in the same commit (frozen physics: a dash-jump adds horizontal speed only — it cannot reach a high platform): in `src/data/stages.js`, berlin's geometry comment becomes `// gate roof: wide, high (double-jump territory)`; in `DESIGN.md` §Stages, "high platforms need a dash-jump or a platform hop" becomes "high platforms need a double jump or a platform hop".
 
+Plus input-adapter hardening from the Task 4 review (same commit):
+- In `src/engine/input.js`, change `export const BUFFER_FRAMES = 6;` to `export const BUFFER_FRAMES = PHYS.INPUT_BUFFER;` (one source of truth; behaviorally identical today — values-into-data, called out).
+- Add this comment directly above `export function buildIntent`:
+  ```js
+  // NOTE: `ctl.reversed` swaps held left/right but NOT the dash double-taps
+  // below (raw key codes). Whether a reversed player's dash should reverse is
+  // an open Phase-3 combat decision — Tim's call. Do not "fix" silently.
+  ```
+- Extend the existing `buildIntent` test in `tests/input.test.mjs` (add `PHYS` to its imports from physics.js) by appending inside the test body:
+  ```js
+  release(inp, 'KeyW');
+  for (let f = 0; f < PHYS.INPUT_BUFFER; f++) inp.beginFrame();
+  assert.equal(buildIntent(ctl, inp, P1MAP).jump, true);    // last buffered frame
+  inp.beginFrame();
+  assert.equal(buildIntent(ctl, inp, P1MAP).jump, false);   // window expired: PHYS owns the length
+  for (let f = 0; f < 15; f++) inp.beginFrame();            // clear the tap window
+  press(inp, 'KeyD'); inp.beginFrame(); release(inp, 'KeyD');
+  for (let f = 0; f < 4; f++) inp.beginFrame();
+  press(inp, 'KeyD'); inp.beginFrame();
+  const i2 = buildIntent(ctl, inp, P1MAP);
+  assert.equal(i2.dashRight, true);                         // adapter wires doubleTapped -> dash
+  assert.equal(i2.dashLeft, false);
+  ```
+
 Plus one defect guard from the camera review (silent, permanent failure mode — called out per the engine-change policy): at the top of `Camera.target()` in `src/engine/camera.js` add
 
 ```js
@@ -633,7 +657,7 @@ test('an empty target list leaves the camera where it is (no NaN poisoning)', ()
 
 - [ ] **Step 4: Run; all PASS** — full suite 62/62.
 
-- [ ] **Step 5: Commit** — `git add tests/match.test.mjs tests/stages.test.mjs tests/camera.test.mjs src/engine/camera.js src/data/stages.js DESIGN.md && git commit -m "Phase 2: pin chair/match-over/layouts; camera empty-target guard; doc fixes"`
+- [ ] **Step 5: Commit** — `git add tests/match.test.mjs tests/stages.test.mjs tests/camera.test.mjs tests/input.test.mjs src/engine/camera.js src/engine/input.js src/data/stages.js DESIGN.md && git commit -m "Phase 2: pin chair/match-over/layouts; camera + input hardening; doc fixes"`
 
 ---
 
