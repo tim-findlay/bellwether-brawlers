@@ -3,11 +3,17 @@
 // Tuning loop: edit src/data/physics.js -> reload. 1/2/3 = body presets,
 // R = reset both bodies. P2 keys drive the second body (the "dummy").
 
-import { PHYS } from '../data/physics.js';
 import { MovementBody } from '../engine/movement.js';
-import { P1MAP, P2MAP, PlayerController } from '../engine/input.js';
+import { P1MAP, P2MAP, PlayerController, buildIntent } from '../engine/input.js';
 
 const PAPER = '#f2e9d8', INK = '#2b2620', NAVY = '#27425f', BRICK = '#c4452e', BRASS = '#c9a227';
+
+export function drawBody(c, b, color) {
+  c.fillStyle = color;
+  c.fillRect(b.x - b.w / 2, b.y - b.h, b.w, b.h);
+  c.fillStyle = b.invulnerable() ? BRASS : INK;    // facing tick / i-frame flag
+  c.fillRect(b.x + b.facing * (b.w / 2 - 3), b.y - b.h + 12, 6, 10);
+}
 
 export const GRAYBOX_STAGE = {
   slabs: [{ x: 230, y: 380, w: 500, h: 70 }],
@@ -27,17 +33,6 @@ export const PRESETS = {
   3: { name: 'HEAVY (mike-ish)',  runMax: 2.4, jumpImpulse: 10, fallMax: 13, weight: 1.45 },
 };
 
-function intentFor(ctl, input, map) {
-  return {
-    left: ctl.held('left'), right: ctl.held('right'), down: ctl.held('down'),
-    downTapped: ctl.pressed('down'),
-    jump: input.buffered(map.up, PHYS.INPUT_BUFFER),     // PHYS owns the buffer length
-    dodge: input.buffered(map.dodge, PHYS.INPUT_BUFFER),
-    dashLeft: input.doubleTapped(map.left, PHYS.DASH_TAP_WINDOW),
-    dashRight: input.doubleTapped(map.right, PHYS.DASH_TAP_WINDOW),
-  };
-}
-
 export function makeGraybox(G) {
   const c = G.canvas.getContext('2d');
   const ctl1 = new PlayerController(G.input, P1MAP);
@@ -50,7 +45,7 @@ export function makeGraybox(G) {
   };
 
   const drive = (body, ctl, map) => {
-    const intent = intentFor(ctl, G.input, map);
+    const intent = buildIntent(ctl, G.input, map);
     body.update(intent, GRAYBOX_STAGE);
     if (body.consumedJump) ctl.consume('up');
     if (body.consumedDodge) ctl.consume('dodge');
@@ -59,13 +54,6 @@ export function makeGraybox(G) {
       const s = body.stats;
       Object.assign(body, new MovementBody(s, GRAYBOX_STAGE.spawn));
     }
-  };
-
-  const drawBody = (b, color) => {
-    c.fillStyle = color;
-    c.fillRect(b.x - b.w / 2, b.y - b.h, b.w, b.h);
-    c.fillStyle = b.invulnerable() ? BRASS : INK;    // facing tick / i-frame flag
-    c.fillRect(b.x + b.facing * (b.w / 2 - 3), b.y - b.h + 12, 6, 10);
   };
 
   return {
@@ -90,8 +78,8 @@ export function makeGraybox(G) {
       for (const s of GRAYBOX_STAGE.slabs) c.fillRect(s.x, s.y, s.w, s.h);
       c.fillStyle = INK;
       for (const p of GRAYBOX_STAGE.platforms) c.fillRect(p.x, p.y, p.w, 5);
-      drawBody(b2, BRICK);
-      drawBody(b1, NAVY);
+      drawBody(c, b2, BRICK);
+      drawBody(c, b1, NAVY);
       // debug readout
       c.fillStyle = INK; c.font = '14px monospace'; c.textAlign = 'left';
       const rows = [

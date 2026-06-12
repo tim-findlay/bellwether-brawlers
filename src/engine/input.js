@@ -1,6 +1,8 @@
 // Keyboard input keyed by PHYSICAL position (KeyboardEvent.code) so layouts
 // like QWERTZ/AZERTY keep working. Logic-frame edge detection + press buffer.
 
+import { PHYS } from '../data/physics.js';
+
 export const P1MAP = { left: 'KeyA', right: 'KeyD', up: 'KeyW', down: 'KeyS', light: 'KeyF', heavy: 'KeyG', s1: 'KeyH', s2: 'KeyJ', super: 'Space', dodge: 'KeyV' };
 export const P2MAP = { left: 'ArrowLeft', right: 'ArrowRight', up: 'ArrowUp', down: 'ArrowDown', light: 'KeyK', heavy: 'KeyL', s1: 'Semicolon', s2: 'Quote', super: 'Enter', dodge: 'Slash' };
 
@@ -100,4 +102,17 @@ export class PlayerController {
   consume(action) { this.input.consume(this.map[action]); }
   pressed(action) { return this.input.keyPressed(this.map[action]); }
   update() {}
+}
+
+// Adapter: one MovementBody intent per logic tick from a PlayerController.
+// Promoted from the Phase-1 graybox; the versus/fight screens share it.
+export function buildIntent(ctl, input, map) {
+  return {
+    left: ctl.held('left'), right: ctl.held('right'), down: ctl.held('down'),
+    downTapped: ctl.pressed('down'),
+    jump: input.buffered(map.up, PHYS.INPUT_BUFFER),
+    dodge: input.buffered(map.dodge, PHYS.INPUT_BUFFER),
+    dashLeft: input.doubleTapped(map.left, PHYS.DASH_TAP_WINDOW),
+    dashRight: input.doubleTapped(map.right, PHYS.DASH_TAP_WINDOW),
+  };
 }
