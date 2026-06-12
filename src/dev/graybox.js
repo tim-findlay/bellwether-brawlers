@@ -15,7 +15,9 @@ export const GRAYBOX_STAGE = {
   // short, per DESIGN ("soft platforms reachable with jump -> double-jump").
   // If the playtest wants single-jump plats, lower these, don't buff jumps.
   platforms: [{ x: 290, y: 270, w: 140 }, { x: 530, y: 270, w: 140 }, { x: 410, y: 175, w: 140 }],
-  blast: { left: -160, right: 1120, top: -200, bottom: 740 },
+  // Blast lines sit INSIDE the 960x540 canvas so the dashed border is actually
+  // visible — there is no camera until Phase 2. Real stages get bigger margins.
+  blast: { left: 30, right: 930, top: 25, bottom: 515 },
   spawn: { x: 480, y: 380 },
 };
 
@@ -25,16 +27,15 @@ export const PRESETS = {
   3: { name: 'HEAVY (mike-ish)',  runMax: 2.4, jumpImpulse: 10, fallMax: 13, weight: 1.45 },
 };
 
-function intentFor(ctl, input, map, body) {
-  const i = {
+function intentFor(ctl, input, map) {
+  return {
     left: ctl.held('left'), right: ctl.held('right'), down: ctl.held('down'),
     downTapped: ctl.pressed('down'),
-    jump: input.buffered(map.up ?? map.jump ?? '', PHYS.INPUT_BUFFER) || ctl.buffered('up'),
-    dodge: ctl.buffered('dodge'),
+    jump: input.buffered(map.up, PHYS.INPUT_BUFFER),     // PHYS owns the buffer length
+    dodge: input.buffered(map.dodge, PHYS.INPUT_BUFFER),
     dashLeft: input.doubleTapped(map.left, PHYS.DASH_TAP_WINDOW),
     dashRight: input.doubleTapped(map.right, PHYS.DASH_TAP_WINDOW),
   };
-  return i;
 }
 
 export function makeGraybox(G) {
@@ -49,7 +50,7 @@ export function makeGraybox(G) {
   };
 
   const drive = (body, ctl, map) => {
-    const intent = intentFor(ctl, G.input, map, body);
+    const intent = intentFor(ctl, G.input, map);
     body.update(intent, GRAYBOX_STAGE);
     if (body.consumedJump) ctl.consume('up');
     if (body.consumedDodge) ctl.consume('dodge');
