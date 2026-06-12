@@ -259,3 +259,44 @@ test('jump wins a same-tick drop + jump', () => {
   assert.equal(b.airJumps, 1, 'full ground jump, double jump preserved');
   assert.ok(b.vy < -MID.jumpImpulse * PHYS.DOUBLE_JUMP_FACTOR, 'full impulse, not the weaker air jump');
 });
+
+test('spot dodge: in place, i-frames 2-13, shared cooldown starts', () => {
+  const b = landed();
+  step(b, { dodge: true });
+  assert.equal(b.state, 'dodge');
+  assert.equal(b.consumedDodge, true);
+  assert.equal(b.vx, 0);
+  step(b, IDLE, 2); assert.equal(b.invulnerable(), true);
+  step(b, IDLE, 12); assert.equal(b.invulnerable(), false);
+  assert.ok(b.dodgeCd > 0);
+});
+
+test('step dodge: direction held gives a horizontal impulse', () => {
+  const b = landed();
+  step(b, { dodge: true, right: true });
+  assert.ok(b.vx >= PHYS.STEP_DODGE_IMPULSE - 0.01);
+});
+
+test('air dodge: impulse along held direction, once per airtime, refreshed on landing', () => {
+  const b = landed();
+  step(b, { jump: true });
+  step(b, IDLE, 5);
+  step(b, { dodge: true, right: true });
+  assert.equal(b.state, 'airdodge');
+  assert.ok(b.vx > 0);
+  assert.equal(b.airDodgeOk, false);
+  b.dodgeCd = 0;                                           // even past cooldown…
+  step(b, { dodge: true, right: true });
+  assert.notEqual(b.consumedDodge, true);                  // …no second air dodge this airtime
+  step(b, IDLE, 200);                                      // fall back to the slab
+  assert.equal(b.grounded, true);
+  assert.equal(b.airDodgeOk, true);
+});
+
+test('shared cooldown blocks ground dodges too', () => {
+  const b = landed();
+  step(b, { dodge: true });
+  step(b, IDLE, PHYS.SPOT_DODGE_DURATION + 2);
+  step(b, { dodge: true });
+  assert.equal(b.consumedDodge, false);                    // still cooling down
+});

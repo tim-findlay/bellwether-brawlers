@@ -133,7 +133,39 @@ export class MovementBody {
       this._setState('air');
     }
   }
-  _dodges(intent) {}       // Task 8
+  _dodges(intent) {
+    if (this.dodging) {                                    // tick an active dodge
+      this.dodgeT--;
+      if (this.state === 'airdodge') {                     // graybox decision: air dodge
+        const k = this.dodgeT / PHYS.AIR_DODGE_DURATION;   // suspends gravity, impulse decays
+        this.vx = this.dodgeVec.x * k; this.vy = this.dodgeVec.y * k;
+      } else {
+        this.vx = this.dodgeVec ? this.dodgeVec.x * (this.dodgeT / PHYS.SPOT_DODGE_DURATION) : 0;
+        this.vy = 0;
+      }
+      if (this.dodgeT <= 0) this._setState(this.grounded ? 'idle' : 'air');
+      return;
+    }
+    if (!intent.dodge || this.dodgeCd > 0 || this.dashT > 0) return;
+    const dx = (intent.right ? 1 : 0) - (intent.left ? 1 : 0);
+    const dy = (intent.down ? 1 : 0) - (intent.jump ? 0 : 0); // vertical aim: down only (up = jump key)
+    if (this.grounded) {
+      this.dodgeT = PHYS.SPOT_DODGE_DURATION;
+      this.dodgeVec = dx !== 0 ? { x: dx * PHYS.STEP_DODGE_IMPULSE, y: 0 } : null;
+      if (dx !== 0) this.vx = dx * PHYS.STEP_DODGE_IMPULSE;
+      this._setState('dodge');
+    } else {
+      if (!this.airDodgeOk) return;
+      this.airDodgeOk = false;
+      const len = Math.hypot(dx, dy) || 1;
+      this.dodgeVec = { x: (dx / len) * PHYS.AIR_DODGE_IMPULSE, y: (dy / len) * PHYS.AIR_DODGE_IMPULSE };
+      this.vx = this.dodgeVec.x; this.vy = this.dodgeVec.y;   // impulse applies on the start tick
+      this.dodgeT = PHYS.AIR_DODGE_DURATION;
+      this._setState('airdodge');
+    }
+    this.dodgeCd = PHYS.DODGE_COOLDOWN;
+    this.consumedDodge = true;
+  }
   _collide(stage, prevBottom) {
     const hw = this.w / 2;
     const wasGrounded = this.grounded;
