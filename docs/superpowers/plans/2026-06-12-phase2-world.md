@@ -6,7 +6,7 @@
 
 **Architecture:** Two new pure-logic engine modules (`camera.js`, `match.js`) tested headlessly like `movement.js`; stage geometry lands as data in `stages.js` with structural sanity tests; a new `versus.js` screen composes MovementBody + MatchState + Camera and draws geometry-fidelity stages (real art arrives with the rig in Phase 3+). The graybox's intent adapter is promoted to `src/engine/input.js` as its permanent home.
 
-**Tech Stack:** Vanilla JS ES modules, zero build, zero deps. Tests: `node --test 'tests/*.test.mjs'` (suite currently 37 green; this plan ends at 63).
+**Tech Stack:** Vanilla JS ES modules, zero build, zero deps. Tests: `node --test 'tests/*.test.mjs'` (suite currently 37 green; this plan ends at 64).
 
 **Spec:** `DESIGN.md` + `BALANCE.md` v3 (BALANCE canonical; physics values frozen 2026-06-12). Stage layouts per the four approved wireframes (DESIGN "Stages"). Conventions identical to the Phase-1 plan: y = feet, slabs solid, platforms one-way, 60 Hz, plan-verbatim TDD, work on `main`, page loads clean after every commit, no Co-Authored-By trailer, never push until wrap-up.
 
@@ -717,7 +717,33 @@ If Step 2 exposed any OTHER defect, fix minimally and report it.
 - Create: `src/screens/versus.js`
 - Modify: `src/main.js` (extend the graybox flag block)
 
-No unit tests — visual shell over tested logic; verify with the Playwright checklist in Step 3.
+- [ ] **Step 0: Event-order defect fix first** (fold-forward from the Task 6 review; the screen below consumes `match.events` and assumes gameover is terminal — in a mixed-stock double-KO it currently isn't in one index order). In `src/engine/match.js`, change the final line of `update()` to process the final-stock player last:
+
+```js
+    for (const i of out.sort((a, b) => this.players[b].stocks - this.players[a].stocks))
+      this._ko(this.players[i], i);
+```
+
+Pinned by this test appended to `tests/match.test.mjs` (and add `assert.deepEqual(m.events, [{ type: 'ko', player: 0 }, { type: 'ko', player: 1 }]);` to the existing "stocks left" double-KO test):
+
+```js
+test('mixed-stock double-KO: gameover is always the final event, winner correct', () => {
+  for (const loser of [0, 1]) {
+    const m = newMatch();
+    m.players[loser].stocks = 1;
+    m.players[0].body.x = STAGE.blast.left - 5;
+    m.players[1].body.x = STAGE.blast.right + 5;
+    step(m);
+    assert.equal(m.over, true);
+    assert.equal(m.winner, 1 - loser);
+    assert.equal(m.events.at(-1).type, 'gameover');
+  }
+});
+```
+
+Run (red on the new test before the sort, green after; suite becomes 64/64), commit: `git add src/engine/match.js tests/match.test.mjs && git commit -m "Phase 2: gameover is always the terminal match event (mixed-stock double-KO)"`. The cosmetic remainder (the winner ends a mixed double-KO parked on a frozen chair, stock decremented) goes to the Task 8 checkpoint with the draw rule.
+
+The rest of this task has no unit tests — visual shell over tested logic; verify with the Playwright checklist in Step 3.
 
 - [ ] **Step 1: Implement `src/screens/versus.js`:**
 
@@ -873,16 +899,16 @@ export function makeVersus(G) {
   - Lose three stocks → "GAME! P2 WINS" + [R] rematch works; Esc pauses; Q quits to title.
   - `?graybox=palace`, `?graybox=pub`, `?graybox=berlin` each load with their distinct layout.
   - Regressions: `?graybox` (no value) still the flat playground; bare `index.html` → title; `?sim=10` → v2 gates pass.
-- [ ] **Step 4: Full suite** — `node --test 'tests/*.test.mjs'` → 63/63 (no engine changes in this task).
+- [ ] **Step 4: Full suite** — `node --test 'tests/*.test.mjs'` → 64/64 (Step 0 added one test; the screen adds none).
 - [ ] **Step 5: Commit** — `git add src/screens/versus.js src/main.js && git commit -m "Phase 2: versus screen — stages, camera, stocks, chair, HUD v3 behind ?graybox=<stage>"`
 
 ---
 
 ### Task 8: Wrap-up
 
-- [ ] **Step 1: Full verification** — suite 63/63; `wc -l` on every new/modified file < 500; the Task 7 checklist green.
+- [ ] **Step 1: Full verification** — suite 64/64; `wc -l` on every new/modified file < 500; the Task 7 checklist green.
 - [ ] **Step 2: Push** — `git push`.
-- [ ] **Step 3: STOP for Tim.** Phase 2 is a checkpoint, not a hard gate: hand Tim `?graybox=office|palace|pub|berlin`, ask him to feel the camera (ease/zoom speed, padding) and the stage sizes/blast distances. Two specific review flags to put in front of him: palace currently has the TIGHTEST side-blast room (430px from slab edge) despite DESIGN calling it longest-side-survival (widening its blast to left 370 / right 2030 restores the ordering if he agrees), the pub P2 spawn sits visually under the bench, and the double-KO rule is currently a DRAW (winner -1) — confirm or pick sudden-death. Confirm before Phase 3 (characters in pairs) is planned. Camera knobs (`pad`, `ease`, `maxZoom`) are constructor options — tune in `versus.js`'s `new Camera(...)` call if he has notes; if any survive tuning, consider promoting them to `PHYS`.
+- [ ] **Step 3: STOP for Tim.** Phase 2 is a checkpoint, not a hard gate: hand Tim `?graybox=office|palace|pub|berlin`, ask him to feel the camera (ease/zoom speed, padding) and the stage sizes/blast distances. Two specific review flags to put in front of him: palace currently has the TIGHTEST side-blast room (430px from slab edge) despite DESIGN calling it longest-side-survival (widening its blast to left 370 / right 2030 restores the ordering if he agrees), the pub P2 spawn sits visually under the bench, and the double-KO rule is currently a DRAW (winner -1) — confirm or pick sudden-death; in a mixed-stock double-KO the winner still loses a stock and ends parked on a frozen chair (cosmetic — confirm). Confirm before Phase 3 (characters in pairs) is planned. Camera knobs (`pad`, `ease`, `maxZoom`) are constructor options — tune in `versus.js`'s `new Camera(...)` call if he has notes; if any survive tuning, consider promoting them to `PHYS`.
 
 ---
 
