@@ -318,3 +318,19 @@ test('shared cooldown blocks ground dodges too', () => {
   step(b, { dodge: true });
   assert.equal(b.consumedDodge, false);                    // still cooling down
 });
+
+test('crossing any blast zone sets out', () => {
+  for (const [k, pos] of Object.entries({
+    left:   { x: -250, y: 500 },  right: { x: 1530, y: 500 },
+    top:    { x: 640, y: -350 },  bottom: { x: 640, y: 1250 },  // head (y-96) must clear bottom=1100
+  })) {
+    const b = new MovementBody(MID, pos);
+    b.vy = 0; step(b);
+    assert.equal(b.out, true, `blast ${k}`);
+  }
+});
+
+test('a body on stage is not out', () => {
+  const b = landed();
+  assert.equal(b.out, false);
+});

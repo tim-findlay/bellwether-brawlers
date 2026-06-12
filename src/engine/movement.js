@@ -203,7 +203,10 @@ export class MovementBody {
     if (this.state === 'air' || this.state === 'airdodge') this._setState('idle');
   }
 
-  _blast(stage) {}         // Task 9
+  _blast(stage) {
+    const z = stage.blast;
+    this.out = this.x < z.left || this.x > z.right || this.y - this.h > z.bottom || this.y < z.top;
+  }
 
   _setState(s) { if (this.state !== s) { this.state = s; this.stateT = 0; } }
 }
