@@ -84,12 +84,16 @@ async function boot() {
     return;
   }
 
-  if (qp.has('graybox')) {
+  const gb = qp.get('graybox');                       // null = absent, '' = flat playground
+  if (gb !== null && gb !== '') {
+    const { makeVersus } = await import('./screens/versus.js');
+    G.screens.versus = makeVersus(G);
+  } else if (gb !== null) {
     const { makeGraybox } = await import('./dev/graybox.js');
     G.screens.graybox = makeGraybox(G);
   }
 
-  G.go(qp.has('graybox') ? 'graybox' : 'title');
+  G.go(gb === null ? 'title' : (gb === '' ? 'graybox' : 'versus'), gb ? { stageId: gb } : undefined);
 
   let last = performance.now();
   let acc = 0;
