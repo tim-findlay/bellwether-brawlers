@@ -6,7 +6,7 @@
 
 **Architecture:** Two new pure-logic engine modules (`camera.js`, `match.js`) tested headlessly like `movement.js`; stage geometry lands as data in `stages.js` with structural sanity tests; a new `versus.js` screen composes MovementBody + MatchState + Camera and draws geometry-fidelity stages (real art arrives with the rig in Phase 3+). The graybox's intent adapter is promoted to `src/engine/input.js` as its permanent home.
 
-**Tech Stack:** Vanilla JS ES modules, zero build, zero deps. Tests: `node --test 'tests/*.test.mjs'` (suite currently 37 green; this plan ends at 59).
+**Tech Stack:** Vanilla JS ES modules, zero build, zero deps. Tests: `node --test 'tests/*.test.mjs'` (suite currently 37 green; this plan ends at 60).
 
 **Spec:** `DESIGN.md` + `BALANCE.md` v3 (BALANCE canonical; physics values frozen 2026-06-12). Stage layouts per the four approved wireframes (DESIGN "Stages"). Conventions identical to the Phase-1 plan: y = feet, slabs solid, platforms one-way, 60 Hz, plan-verbatim TDD, work on `main`, page loads clean after every commit, no Co-Authored-By trailer, never push until wrap-up.
 
@@ -612,9 +612,9 @@ And two comment/doc corrections in the same commit (frozen physics: a dash-jump 
 
 - [ ] **Step 3: No new implementation expected.** If Step 2 exposed a real defect, fix minimally and report it.
 
-- [ ] **Step 4: Run; all PASS** — full suite 59/59.
+- [ ] **Step 4: Run; all PASS** — full suite 60/60.
 
-- [ ] **Step 5: Commit** — `git add tests/match.test.mjs && git commit -m "Phase 2: pin the respawn-chair sequence and match-over rules"`
+- [ ] **Step 5: Commit** — `git add tests/match.test.mjs tests/stages.test.mjs src/data/stages.js DESIGN.md && git commit -m "Phase 2: pin the chair sequence, match-over rules and layout personalities"`
 
 ---
 
@@ -787,9 +787,9 @@ export function makeVersus(G) {
 
 ### Task 8: Wrap-up
 
-- [ ] **Step 1: Full verification** — suite 59/59; `wc -l` on every new/modified file < 500; the Task 7 checklist green.
+- [ ] **Step 1: Full verification** — suite 60/60; `wc -l` on every new/modified file < 500; the Task 7 checklist green.
 - [ ] **Step 2: Push** — `git push`.
-- [ ] **Step 3: STOP for Tim.** Phase 2 is a checkpoint, not a hard gate: hand Tim `?graybox=office|palace|pub|berlin`, ask him to feel the camera (ease/zoom speed, padding) and the stage sizes/blast distances, and confirm before Phase 3 (characters in pairs) is planned. Camera knobs (`pad`, `ease`, `maxZoom`) are constructor options — tune in `versus.js`'s `new Camera(...)` call if he has notes; if any survive tuning, consider promoting them to `PHYS`.
+- [ ] **Step 3: STOP for Tim.** Phase 2 is a checkpoint, not a hard gate: hand Tim `?graybox=office|palace|pub|berlin`, ask him to feel the camera (ease/zoom speed, padding) and the stage sizes/blast distances. Two specific review flags to put in front of him: palace currently has the TIGHTEST side-blast room (430px from slab edge) despite DESIGN calling it longest-side-survival (widening its blast to left 370 / right 2030 restores the ordering if he agrees), and the pub P2 spawn sits visually under the bench. Confirm before Phase 3 (characters in pairs) is planned. Camera knobs (`pad`, `ease`, `maxZoom`) are constructor options — tune in `versus.js`'s `new Camera(...)` call if he has notes; if any survive tuning, consider promoting them to `PHYS`.
 
 ---
 
