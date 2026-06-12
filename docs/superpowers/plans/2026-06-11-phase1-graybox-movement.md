@@ -676,6 +676,33 @@ test('holding the opposite direction mid-dash cannot reverse the dash', () => {
   assert.ok(b.vx > 0, 'dash direction is latched at dash start');
   assert.equal(b.state, 'dash');
 });
+
+test('coyote boundary: free on airborne tick 5, spends the double jump on tick 6', () => {
+  const run = (airTicks) => {
+    const b = new MovementBody(MID, { x: 396, y: 690 });
+    step(b, IDLE, 10);
+    let guard = 0;
+    while (b.grounded && guard++ < 120) step(b, { left: true });
+    step(b, IDLE, airTicks - 1);
+    step(b, { jump: true });                               // jump on airborne tick `airTicks`
+    return b.airJumps;
+  };
+  assert.equal(run(PHYS.COYOTE_FRAMES), 1);                // tick 5: still a free ground jump
+  assert.equal(run(PHYS.COYOTE_FRAMES + 1), 0);            // tick 6: double jump spent
+});
+
+test('double jump after coyote expiry cancels a still-live dash', () => {
+  const b = new MovementBody(MID, { x: 370, y: 690 });     // near the slab's left corner
+  step(b, IDLE, 10);
+  step(b, { dashLeft: true, left: true });                 // dash off the edge
+  let guard = 0;
+  while (b.grounded && guard++ < 10) step(b, { left: true });
+  assert.ok(b.dashT > 0, 'dash still live at ground loss');
+  step(b, IDLE, PHYS.COYOTE_FRAMES);                       // outlive the coyote window
+  step(b, { jump: true });
+  assert.equal(b.airJumps, 0, 'air jump consumed (not coyote)');
+  assert.equal(b.dashT, 0, 'double jump kills the dash');
+});
 ```
 
 And append to the assertions in `tests/physics.test.mjs` (inside the existing test):
@@ -714,6 +741,10 @@ And append to the assertions in `tests/physics.test.mjs` (inside the existing te
       this.dashT = PHYS.DASH_DURATION; this._setState('dash');
     }
     ```
+    Plus two defect fixes from the Task 5 review (both have repros; called out per the engine-change policy, not buried):
+    - **Coyote off-by-one:** `update()` decrements `coyoteT` before `_jumps` reads it, so the real window is 4 frames, not the 5 that BALANCE.md/`PHYS.COYOTE_FRAMES` promise. Fix: DELETE `if (this.coyoteT > 0) this.coyoteT--;` from the top timer block and insert it immediately AFTER the `if (!this.dodging) { ... }` block closes (before the `prevBottom` line), with the comment `// after _jumps reads it: 5 means 5`. The boundary test above pins both edges.
+    - **Double jump must cancel a live dash:** mirror the dash-clear into `_jumps`' air branch — after `this.vy = -this.stats.jumpImpulse * PHYS.DOUBLE_JUMP_FACTOR;` add `if (this.dashT > 0) { this.dashT = 0; this.dashCd = PHYS.DASH_COOLDOWN; this.vx *= PHYS.DASH_JUMP_CARRY; }` (same line the ground branch already has). Otherwise a dash carried off a ledge keeps overriding `vx` straight through the double jump.
+
     Plus three small movement.js fixes that landed as review findings on Task 3 (docs+code together, engine-change policy "values into data"):
     - Constructor: add `this.dashDir = 1;` next to `this.facing = 1;`
     - In `_horizontal`'s dash branch, change `this.vx = this.facing * this.dashSpeed;` to `this.vx = this.dashDir * this.dashSpeed;` — otherwise holding the opposite direction mid-dash reverses the dash at full speed via the live `facing` update.
@@ -861,7 +892,7 @@ test('a body on stage is not out', () => {
 
 *(Note `y - this.h > z.bottom`: you are out the bottom when your head clears it; and out the top only when your feet clear it — generous on the way up, strict on the way down, the platform-fighter convention.)*
 
-- [ ] **Step 4: Run; all PASS** — full suite: `node --test 'tests/*.test.mjs'` → expect 31 passing tests (27 movement + 3 input + 1 physics).
+- [ ] **Step 4: Run; all PASS** — full suite: `node --test 'tests/*.test.mjs'` → expect 33 passing tests (29 movement + 3 input + 1 physics).
 
 - [ ] **Step 5: Commit** — `git commit -am "Phase 1: blast-zone exit detection"`
 
