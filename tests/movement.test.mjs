@@ -260,14 +260,17 @@ test('jump wins a same-tick drop + jump', () => {
   assert.ok(b.vy < -MID.jumpImpulse * PHYS.DOUBLE_JUMP_FACTOR, 'full impulse, not the weaker air jump');
 });
 
-test('spot dodge: in place, i-frames 2-13, shared cooldown starts', () => {
+test('spot dodge: in place, i-frames exactly 2-13 (0-indexed stateT), shared cooldown starts', () => {
   const b = landed();
-  step(b, { dodge: true });
+  step(b, { dodge: true });                                // start tick ends at stateT 0
   assert.equal(b.state, 'dodge');
   assert.equal(b.consumedDodge, true);
   assert.equal(b.vx, 0);
-  step(b, IDLE, 2); assert.equal(b.invulnerable(), true);
-  step(b, IDLE, 12); assert.equal(b.invulnerable(), false);
+  assert.equal(b.invulnerable(), false);                   // stateT 0: startup
+  step(b); assert.equal(b.invulnerable(), false);          // stateT 1: startup
+  step(b); assert.equal(b.invulnerable(), true);           // stateT 2: window opens
+  step(b, IDLE, 11); assert.equal(b.invulnerable(), true); // stateT 13: last invulnerable frame
+  step(b); assert.equal(b.invulnerable(), false);          // stateT 14: recovery
   assert.ok(b.dodgeCd > 0);
 });
 
@@ -285,12 +288,27 @@ test('air dodge: impulse along held direction, once per airtime, refreshed on la
   assert.equal(b.state, 'airdodge');
   assert.ok(b.vx > 0);
   assert.equal(b.airDodgeOk, false);
+  step(b, IDLE, PHYS.AIR_DODGE_DURATION + 1);              // wait out the active dodge (still airborne)
+  assert.equal(b.grounded, false);
   b.dodgeCd = 0;                                           // even past cooldown…
   step(b, { dodge: true, right: true });
-  assert.notEqual(b.consumedDodge, true);                  // …no second air dodge this airtime
+  assert.equal(b.consumedDodge, false);                    // …no second air dodge this airtime
+  assert.notEqual(b.state, 'airdodge');
   step(b, IDLE, 200);                                      // fall back to the slab
   assert.equal(b.grounded, true);
   assert.equal(b.airDodgeOk, true);
+});
+
+test('air dodge i-frames are exactly 3-15 (0-indexed stateT)', () => {
+  const b = landed();
+  step(b, { jump: true });
+  step(b, IDLE, 3);
+  step(b, { dodge: true, right: true });                   // start tick ends at stateT 0
+  assert.equal(b.invulnerable(), false);
+  step(b, IDLE, 2); assert.equal(b.invulnerable(), false); // stateT 2: startup
+  step(b); assert.equal(b.invulnerable(), true);           // stateT 3: window opens
+  step(b, IDLE, 12); assert.equal(b.invulnerable(), true); // stateT 15: last invulnerable frame
+  step(b); assert.equal(b.invulnerable(), false);          // stateT 16: recovery
 });
 
 test('shared cooldown blocks ground dodges too', () => {
