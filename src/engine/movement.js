@@ -69,7 +69,38 @@ export class MovementBody {
     if (!this.grounded) this.vy = Math.min(this.vy + PHYS.GRAV * m, this.stats.fallMax * m);
   }
 
-  _horizontal(intent) {}   // Task 3
+  _horizontal(intent) {
+    const dir = (intent.right ? 1 : 0) - (intent.left ? 1 : 0);
+    if (dir !== 0) this.facing = dir;
+
+    if (this.dashT > 0) {                       // dash overrides steering (Task 7)
+      this.dashT--;
+      this.vx = this.facing * this.dashSpeed;
+      if (this.dashT === 0) { this.dashCd = PHYS.DASH_COOLDOWN; this._setState(this.grounded ? 'run' : 'air'); }
+      return;
+    }
+
+    if (this.grounded) {
+      if (dir !== 0) {
+        this.vx += dir * PHYS.RUN_ACCEL;
+        const max = this.stats.runMax;
+        if (Math.abs(this.vx) > max && Math.sign(this.vx) === dir) this.vx = dir * max;
+        this._setState('run');
+      } else {
+        this.vx *= PHYS.RUN_FRICTION;
+        if (Math.abs(this.vx) < 0.05) this.vx = 0;
+        this._setState('idle');
+      }
+    } else {
+      const max = this.airMax;
+      if (dir !== 0 && (Math.sign(this.vx) !== dir || Math.abs(this.vx) < max)) {
+        this.vx = Math.abs(this.vx + dir * PHYS.AIR_ACCEL) > max && Math.sign(this.vx + dir * PHYS.AIR_ACCEL) === dir
+          ? dir * max : this.vx + dir * PHYS.AIR_ACCEL;
+      }
+      if (Math.abs(this.vx) > max) this.vx *= 0.985;   // momentum carry decays, never clamps
+      this._setState('air');
+    }
+  }
   _jumps(intent) {}        // Task 5
   _dodges(intent) {}       // Task 8
   _collide(stage, prevBottom) {}  // Task 4
