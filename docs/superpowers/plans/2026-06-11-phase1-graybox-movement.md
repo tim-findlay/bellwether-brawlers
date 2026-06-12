@@ -785,14 +785,17 @@ And append to the assertions in `tests/physics.test.mjs` (inside the existing te
 - [ ] **Step 1: Failing tests:**
 
 ```js
-test('spot dodge: in place, i-frames 2-13, shared cooldown starts', () => {
+test('spot dodge: in place, i-frames exactly 2-13 (0-indexed stateT), shared cooldown starts', () => {
   const b = landed();
-  step(b, { dodge: true });
+  step(b, { dodge: true });                                // start tick ends at stateT 0
   assert.equal(b.state, 'dodge');
   assert.equal(b.consumedDodge, true);
   assert.equal(b.vx, 0);
-  step(b, IDLE, 2); assert.equal(b.invulnerable(), true);
-  step(b, IDLE, 12); assert.equal(b.invulnerable(), false);
+  assert.equal(b.invulnerable(), false);                   // stateT 0: startup
+  step(b); assert.equal(b.invulnerable(), false);          // stateT 1: startup
+  step(b); assert.equal(b.invulnerable(), true);           // stateT 2: window opens
+  step(b, IDLE, 11); assert.equal(b.invulnerable(), true); // stateT 13: last invulnerable frame
+  step(b); assert.equal(b.invulnerable(), false);          // stateT 14: recovery
   assert.ok(b.dodgeCd > 0);
 });
 
@@ -810,12 +813,27 @@ test('air dodge: impulse along held direction, once per airtime, refreshed on la
   assert.equal(b.state, 'airdodge');
   assert.ok(b.vx > 0);
   assert.equal(b.airDodgeOk, false);
+  step(b, IDLE, PHYS.AIR_DODGE_DURATION + 1);              // wait out the active dodge (still airborne)
+  assert.equal(b.grounded, false);
   b.dodgeCd = 0;                                           // even past cooldown…
   step(b, { dodge: true, right: true });
-  assert.notEqual(b.consumedDodge, true);                  // …no second air dodge this airtime
+  assert.equal(b.consumedDodge, false);                    // …no second air dodge this airtime
+  assert.notEqual(b.state, 'airdodge');
   step(b, IDLE, 200);                                      // fall back to the slab
   assert.equal(b.grounded, true);
   assert.equal(b.airDodgeOk, true);
+});
+
+test('air dodge i-frames are exactly 3-15 (0-indexed stateT)', () => {
+  const b = landed();
+  step(b, { jump: true });
+  step(b, IDLE, 3);
+  step(b, { dodge: true, right: true });                   // start tick ends at stateT 0
+  assert.equal(b.invulnerable(), false);
+  step(b, IDLE, 2); assert.equal(b.invulnerable(), false); // stateT 2: startup
+  step(b); assert.equal(b.invulnerable(), true);           // stateT 3: window opens
+  step(b, IDLE, 12); assert.equal(b.invulnerable(), true); // stateT 15: last invulnerable frame
+  step(b); assert.equal(b.invulnerable(), false);          // stateT 16: recovery
 });
 
 test('shared cooldown blocks ground dodges too', () => {
@@ -867,7 +885,7 @@ test('shared cooldown blocks ground dodges too', () => {
   }
 ```
 
-*(Graybox decisions, flagged for the playtest: air dodge suspends gravity for its 22 frames and its impulse decays linearly; vertical air-dodge aim is down-only for now since up is the jump key. Both are one-line tunables.)*
+*(Graybox decisions, flagged for the playtest: air dodge suspends gravity for its 22 frames and its impulse decays linearly; vertical air-dodge aim is down-only for now since up is the jump key; a step dodge that slides off a ledge hovers at constant height for its remaining frames; a same-tick down-tap + dodge on a platform resolves as drop-through + air dodge (spends the airtime dodge); a neutral air dodge wipes ALL incoming momentum to zero — that last one must become an explicit decision before Phase-2 knockback. All are one-line tunables.)*
 
 - [ ] **Step 4: Run; all PASS.**
 
@@ -912,7 +930,7 @@ test('a body on stage is not out', () => {
 
 *(Note `y - this.h > z.bottom`: you are out the bottom when your head clears it; and out the top only when your feet clear it — generous on the way up, strict on the way down, the platform-fighter convention.)*
 
-- [ ] **Step 4: Run; all PASS** — full suite: `node --test 'tests/*.test.mjs'` → expect 35 passing tests (31 movement + 3 input + 1 physics).
+- [ ] **Step 4: Run; all PASS** — full suite: `node --test 'tests/*.test.mjs'` → expect 36 passing tests (32 movement + 3 input + 1 physics).
 
 - [ ] **Step 5: Commit** — `git commit -am "Phase 1: blast-zone exit detection"`
 
@@ -1077,7 +1095,8 @@ git commit -m "Phase 1: ?graybox movement playground — presets, debug readout,
 - [ ] **Step 1: Full verification** — `node --test 'tests/*.test.mjs'` (all green), plus the Task 10 manual checklist if not just done.
 - [ ] **Step 2: Line-count check** — `wc -l src/engine/movement.js src/dev/graybox.js src/data/physics.js` → every file < 500.
 - [ ] **Step 3: Push** — `git push` (Pages serves main; the graybox is dev-flag-only and harmless in public).
-- [ ] **Step 4: HARD STOP.** Tell Tim the graybox is ready at `?graybox` with the controls + preset keys, and ask for feel notes (BALANCE.md lists what to poke: dash-jump arc vs Brawlhalla, fast-fall snappiness, air-dodge-as-recovery, dodge cooldown rhythm). **Do not begin Phase 2.** After his pass: freeze the tuned `physics.js` values into BALANCE.md (same commit), then plan Phase 2.
+- [ ] **Step 4: BALANCE.md sync** — at freeze time: add the dodge duration/impulse rows (SPOT_DODGE_DURATION 18, AIR_DODGE_DURATION 22, AIR_DODGE_IMPULSE 4.5) to the starting-values table, and document the i-frame frame-numbering convention in the Dodge bullet ("windows are 0-indexed engine ticks from the dodge's first full tick: spot 2–13 of 18, air 3–15 of 22").
+- [ ] **Step 5: HARD STOP.** Tell Tim the graybox is ready at `?graybox` with the controls + preset keys, and ask for feel notes (BALANCE.md lists what to poke: dash-jump arc vs Brawlhalla, fast-fall snappiness, air-dodge-as-recovery, dodge cooldown rhythm — plus the flagged graybox decisions: facing-flip during a latched dash, step-dodge ledge hover, neutral air dodge momentum wipe, drop+dodge same-tick behavior). **Do not begin Phase 2.** After his pass: freeze the tuned `physics.js` values into BALANCE.md (same commit), then plan Phase 2.
 
 ---
 
