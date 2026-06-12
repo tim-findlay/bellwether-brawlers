@@ -30,9 +30,9 @@
 - **Self-stagger** (Adrian's tax, replaces v2 trips): 30f non-actionable, fully vulnerable, no invulnerability on exit. **Hazard stagger:** 20f, never comboable, invulnerable through recovery.
 - **Respawn:** invulnerable until first action, hard cap 180f; spawn platform (the chair) descends from centre-top over 60f.
 
-## physics.js — graybox starting values
+## physics.js — frozen values (graybox sign-off 2026-06-12)
 
-*Starting points for the Phase-1 playground; canonical only after Tim's graybox sign-off, then frozen here. World units: px at base zoom (960×540 viewport; stages ~2.5 viewports wide including blast-zone margins). Per-character entries are bands the character files must respect.*
+*Tim played the Phase-1 graybox and signed off on the starting values unchanged — these are now canonical. Tuning later is fine, but `src/data/physics.js` and this table change in the same commit. World units: px at base zoom (960×540 viewport; stages ~2.5 viewports wide including blast-zone margins). Per-character entries are bands the character files must respect.*
 
 | Constant | Start | Constant | Start |
 |----------|-------|----------|-------|
@@ -48,8 +48,12 @@
 | DODGE_COOLDOWN | 72f | STEP_DODGE_IMPULSE | 3.5 |
 | DROP_THROUGH_GRACE | 8f soft-plat collision ignored after a drop | | |
 | AIR_MOMENTUM_DECAY | 0.985 | GROUND_DEADZONE | 0.05 |
+| SPOT_DODGE_DURATION | 18f (i-frames 2–13) | AIR_DODGE_DURATION | 22f (i-frames 3–15) |
+| AIR_DODGE_IMPULSE | 4.5 | | |
 
-Dash initiates grounded-only (air double-taps do nothing); dash-jump carries the momentum airborne. Fast-fall (down held) lands **on** soft platforms; drop-through needs a fresh tap (DESIGN.md, Movement).
+I-frame windows are **0-indexed engine ticks** counted from the dodge's first full tick (the start tick is tick 0) — combat code must read them with that convention.
+
+Movement semantics frozen with the values: dash initiates grounded-only (air double-taps do nothing) and its **direction latches at start — dashes are not steerable**; dash-jump carries the momentum airborne; a double jump cancels a still-live dash; jump wins a same-tick drop+jump; fast-fall (down held) lands **on** soft platforms; drop-through needs a fresh tap (DESIGN.md, Movement). Air dodge suspends gravity for its 22f and a neutral air dodge zeroes all momentum — **re-confirm that interaction when Phase-2 knockback lands** (an air dodge that cancels launch momentum is a big defensive lever).
 
 ## Sim methodology
 

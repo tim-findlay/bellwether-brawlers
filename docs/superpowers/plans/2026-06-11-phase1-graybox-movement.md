@@ -1,6 +1,6 @@
 # Phase 1: Graybox Movement Playground — Implementation Plan
 
-> Executed through commit `6f1ceb4` (2026-06-12): Tasks 1–10 complete, 37/37 tests green, final series review = SHIP. Remaining: BALANCE.md freeze sync + the playtest HARD STOP.
+> Executed through commit `6f1ceb4` (2026-06-12): Tasks 1–10 complete, 37/37 tests green, final series review = SHIP. Playtest passed 2026-06-12 with starting values unchanged; BALANCE.md frozen. Plan fully executed.
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
@@ -1111,8 +1111,8 @@ git commit -m "Phase 1: ?graybox movement playground — presets, debug readout,
 - [x] **Step 1: Full verification** — `node --test 'tests/*.test.mjs'` (all green), plus the Task 10 manual checklist if not just done.
 - [x] **Step 2: Line-count check** — `wc -l src/engine/movement.js src/dev/graybox.js src/data/physics.js` → every file < 500.
 - [x] **Step 3: Push** — `git push` (Pages serves main; the graybox is dev-flag-only and harmless in public).
-- [ ] **Step 4: BALANCE.md sync** — at freeze time: add the dodge duration/impulse rows (SPOT_DODGE_DURATION 18, AIR_DODGE_DURATION 22, AIR_DODGE_IMPULSE 4.5) to the starting-values table, and document the i-frame frame-numbering convention in the Dodge bullet ("windows are 0-indexed engine ticks from the dodge's first full tick: spot 2–13 of 18, air 3–15 of 22").
-- [ ] **Step 5: HARD STOP.** Tell Tim the graybox is ready at `?graybox` with the controls + preset keys, and ask for feel notes (BALANCE.md lists what to poke: dash-jump arc vs Brawlhalla, fast-fall snappiness, air-dodge-as-recovery, dodge cooldown rhythm — plus the flagged graybox decisions: facing-flip during a latched dash, step-dodge ledge hover, neutral air dodge momentum wipe, drop+dodge same-tick behavior). **Do not begin Phase 2.** After his pass: freeze the tuned `physics.js` values into BALANCE.md (same commit), then plan Phase 2.
+- [x] **Step 4: BALANCE.md sync** — at freeze time: add the dodge duration/impulse rows (SPOT_DODGE_DURATION 18, AIR_DODGE_DURATION 22, AIR_DODGE_IMPULSE 4.5) to the starting-values table, and document the i-frame frame-numbering convention in the Dodge bullet ("windows are 0-indexed engine ticks from the dodge's first full tick: spot 2–13 of 18, air 3–15 of 22").
+- [x] **Step 5: HARD STOP.** Tell Tim the graybox is ready at `?graybox` with the controls + preset keys, and ask for feel notes (BALANCE.md lists what to poke: dash-jump arc vs Brawlhalla, fast-fall snappiness, air-dodge-as-recovery, dodge cooldown rhythm — plus the flagged graybox decisions: facing-flip during a latched dash, step-dodge ledge hover, neutral air dodge momentum wipe, drop+dodge same-tick behavior). **Do not begin Phase 2.** After his pass: freeze the tuned `physics.js` values into BALANCE.md (same commit), then plan Phase 2.
 
 ---
 
