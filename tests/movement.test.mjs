@@ -106,3 +106,37 @@ test('walking off an edge starts coyote time and airtime', () => {
   assert.equal(b.grounded, false);
   // coyoteT was set the frame ground was lost (asserted indirectly in Task 5's coyote-jump test)
 });
+
+const landed = () => { const b = new MovementBody(MID, { x: 640, y: 690 }); step(b, IDLE, 10); return b; };
+
+test('ground jump applies full impulse and reports consumption', () => {
+  const b = landed();
+  step(b, { jump: true });
+  assert.equal(b.vy, -MID.jumpImpulse + PHYS.GRAV);       // impulse, then this tick's gravity
+  assert.equal(b.consumedJump, true);
+  assert.equal(b.grounded, false);
+  assert.equal(b.airJumps, 1);                            // double jump intact
+});
+
+test('double jump uses the air jump at DOUBLE_JUMP_FACTOR and is consumed', () => {
+  const b = landed();
+  step(b, { jump: true });
+  step(b, IDLE, 10);
+  step(b, { jump: true });
+  assert.ok(Math.abs(b.vy - (-MID.jumpImpulse * PHYS.DOUBLE_JUMP_FACTOR + PHYS.GRAV)) < 1e-9);
+  assert.equal(b.airJumps, 0);
+  step(b, { jump: true });
+  assert.equal(b.consumedJump, false);                    // nothing left to consume
+});
+
+test('coyote jump within COYOTE_FRAMES is a free ground jump', () => {
+  const b = new MovementBody(MID, { x: 396, y: 690 });
+  step(b, IDLE, 10);
+  let guard = 0;                                          // run left until the exact tick ground is lost
+  while (b.grounded && guard++ < 120) step(b, { left: true });
+  assert.equal(b.grounded, false);
+  assert.ok(b.coyoteT > 0, 'should be inside the coyote window on the first airborne tick');
+  step(b, { jump: true, left: true });                    // jump immediately
+  assert.equal(b.airJumps, 1);                            // did NOT spend the double jump
+  assert.ok(b.vy < 0);
+});

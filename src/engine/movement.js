@@ -101,7 +101,21 @@ export class MovementBody {
       this._setState('air');
     }
   }
-  _jumps(intent) {}        // Task 5
+  _jumps(intent) {
+    if (!intent.jump) return;
+    if (this.grounded || this.coyoteT > 0) {
+      this.vy = -this.stats.jumpImpulse;
+      this.grounded = false; this.coyoteT = 0;
+      this.consumedJump = true;
+      if (this.dashT > 0) { this.dashT = 0; this.dashCd = PHYS.DASH_COOLDOWN; this.vx *= PHYS.DASH_JUMP_CARRY; }
+      this._setState('air');
+    } else if (this.airJumps > 0) {
+      this.airJumps--;
+      this.vy = -this.stats.jumpImpulse * PHYS.DOUBLE_JUMP_FACTOR;
+      this.consumedJump = true;
+      this._setState('air');
+    }
+  }
   _dodges(intent) {}       // Task 8
   _collide(stage, prevBottom) {
     const hw = this.w / 2;
