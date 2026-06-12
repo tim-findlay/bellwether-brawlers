@@ -83,6 +83,15 @@ export const STAGES = [
         }
       }},
     ],
+    // THE OFFICE — symmetric tri-plat (the tournament stage)
+    geometry: {
+      slabs: [{ x: 920, y: 760, w: 560, h: 70 }],
+      platforms: [{ x: 985, y: 650, w: 150 }, { x: 1265, y: 650, w: 150 }, { x: 1122, y: 552, w: 156 }],
+      spawns: [{ x: 1060, y: 760 }, { x: 1340, y: 760 }],
+      respawn: { x: 1200, y: 700 },
+      cameraBounds: { x: 330, y: 60, w: 1740, h: 1280 },
+      blast: { left: 480, right: 1920, top: 130, bottom: 1190 },
+    },
   },
   {
     id: 'palace',
@@ -130,6 +139,15 @@ export const STAGES = [
         }
       }},
     ],
+    // PALACE FORECOURT — widest, flattest (the zoner's stage)
+    geometry: {
+      slabs: [{ x: 820, y: 780, w: 760, h: 70 }],
+      platforms: [{ x: 905, y: 668, w: 170 }, { x: 1325, y: 668, w: 170 }],
+      spawns: [{ x: 980, y: 780 }, { x: 1420, y: 780 }],
+      respawn: { x: 1200, y: 715 },
+      cameraBounds: { x: 230, y: 40, w: 1940, h: 1320 },
+      blast: { left: 390, right: 2010, top: 110, bottom: 1230 },
+    },
   },
   {
     id: 'pub',
@@ -177,6 +195,17 @@ export const STAGES = [
         rect(ctx, sx + 14 + swing * 1.6, 146, 12, 8, '#f0d98a'); // little bellwether
       }},
     ],
+    // THE BELLWETHER ARMS — asymmetric (the scrappy local)
+    geometry: {
+      slabs: [{ x: 940, y: 770, w: 520, h: 70 }],
+      platforms: [{ x: 965, y: 658, w: 140 },   // awning (pub side)
+                  { x: 1000, y: 560, w: 96 },    // hanging sign (static)
+                  { x: 1295, y: 700, w: 130 }],  // bench (low, other side)
+      spawns: [{ x: 1075, y: 770 }, { x: 1330, y: 770 }],
+      respawn: { x: 1200, y: 705 },
+      cameraBounds: { x: 350, y: 70, w: 1700, h: 1260 },
+      blast: { left: 500, right: 1900, top: 140, bottom: 1180 },
+    },
   },
   {
     id: 'berlin',
@@ -213,11 +242,24 @@ export const STAGES = [
         rect(ctx, 70 + ox, 190, 4, 40, '#3a4255');
       }},
     ],
+    // BERLIN — the gate (event-only)
+    geometry: {
+      slabs: [{ x: 890, y: 790, w: 620, h: 70 }],
+      platforms: [{ x: 1040, y: 640, w: 320 }],  // gate roof: wide, high (dash-jump or double-jump)
+      spawns: [{ x: 1030, y: 790 }, { x: 1370, y: 790 }],
+      respawn: { x: 1200, y: 725 },
+      cameraBounds: { x: 320, y: 60, w: 1760, h: 1300 },
+      blast: { left: 470, right: 1930, top: 130, bottom: 1210 },
+    },
   },
 ];
 
 export const stageById = (id) => STAGES.find(s => s.id === id);
 export const SELECTABLE_STAGES = STAGES.filter(s => s.selectable);
+
+// v3 platform-fighter geometry (Phase 2+). v2 visuals above are untouched.
+export const STAGE_IDS_V3 = ['office', 'palace', 'pub', 'berlin'];
+export function geometryOf(id) { return stageById(id)?.geometry ?? null; }
 
 // Shared stage background painter used by the renderer.
 export function drawStage(ctx, stage, t, parallaxX) {
