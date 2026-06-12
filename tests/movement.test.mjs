@@ -140,3 +140,43 @@ test('coyote jump within COYOTE_FRAMES is a free ground jump', () => {
   assert.equal(b.airJumps, 1);                            // did NOT spend the double jump
   assert.ok(b.vy < 0);
 });
+
+const onPlatform = () => {   // land on the left soft platform (top y=560)
+  const b = new MovementBody(MID, { x: 500, y: 540 });
+  step(b, IDLE, 20);
+  assert.equal(b.y, 560); assert.equal(b.onPlatform, true);
+  return b;
+};
+
+test('rising through a platform does not land', () => {
+  const b = new MovementBody(MID, { x: 500, y: 700 });
+  b.vy = -15;
+  let everGroundedWhileRising = false;
+  for (let i = 0; i < 12; i++) { step(b); if (b.vy < 0 && b.grounded) everGroundedWhileRising = true; }
+  assert.equal(everGroundedWhileRising, false);
+});
+
+test('fresh down tap on a platform drops through; held down does not', () => {
+  const b = onPlatform();
+  step(b, { down: true }, 5);                              // held: stays put
+  assert.equal(b.grounded, true);
+  step(b, { down: true, downTapped: true });               // fresh tap: drop
+  assert.equal(b.grounded, false);
+  assert.equal(b.dropT, PHYS.DROP_THROUGH_GRACE);          // set after the timer tick; decrements from next frame
+  step(b, IDLE, 60);
+  assert.equal(b.y, 700);                                  // fell to the slab below
+});
+
+test('fast-fall lands ON platforms (down held while descending)', () => {
+  const b = new MovementBody(MID, { x: 500, y: 400 });
+  step(b, { down: true }, 60);
+  assert.equal(b.y, 560);                                  // caught by the platform
+  assert.equal(b.grounded, true);
+});
+
+test('drop-through from a platform cannot drop through the main slab', () => {
+  const b = new MovementBody(MID, { x: 640, y: 690 });
+  step(b, IDLE, 10);                                       // grounded on slab
+  step(b, { down: true, downTapped: true });
+  assert.equal(b.grounded, true);                          // slabs are solid; nothing happens
+});

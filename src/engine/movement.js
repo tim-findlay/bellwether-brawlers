@@ -49,6 +49,14 @@ export class MovementBody {
     if (this.dropT > 0) this.dropT--;
     if (this.coyoteT > 0) this.coyoteT--;
 
+    // drop-through: fresh tap, only on one-way platforms (slabs are solid)
+    if (this.grounded && this.onPlatform && intent.downTapped && !this.dodging) {
+      this.grounded = false; this.onPlatform = false;
+      this.dropT = PHYS.DROP_THROUGH_GRACE;
+      this.y += 1;
+      this._setState('air');
+    }
+
     this._dodges(intent);
     if (!this.dodging) {
       this._horizontal(intent);
