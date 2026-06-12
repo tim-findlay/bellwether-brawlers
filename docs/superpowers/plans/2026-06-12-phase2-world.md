@@ -6,7 +6,7 @@
 
 **Architecture:** Two new pure-logic engine modules (`camera.js`, `match.js`) tested headlessly like `movement.js`; stage geometry lands as data in `stages.js` with structural sanity tests; a new `versus.js` screen composes MovementBody + MatchState + Camera and draws geometry-fidelity stages (real art arrives with the rig in Phase 3+). The graybox's intent adapter is promoted to `src/engine/input.js` as its permanent home.
 
-**Tech Stack:** Vanilla JS ES modules, zero build, zero deps. Tests: `node --test 'tests/*.test.mjs'` (suite currently 37 green; this plan ends at 62).
+**Tech Stack:** Vanilla JS ES modules, zero build, zero deps. Tests: `node --test 'tests/*.test.mjs'` (suite currently 37 green; this plan ends at 64).
 
 **Spec:** `DESIGN.md` + `BALANCE.md` v3 (BALANCE canonical; physics values frozen 2026-06-12). Stage layouts per the four approved wireframes (DESIGN "Stages"). Conventions identical to the Phase-1 plan: y = feet, slabs solid, platforms one-way, 60 Hz, plan-verbatim TDD, work on `main`, page loads clean after every commit, no Co-Authored-By trailer, never push until wrap-up.
 
@@ -653,11 +653,60 @@ test('an empty target list leaves the camera where it is (no NaN poisoning)', ()
 
 - [ ] **Step 2: Run** — the chair/match-over tests may already pass (code landed in Task 5); the personality test must pass against the Task-1 data as committed. Any failure = genuine defect — investigate before touching anything.
 
-- [ ] **Step 3: No new implementation expected.** If Step 2 exposed a real defect, fix minimally and report it.
+- [ ] **Step 3: One guarded implementation change** (fold-forward from the Task 5 review — double-KO on final stocks corrupted the winner; rule chosen: **draw**, flagged for Tim at the Task 8 checkpoint). Replace `MatchState.update` in `src/engine/match.js` with:
 
-- [ ] **Step 4: Run; all PASS** — full suite 62/62.
+```js
+  update(intents) {
+    if (this.over) return;
+    const out = [];
+    this.players.forEach((p, i) => {
+      if (p.respawn) { this._chair(p, intents[i]); return; }
+      p.body.update(intents[i], this.stage);
+      if (p.body.out) out.push(i);
+    });
+    if (out.length === 2 && this.players.every(p => p.stocks === 1)) {
+      this.players.forEach(p => p.stocks--);                // simultaneous final-stock KO:
+      this.over = true; this.winner = -1;                   // a DRAW — Tim to confirm
+      this.events.push({ type: 'gameover', winner: -1 });
+      return;
+    }
+    for (const i of out) this._ko(this.players[i], i);
+  }
+```
 
-- [ ] **Step 5: Commit** — `git add tests/match.test.mjs tests/stages.test.mjs tests/camera.test.mjs tests/input.test.mjs src/engine/camera.js src/engine/input.js src/data/stages.js DESIGN.md && git commit -m "Phase 2: pin chair/match-over/layouts; camera + input hardening; doc fixes"`
+pinned by these two tests appended to `tests/match.test.mjs`:
+
+```js
+test('same-tick double-KO on final stocks is a draw, one event', () => {
+  const m = newMatch();
+  m.players[0].stocks = 1; m.players[1].stocks = 1;
+  m.players[0].body.x = STAGE.blast.left - 5;
+  m.players[1].body.x = STAGE.blast.right + 5;
+  step(m);
+  assert.equal(m.over, true);
+  assert.equal(m.winner, -1);
+  assert.deepEqual(m.events, [{ type: 'gameover', winner: -1 }]);
+});
+
+test('same-tick double-KO with stocks left costs one stock each, both ride chairs', () => {
+  const m = newMatch();
+  m.players[0].body.x = STAGE.blast.left - 5;
+  m.players[1].body.x = STAGE.blast.right + 5;
+  step(m);
+  assert.equal(m.over, false);
+  assert.equal(m.players[0].stocks, STOCKS - 1);
+  assert.equal(m.players[1].stocks, STOCKS - 1);
+  assert.ok(m.players[0].respawn && m.players[1].respawn);
+});
+```
+
+Also add one line inside the `layout personalities are pinned` test (chair must descend, never ascend): `for (const g of [off, pal, pub, ber]) assert.ok(g.cameraBounds.y + 40 < g.respawn.y, 'chair starts above its hover point');`
+
+If Step 2 exposed any OTHER defect, fix minimally and report it.
+
+- [ ] **Step 4: Run; all PASS** — full suite 64/64.
+
+- [ ] **Step 5: Commit** — `git add tests/match.test.mjs tests/stages.test.mjs tests/camera.test.mjs tests/input.test.mjs src/engine/match.js src/engine/camera.js src/engine/input.js src/data/stages.js DESIGN.md && git commit -m "Phase 2: double-KO draw rule; pin chair/match-over/layouts; camera + input hardening"`
 
 ---
 
@@ -720,7 +769,7 @@ export function makeVersus(G) {
       });
       for (const ev of match.events.splice(0)) {
         if (ev.type === 'ko') { G.fx.shake(5, 12); banner = { text: 'STOCK LOST!', t: 70 }; G.audio.play('ko'); }
-        if (ev.type === 'gameover') { banner = { text: `GAME! P${ev.winner + 1} WINS`, t: 9999 }; G.audio.play('bell'); }
+        if (ev.type === 'gameover') { banner = { text: ev.winner < 0 ? 'DRAW!' : `GAME! P${ev.winner + 1} WINS`, t: 9999 }; G.audio.play('bell'); }
       }
       camera.update(targets());
       if (banner && banner.t > 0) banner.t--;
@@ -823,16 +872,16 @@ export function makeVersus(G) {
   - Lose three stocks → "GAME! P2 WINS" + [R] rematch works; Esc pauses; Q quits to title.
   - `?graybox=palace`, `?graybox=pub`, `?graybox=berlin` each load with their distinct layout.
   - Regressions: `?graybox` (no value) still the flat playground; bare `index.html` → title; `?sim=10` → v2 gates pass.
-- [ ] **Step 4: Full suite** — `node --test 'tests/*.test.mjs'` → 62/62 (no engine changes in this task).
+- [ ] **Step 4: Full suite** — `node --test 'tests/*.test.mjs'` → 64/64 (no engine changes in this task).
 - [ ] **Step 5: Commit** — `git add src/screens/versus.js src/main.js && git commit -m "Phase 2: versus screen — stages, camera, stocks, chair, HUD v3 behind ?graybox=<stage>"`
 
 ---
 
 ### Task 8: Wrap-up
 
-- [ ] **Step 1: Full verification** — suite 62/62; `wc -l` on every new/modified file < 500; the Task 7 checklist green.
+- [ ] **Step 1: Full verification** — suite 64/64; `wc -l` on every new/modified file < 500; the Task 7 checklist green.
 - [ ] **Step 2: Push** — `git push`.
-- [ ] **Step 3: STOP for Tim.** Phase 2 is a checkpoint, not a hard gate: hand Tim `?graybox=office|palace|pub|berlin`, ask him to feel the camera (ease/zoom speed, padding) and the stage sizes/blast distances. Two specific review flags to put in front of him: palace currently has the TIGHTEST side-blast room (430px from slab edge) despite DESIGN calling it longest-side-survival (widening its blast to left 370 / right 2030 restores the ordering if he agrees), and the pub P2 spawn sits visually under the bench. Confirm before Phase 3 (characters in pairs) is planned. Camera knobs (`pad`, `ease`, `maxZoom`) are constructor options — tune in `versus.js`'s `new Camera(...)` call if he has notes; if any survive tuning, consider promoting them to `PHYS`.
+- [ ] **Step 3: STOP for Tim.** Phase 2 is a checkpoint, not a hard gate: hand Tim `?graybox=office|palace|pub|berlin`, ask him to feel the camera (ease/zoom speed, padding) and the stage sizes/blast distances. Two specific review flags to put in front of him: palace currently has the TIGHTEST side-blast room (430px from slab edge) despite DESIGN calling it longest-side-survival (widening its blast to left 370 / right 2030 restores the ordering if he agrees), the pub P2 spawn sits visually under the bench, and the double-KO rule is currently a DRAW (winner -1) — confirm or pick sudden-death. Confirm before Phase 3 (characters in pairs) is planned. Camera knobs (`pad`, `ease`, `maxZoom`) are constructor options — tune in `versus.js`'s `new Camera(...)` call if he has notes; if any survive tuning, consider promoting them to `PHYS`.
 
 ---
 
