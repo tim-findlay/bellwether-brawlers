@@ -34,3 +34,41 @@ test('minZoom defaults to exactly bounds-fit', () => {
   // 960/1920 = 0.5, 540/1080 = 0.5 -> minZoom 0.5
   assert.equal(c.minZoom, 0.5);
 });
+
+test('update eases toward the target and converges', () => {
+  const c = cam();
+  const pts = [{ x: 700, y: 400 }];
+  c.update(pts);
+  assert.notEqual(c.x, 700);                              // one step is partial
+  for (let i = 0; i < 300; i++) c.update(pts);
+  assert.ok(Math.abs(c.x - 700) < 1);                     // converged
+  assert.ok(Math.abs(c.zoom - c.maxZoom) < 0.01);
+});
+
+test('the view never shows outside cameraBounds', () => {
+  const c = cam();
+  for (let i = 0; i < 300; i++) c.update([{ x: 10, y: 10 }]);   // corner target
+  const halfW = c.viewW / 2 / c.zoom, halfH = c.viewH / 2 / c.zoom;
+  assert.ok(c.x - halfW >= BOUNDS.x - 1e-9, 'left edge clamped');
+  assert.ok(c.y - halfH >= BOUNDS.y - 1e-9, 'top edge clamped');
+});
+
+test('worldToScreen round-trips with the current transform', () => {
+  const c = cam();
+  for (let i = 0; i < 50; i++) c.update([{ x: 600, y: 700 }]);
+  const s = c.worldToScreen(600, 700);
+  assert.ok(s.x >= 0 && s.x <= 960 && s.y >= 0 && s.y <= 540, 'target on screen');
+  const w = c.screenToWorld(s.x, s.y);
+  assert.ok(Math.abs(w.x - 600) < 1e-6 && Math.abs(w.y - 700) < 1e-6);
+});
+
+test('apply sets the canvas transform with shake composed as an offset', () => {
+  const c = cam();
+  const calls = [];
+  const ctx = { setTransform: (...a) => calls.push(a) };
+  c.apply(ctx, 7, -3);
+  const [zx, , , zy, tx, ty] = calls[0];
+  assert.equal(zx, c.zoom); assert.equal(zy, c.zoom);
+  assert.equal(tx, c.viewW / 2 - c.x * c.zoom + 7);
+  assert.equal(ty, c.viewH / 2 - c.y * c.zoom - 3);
+});
