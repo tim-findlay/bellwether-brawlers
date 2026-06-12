@@ -1,5 +1,7 @@
 # Phase 1: Graybox Movement Playground — Implementation Plan
 
+> Executed through commit `6f1ceb4` (2026-06-12): Tasks 1–10 complete, 37/37 tests green, final series review = SHIP. Remaining: BALANCE.md freeze sync + the playtest HARD STOP.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Build the v3 momentum-movement core (run/dash/dash-jump/double-jump/air-dodge/fast-fall/drop-through, platform collision, blast-zone exits) and a `?graybox` playground where Tim tunes the feel — the HARD STOP gate before any other v3 phase.
@@ -50,7 +52,7 @@ Stage object: `{ slabs: [{x,y,w,h}], platforms: [{x,y,w}], blast: {left,right,to
 - Create: `src/data/physics.js`
 - Test: `tests/physics.test.mjs`
 
-- [ ] **Step 1: Write the failing test** — `tests/physics.test.mjs`:
+- [x] **Step 1: Write the failing test** — `tests/physics.test.mjs`:
 
 ```js
 import { test } from 'node:test';
@@ -84,9 +86,9 @@ test('PHYS matches the BALANCE.md starting-value table', () => {
 });
 ```
 
-- [ ] **Step 2: Run it; expect failure** — `node --test tests/physics.test.mjs` → FAIL (`Cannot find module .../src/data/physics.js`).
+- [x] **Step 2: Run it; expect failure** — `node --test tests/physics.test.mjs` → FAIL (`Cannot find module .../src/data/physics.js`).
 
-- [ ] **Step 3: Implement** — `src/data/physics.js`:
+- [x] **Step 3: Implement** — `src/data/physics.js`:
 
 ```js
 // Universal movement & knockback constants — BALANCE.md is canonical for
@@ -120,9 +122,9 @@ export const PHYS = {
 };
 ```
 
-- [ ] **Step 4: Run it; expect pass** — `node --test tests/physics.test.mjs` → PASS (1 test).
+- [x] **Step 4: Run it; expect pass** — `node --test tests/physics.test.mjs` → PASS (1 test).
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/data/physics.js tests/physics.test.mjs
@@ -137,7 +139,7 @@ git commit -m "Phase 1: physics.js — universal movement constants, locked to B
 - Create: `src/engine/movement.js`
 - Test: `tests/movement.test.mjs`
 
-- [ ] **Step 1: Write the failing tests** — `tests/movement.test.mjs`:
+- [x] **Step 1: Write the failing tests** — `tests/movement.test.mjs`:
 
 ```js
 import { test } from 'node:test';
@@ -178,9 +180,9 @@ test('a body spawned in the air is airborne, not grounded', () => {
 });
 ```
 
-- [ ] **Step 2: Run; expect failure** — `node --test tests/movement.test.mjs` → FAIL (module not found).
+- [x] **Step 2: Run; expect failure** — `node --test tests/movement.test.mjs` → FAIL (module not found).
 
-- [ ] **Step 3: Implement the skeleton** — `src/engine/movement.js`:
+- [x] **Step 3: Implement the skeleton** — `src/engine/movement.js`:
 
 ```js
 // MovementBody — the v3 momentum-movement core. Pure logic: no DOM, no
@@ -264,9 +266,9 @@ export class MovementBody {
 }
 ```
 
-- [ ] **Step 4: Run; expect pass** — `node --test tests/movement.test.mjs` → 2 PASS. (Bodies fall forever — collision is Task 4.)
+- [x] **Step 4: Run; expect pass** — `node --test tests/movement.test.mjs` → 2 PASS. (Bodies fall forever — collision is Task 4.)
 
-- [ ] **Step 5: Commit** — `git add src/engine/movement.js tests/movement.test.mjs && git commit -m "Phase 1: MovementBody skeleton — gravity, integration, fall cap"`
+- [x] **Step 5: Commit** — `git add src/engine/movement.js tests/movement.test.mjs && git commit -m "Phase 1: MovementBody skeleton — gravity, integration, fall cap"`
 
 ---
 
@@ -274,7 +276,7 @@ export class MovementBody {
 
 **Files:** Modify `src/engine/movement.js` (`_horizontal`), append to `tests/movement.test.mjs`.
 
-- [ ] **Step 1: Failing tests** (append; note these need ground — give the body `grounded` manually until Task 4 lands):
+- [x] **Step 1: Failing tests** (append; note these need ground — give the body `grounded` manually until Task 4 lands):
 
 ```js
 const grounded = (b) => { b.grounded = true; b.vy = 0; b.state = 'idle'; return b; };
@@ -309,9 +311,9 @@ test('air drift is capped below run speed and cannot brake excess momentum insta
 });
 ```
 
-- [ ] **Step 2: Run; expect the three new tests to FAIL.**
+- [x] **Step 2: Run; expect the three new tests to FAIL.**
 
-- [ ] **Step 3: Implement `_horizontal`:**
+- [x] **Step 3: Implement `_horizontal`:**
 
 ```js
   _horizontal(intent) {
@@ -348,9 +350,9 @@ test('air drift is capped below run speed and cannot brake excess momentum insta
   }
 ```
 
-- [ ] **Step 4: Run; all movement tests PASS** — `node --test tests/movement.test.mjs`.
+- [x] **Step 4: Run; all movement tests PASS** — `node --test tests/movement.test.mjs`.
 
-- [ ] **Step 5: Commit** — `git commit -am "Phase 1: ground run accel/friction + capped air drift with momentum carry"`
+- [x] **Step 5: Commit** — `git commit -am "Phase 1: ground run accel/friction + capped air drift with momentum carry"`
 
 ---
 
@@ -358,7 +360,7 @@ test('air drift is capped below run speed and cannot brake excess momentum insta
 
 **Files:** Modify `src/engine/movement.js` (`_collide`), append tests.
 
-- [ ] **Step 1: Failing tests:**
+- [x] **Step 1: Failing tests:**
 
 ```js
 test('a falling body lands on the slab top and stays', () => {
@@ -403,9 +405,9 @@ test('walking off an edge starts coyote time and airtime', () => {
 });
 ```
 
-- [ ] **Step 2: Run; new tests FAIL.**
+- [x] **Step 2: Run; new tests FAIL.**
 
-- [ ] **Step 3: Implement `_collide`:**
+- [x] **Step 3: Implement `_collide`:**
 
 ```js
   _collide(stage, prevBottom) {
@@ -446,9 +448,9 @@ test('walking off an edge starts coyote time and airtime', () => {
   }
 ```
 
-- [ ] **Step 4: Run; all PASS.**
+- [x] **Step 4: Run; all PASS.**
 
-- [ ] **Step 5: Commit** — `git commit -am "Phase 1: solid slab collision, landing resets, coyote trigger"`
+- [x] **Step 5: Commit** — `git commit -am "Phase 1: solid slab collision, landing resets, coyote trigger"`
 
 ---
 
@@ -456,7 +458,7 @@ test('walking off an edge starts coyote time and airtime', () => {
 
 **Files:** Modify `src/engine/movement.js` (`_jumps`), append tests.
 
-- [ ] **Step 1: Failing tests:**
+- [x] **Step 1: Failing tests:**
 
 ```js
 const landed = () => { const b = new MovementBody(MID, { x: 640, y: 690 }); step(b, IDLE, 10); return b; };
@@ -494,9 +496,9 @@ test('coyote jump within COYOTE_FRAMES is a free ground jump', () => {
 });
 ```
 
-- [ ] **Step 2: Run; FAIL.**
+- [x] **Step 2: Run; FAIL.**
 
-- [ ] **Step 3: Implement `_jumps`:**
+- [x] **Step 3: Implement `_jumps`:**
 
 ```js
   _jumps(intent) {
@@ -518,9 +520,9 @@ test('coyote jump within COYOTE_FRAMES is a free ground jump', () => {
 
 *(Note: `_jumps` runs before `_gravity` in `update()`, so the first post-jump tick reads `-impulse + GRAV` — the tests encode that.)*
 
-- [ ] **Step 4: Run; all PASS.**
+- [x] **Step 4: Run; all PASS.**
 
-- [ ] **Step 5: Commit** — `git commit -am "Phase 1: ground/double jumps with coyote time and dash-jump momentum carry"`
+- [x] **Step 5: Commit** — `git commit -am "Phase 1: ground/double jumps with coyote time and dash-jump momentum carry"`
 
 ---
 
@@ -528,7 +530,7 @@ test('coyote jump within COYOTE_FRAMES is a free ground jump', () => {
 
 **Files:** Modify nothing new (collision landed in Task 4; drop-through trigger goes in `update`), append tests.
 
-- [ ] **Step 1: Failing tests:**
+- [x] **Step 1: Failing tests:**
 
 ```js
 const onPlatform = () => {   // land on the left soft platform (top y=560)
@@ -572,9 +574,9 @@ test('drop-through from a platform cannot drop through the main slab', () => {
 });
 ```
 
-- [ ] **Step 2: Run; FAIL** (no drop-through trigger yet).
+- [x] **Step 2: Run; FAIL** (no drop-through trigger yet).
 
-- [ ] **Step 3: Implement** — add to `update()`, immediately after the timers block:
+- [x] **Step 3: Implement** — add to `update()`, immediately after the timers block:
 
 ```js
     // drop-through: fresh tap, only on one-way platforms (slabs are solid)
@@ -586,9 +588,9 @@ test('drop-through from a platform cannot drop through the main slab', () => {
     }
 ```
 
-- [ ] **Step 4: Run; all PASS.**
+- [x] **Step 4: Run; all PASS.**
 
-- [ ] **Step 5: Commit** — `git commit -am "Phase 1: one-way platforms — drop-through tap vs fast-fall hold"`
+- [x] **Step 5: Commit** — `git commit -am "Phase 1: one-way platforms — drop-through tap vs fast-fall hold"`
 
 ---
 
@@ -598,7 +600,7 @@ test('drop-through from a platform cannot drop through the main slab', () => {
 - Modify: `src/engine/input.js` (maps + double-tap tracking)
 - Test: `tests/input.test.mjs` + append to `tests/movement.test.mjs`
 
-- [ ] **Step 1: Failing tests** — `tests/input.test.mjs`:
+- [x] **Step 1: Failing tests** — `tests/input.test.mjs`:
 
 ```js
 import { test } from 'node:test';
@@ -729,9 +731,9 @@ And append to the assertions in `tests/physics.test.mjs` (inside the existing te
 });
 ```
 
-- [ ] **Step 2: Run both files; FAIL.**
+- [x] **Step 2: Run both files; FAIL.**
 
-- [ ] **Step 3: Implement.** In `src/engine/input.js`:
+- [x] **Step 3: Implement.** In `src/engine/input.js`:
   - Add `dodge: 'KeyV'` to `P1MAP` and `dodge: 'Slash'` to `P2MAP` (PREVENT picks them up automatically via `Object.values`).
   - In the constructor add `this.prevPressFrame = {};`
   - In `beginFrame()` change the press-frame loop to:
@@ -772,9 +774,9 @@ And append to the assertions in `tests/physics.test.mjs` (inside the existing te
 
     (`_horizontal` already handles the dash override and cooldown from Task 3; `_jumps` already handles the carry from Task 5.)
 
-- [ ] **Step 4: Run; all PASS** — `node --test 'tests/*.test.mjs'`.
+- [x] **Step 4: Run; all PASS** — `node --test 'tests/*.test.mjs'`.
 
-- [ ] **Step 5: Commit** — `git add -A && git commit -m "Phase 1: dash via grounded double-tap (latched dir), dash-jump carry; Input.doubleTapped + dodge keys; momentum/deadzone constants to data"` (includes BALANCE.md table rows).
+- [x] **Step 5: Commit** — `git add -A && git commit -m "Phase 1: dash via grounded double-tap (latched dir), dash-jump carry; Input.doubleTapped + dodge keys; momentum/deadzone constants to data"` (includes BALANCE.md table rows).
 
 ---
 
@@ -782,7 +784,7 @@ And append to the assertions in `tests/physics.test.mjs` (inside the existing te
 
 **Files:** Modify `src/engine/movement.js` (`_dodges`), append tests.
 
-- [ ] **Step 1: Failing tests:**
+- [x] **Step 1: Failing tests:**
 
 ```js
 test('spot dodge: in place, i-frames exactly 2-13 (0-indexed stateT), shared cooldown starts', () => {
@@ -845,9 +847,9 @@ test('shared cooldown blocks ground dodges too', () => {
 });
 ```
 
-- [ ] **Step 2: Run; FAIL.**
+- [x] **Step 2: Run; FAIL.**
 
-- [ ] **Step 3: Implement `_dodges`:**
+- [x] **Step 3: Implement `_dodges`:**
 
 ```js
   _dodges(intent) {
@@ -887,9 +889,9 @@ test('shared cooldown blocks ground dodges too', () => {
 
 *(Graybox decisions, flagged for the playtest: air dodge suspends gravity for its 22 frames and its impulse decays linearly; vertical air-dodge aim is down-only for now since up is the jump key; a step dodge that slides off a ledge hovers at constant height for its remaining frames; a same-tick down-tap + dodge on a platform resolves as drop-through + air dodge (spends the airtime dodge); a neutral air dodge wipes ALL incoming momentum to zero — that last one must become an explicit decision before Phase-2 knockback. All are one-line tunables.)*
 
-- [ ] **Step 4: Run; all PASS.**
+- [x] **Step 4: Run; all PASS.**
 
-- [ ] **Step 5: Commit** — `git commit -am "Phase 1: spot/step/air dodges — shared cooldown, once per airtime"`
+- [x] **Step 5: Commit** — `git commit -am "Phase 1: spot/step/air dodges — shared cooldown, once per airtime"`
 
 ---
 
@@ -897,7 +899,7 @@ test('shared cooldown blocks ground dodges too', () => {
 
 **Files:** Modify `src/engine/movement.js` (`_blast`), append tests.
 
-- [ ] **Step 1: Failing tests:**
+- [x] **Step 1: Failing tests:**
 
 ```js
 test('crossing any blast zone sets out', () => {
@@ -930,9 +932,9 @@ Hardening note (review fold-forward): also add this comment directly above the `
     // out the top only when the FEET clear it — generous up, strict down.
 ```
 
-- [ ] **Step 2: Run; FAIL.**
+- [x] **Step 2: Run; FAIL.**
 
-- [ ] **Step 3: Implement `_blast`:**
+- [x] **Step 3: Implement `_blast`:**
 
 ```js
   _blast(stage) {
@@ -943,9 +945,9 @@ Hardening note (review fold-forward): also add this comment directly above the `
 
 *(Note `y - this.h > z.bottom`: you are out the bottom when your head clears it; and out the top only when your feet clear it — generous on the way up, strict on the way down, the platform-fighter convention.)*
 
-- [ ] **Step 4: Run; all PASS** — full suite: `node --test 'tests/*.test.mjs'` → expect 36 passing tests (32 movement + 3 input + 1 physics).
+- [x] **Step 4: Run; all PASS** — full suite: `node --test 'tests/*.test.mjs'` → expect 37 passing tests (33 movement + 3 input + 1 physics).
 
-- [ ] **Step 5: Commit** — `git commit -am "Phase 1: blast-zone exit detection"`
+- [x] **Step 5: Commit** — `git commit -am "Phase 1: blast-zone exit detection"`
 
 ---
 
@@ -957,7 +959,7 @@ Hardening note (review fold-forward): also add this comment directly above the `
 
 No unit tests — this is the visual shell over tested logic. Manual verification in Step 3.
 
-- [ ] **Step 1: Implement `src/dev/graybox.js`:**
+- [x] **Step 1: Implement `src/dev/graybox.js`:**
 
 ```js
 // Phase-1 movement playground (?graybox). Dev-only, dynamically imported.
@@ -1068,7 +1070,7 @@ export function makeGraybox(G) {
 }
 ```
 
-- [ ] **Step 2: Wire the flag** — in `src/main.js`, replace the dev-flags block (after the `?sim` block, before `G.go('title')`):
+- [x] **Step 2: Wire the flag** — in `src/main.js`, replace the dev-flags block (after the `?sim` block, before `G.go('title')`):
 
 ```js
   if (qp.has('graybox')) {
@@ -1081,7 +1083,7 @@ export function makeGraybox(G) {
 
 (The existing `G.go('title');` line is replaced by the conditional one. The rAF loop below is untouched — the graybox runs at fixed 60 Hz like everything else.)
 
-- [ ] **Step 3: Manual verification checklist** (serve with `python3 -m http.server 8000` from the repo root, then open `http://localhost:8000/index.html?graybox`):
+- [x] **Step 3: Manual verification checklist** (serve with `python3 -m http.server 8000` from the repo root, then open `http://localhost:8000/index.html?graybox`):
   - No console errors on load; paper-tone playground renders with dashed blast border, gray slab, 3 ink platforms, navy (P1) and brick (P2) bodies.
   - A/D run with visible accel; double-tap D dashes; W jumps; W again double-jumps; dash→W gives a long flat arc.
   - Hold S while falling = visibly faster fall that still lands on platforms; tap S on a platform = drop through; tap S on the slab = nothing.
@@ -1093,9 +1095,9 @@ export function makeGraybox(G) {
   - **Regression:** open `http://localhost:8000/index.html` (no flag) — title screen renders, menus work, a quick fight plays normally.
   - **Regression:** `http://localhost:8000/index.html?sim=10` still runs and reports the v2 gates.
 
-- [ ] **Step 4: Run the full test suite** — `node --test 'tests/*.test.mjs'` → all pass.
+- [x] **Step 4: Run the full test suite** — `node --test 'tests/*.test.mjs'` → all pass.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/dev/graybox.js src/main.js
@@ -1106,9 +1108,9 @@ git commit -m "Phase 1: ?graybox movement playground — presets, debug readout,
 
 ### Task 11: Phase wrap-up
 
-- [ ] **Step 1: Full verification** — `node --test 'tests/*.test.mjs'` (all green), plus the Task 10 manual checklist if not just done.
-- [ ] **Step 2: Line-count check** — `wc -l src/engine/movement.js src/dev/graybox.js src/data/physics.js` → every file < 500.
-- [ ] **Step 3: Push** — `git push` (Pages serves main; the graybox is dev-flag-only and harmless in public).
+- [x] **Step 1: Full verification** — `node --test 'tests/*.test.mjs'` (all green), plus the Task 10 manual checklist if not just done.
+- [x] **Step 2: Line-count check** — `wc -l src/engine/movement.js src/dev/graybox.js src/data/physics.js` → every file < 500.
+- [x] **Step 3: Push** — `git push` (Pages serves main; the graybox is dev-flag-only and harmless in public).
 - [ ] **Step 4: BALANCE.md sync** — at freeze time: add the dodge duration/impulse rows (SPOT_DODGE_DURATION 18, AIR_DODGE_DURATION 22, AIR_DODGE_IMPULSE 4.5) to the starting-values table, and document the i-frame frame-numbering convention in the Dodge bullet ("windows are 0-indexed engine ticks from the dodge's first full tick: spot 2–13 of 18, air 3–15 of 22").
 - [ ] **Step 5: HARD STOP.** Tell Tim the graybox is ready at `?graybox` with the controls + preset keys, and ask for feel notes (BALANCE.md lists what to poke: dash-jump arc vs Brawlhalla, fast-fall snappiness, air-dodge-as-recovery, dodge cooldown rhythm — plus the flagged graybox decisions: facing-flip during a latched dash, step-dodge ledge hover, neutral air dodge momentum wipe, drop+dodge same-tick behavior). **Do not begin Phase 2.** After his pass: freeze the tuned `physics.js` values into BALANCE.md (same commit), then plan Phase 2.
 
