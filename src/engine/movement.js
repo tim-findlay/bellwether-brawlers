@@ -205,6 +205,8 @@ export class MovementBody {
 
   _blast(stage) {
     const z = stage.blast;
+    // platform-fighter convention: out the bottom when the HEAD clears it,
+    // out the top only when the FEET clear it — generous up, strict down.
     this.out = this.x < z.left || this.x > z.right || this.y - this.h > z.bottom || this.y < z.top;
   }
 

@@ -334,3 +334,9 @@ test('a body on stage is not out', () => {
   const b = landed();
   assert.equal(b.out, false);
 });
+
+test('blast asymmetry: generous going up, strict going down', () => {
+  const out = (pos, vy = 0) => { const b = new MovementBody(MID, pos); b.vy = vy; step(b); return b.out; };
+  assert.equal(out({ x: 640, y: 1150 }), false);           // feet past bottom, head (~1054) not: alive
+  assert.equal(out({ x: 640, y: -250 }, -1), false);       // head (~-346) past top, feet not: alive
+});
