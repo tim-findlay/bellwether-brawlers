@@ -1,5 +1,5 @@
 // Manifest-driven asset loaders with graceful fallback.
-//  - headshots: assets/headshots/<id>.png -> select-card / in-world variants
+//  - headshots: assets/headshots/<id>.png -> win-screen / in-world variants
 //  - stage art: assets/stages/<id>.png    -> 480x270 pixel backdrop (v3 world)
 //  - sprites:   assets/sprites/<id>/<anim>.png via render/sprites.js
 // Dropping a file into the repo makes it Just Work — the manifest is the
@@ -52,7 +52,7 @@ function loadImage(src) {
 // Pre-render the two circular variants used everywhere:
 //  - fight: small head used on the in-world fighter body (world-buffer px,
 //    pixelation comes from the 2x world upscale)
-//  - card: select-card / win-screen portrait, lightly pixelated at full res
+//  - card: win-screen portrait, lightly pixelated at full res
 function makeHeads(img) {
   return {
     fight: circleCrop(img, 22, 1),

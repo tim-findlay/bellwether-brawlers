@@ -1,9 +1,14 @@
-// Character select (P1 → P2/CPU) then stage select. Cards show the real
-// headshot where one exists, the drawn head otherwise, plus the counterplay tip.
+// Character select (P1 → P2/CPU) then stage select. Cards show the fighter as
+// they play: the idle sprite sheet, or the drawn fallback body when a sheet is
+// missing (drop-in rule), plus the counterplay tip.
 
 import { CHARACTERS } from '../data/characters.js';
 import { SELECTABLE_STAGES } from '../data/stages.js';
+import { drawSprite, frameFor, hasAnim } from '../render/sprites.js';
+import { drawFallbackBody } from '../render/body.js';
 import { paperBG } from './menu.js';
+
+const CARD_SCALE = 1.4;               // 64 px cell -> ~90 px on the card
 
 const COLS = 4;
 
@@ -101,15 +106,13 @@ export function makeSelect(G) {
         c.lineWidth = (selP1 || selP2) ? 5 : 2;
         c.strokeRect(x, y, cw, ch);
 
-        // portrait
-        const head = G.heads.get(ch0.id);
-        const px = x + cw / 2 - 44, py = y + 12;
-        if (head?.card) {
-          c.imageSmoothingEnabled = false;
-          c.drawImage(head.card, px, py, 88, 88);
-        } else {
-          this.cartoonCard(c, ch0, px, py);
-        }
+        // the fighter itself, idling on a strip of floor
+        const sel = selP1 || selP2;
+        c.fillStyle = sel ? '#ddd0b2' : '#e8dec6';
+        c.fillRect(x + cw / 2 - 62, y + 10, 124, 98);
+        c.fillStyle = '#d6cab0';
+        c.fillRect(x + cw / 2 - 62, y + 104, 124, 4);
+        this.fighter(c, ch0, x + cw / 2, y + 105, t + i * 11);
         c.fillStyle = '#2b2620';
         c.font = "700 22px 'Pixelify Sans'";
         c.fillText(ch0.name, x + cw / 2, y + 124);
@@ -142,23 +145,15 @@ export function makeSelect(G) {
       c.fillText('move with your keys · F / K / ENTER confirm · ESC back', 480, 520);
     },
 
-    cartoonCard(c, cfg, x, y) {
-      c.fillStyle = '#e4dcc8';
-      c.fillRect(x, y, 88, 88);
-      c.strokeStyle = '#2b2620'; c.lineWidth = 2; c.strokeRect(x, y, 88, 88);
-      c.fillStyle = cfg.body.skin;
-      c.fillRect(x + 24, y + 26, 40, 44);
-      c.fillStyle = cfg.body.hair.color;
-      if (cfg.body.hair.style === 'bob') { c.fillRect(x + 18, y + 18, 52, 18); c.fillRect(x + 18, y + 30, 9, 34); c.fillRect(x + 61, y + 30, 9, 34); }
-      else if (cfg.body.hair.style === 'cap') { c.fillRect(x + 20, y + 14, 48, 16); c.fillRect(x + 14, y + 26, 34, 6); }
-      else c.fillRect(x + 20, y + 16, 48, 16);
-      c.fillStyle = '#1a1a1a';
-      c.fillRect(x + 34, y + 44, 5, 5);
-      c.fillRect(x + 52, y + 44, 5, 5);
-      c.fillStyle = '#6e6450';
-      c.font = "600 11px 'Barlow Condensed'";
-      c.textAlign = 'center';
-      c.fillText('photo TBC', x + 44, y + 82);
+    // Idle sprite if the sheet loaded, else the drawn body (no photo head).
+    fighter(c, cfg, x, y, tt) {
+      const sheet = G.sprites?.get?.(cfg.id);
+      if (hasAnim(sheet, 'idle')) {
+        drawSprite(c, sheet, 'idle', frameFor(sheet.anims.idle, tt), x, y, 1, CARD_SCALE);
+        return;
+      }
+      const h = 64 * CARD_SCALE;
+      drawFallbackBody(c, { cfg, x, y, anim: { name: 'idle', t: tt }, body: { x, y, h, facing: 1, grounded: false } }, null);
     },
 
     drawStagePick(c) {
