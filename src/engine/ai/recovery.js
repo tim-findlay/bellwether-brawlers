@@ -73,6 +73,10 @@ export function recover(ai, f, world) {
     return;
   }
 
+  // --- the recovery move (air heavy): a rising strike, once per airtime ------
+  if (f.cfg.recovery && !f.recoveryUsed && b.vy > 0 && !under && b.y > slab.y - 40) {
+    ai.press('heavy'); return;
+  }
   // --- air dodge toward the stage: last resort -------------------------------
   if (b.airDodgeOk && b.dodgeCd === 0 && b.vy > 0 && !under) {
     ai.press('dodge');

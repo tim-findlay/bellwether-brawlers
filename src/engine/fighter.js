@@ -35,7 +35,7 @@ export class Fighter {
     this.gauge = this.maxGauge;
     this.cd = { s1: 0, s2: 0 };
     this.state = 'normal'; this.stateT = 0;
-    this.attack = null; this.landLag = 0; this.chair = null; this.hazardInv = 0; this.tripOnLand = false;
+    this.attack = null; this.landLag = 0; this.chair = null; this.hazardInv = 0; this.tripOnLand = false; this.recoveryUsed = false;
     this.statuses = new Map();
     this.controller.reversed = false;
     this.hurtFlash = 0; this.animT = (this.side + 1) * 17;
@@ -107,7 +107,13 @@ export class Fighter {
     const air = this.airborne;
     let aerial = false;
     if (slot === 'light' && air) { move = this.cfg.aerials?.[aim] || this.cfg.aerials?.n; if (!move) return false; aerial = true; }
-    else if (slot === 'heavy' && air) return false;                 // ground-only kill commit
+    else if (slot === 'heavy' && air) {                               // air heavy: ground pound (down) or the recovery (once per airtime)
+      if (aim === 'd') move = this.cfg.groundPound || null;
+      else { if (this.recoveryUsed || !this.cfg.recovery) return false; move = this.cfg.recovery; this.recoveryUsed = true; }
+      if (!move) return false; aerial = true;
+    }
+    else if (slot === 'light') move = this.cfg.lights?.[aim === 'u' ? 'n' : (aim || 'n')] || move;   // n / side / down light
+    else if (slot === 'heavy') move = this.cfg.sigs?.[aim === 'u' ? 'n' : (aim || 'n')] || move;     // n / side / down signature
     else if ((slot === 's1' || slot === 's2' || slot === 'super') && air && !move.air) return false;
     if ((slot === 's1' || slot === 's2' || slot === 'super') && this.hasStatus('silence')) {
       this.world.fx.text(this.x, this.y - 120, 'LOCKED', '#c4452e');
@@ -125,7 +131,7 @@ export class Fighter {
       this.world.fx.flash('#f2e9d8', 5);
       this.world.fx.banner(move.name.toUpperCase(), { dur: 70, sub: this.cfg.name });
     }
-    this.attack = { slot, move, frame: 0, hasHit: false, fired: false, aerial, aim: aerial ? (aim || 'n') : null, hits: 0, armorSpent: false };
+    this.attack = { slot, move, frame: 0, hasHit: false, fired: false, aerial, aim: aim || 'n', hits: 0, armorSpent: false };
     this.body.fastFalling = false;
     if (move.unparryable) this.world.fx.text(this.x, this.y - 134, 'UNPARRYABLE!', '#c4452e');
     if (this.cfg.hooks?.onMoveStart) this.cfg.hooks.onMoveStart(this, slot, move);
@@ -139,8 +145,13 @@ export class Fighter {
     const total = (m.startup || 0) + (m.active || 0) + (m.recover || 0);
     if (m.travel && a.frame <= (m.startup || 0) + (m.active || 0)) {
       this.body.x += this.facing * (m.travel / ((m.startup || 0) + (m.active || 0)));
-      if (this.airborne) this.body.vy = Math.min(this.body.vy, 0);   // lunges hover through their travel
+      if (this.airborne && m.kind !== 'aerial') this.body.vy = Math.min(this.body.vy, 0);   // lunges hover through their travel
     }
+    if (m.lift && this.airborne) {                                       // recovery: rise through startup + active
+      if (a.frame === 1) this.body.vy = -m.lift;
+      else if (a.frame <= (m.startup || 0) + (m.active || 0)) this.body.vy = Math.min(this.body.vy, -m.lift * 0.45);
+    }
+    if (m.dive && this.airborne && a.frame >= (m.startup || 0)) this.body.vy = Math.max(this.body.vy, m.dive);   // ground pound: drop
     if (!a.fired && a.frame >= (m.startup || 0)) { a.fired = true; this.world.fire(this, a); }
     if (a.frame >= total) {
       const whiffed = !a.hasHit && !['buff', 'parry', 'catch', 'bell', 'zoneSuper', 'teleport'].includes(m.kind);
@@ -184,7 +195,7 @@ export class Fighter {
     this.attack = null; this.landLag = 0; this.tripOnLand = false;
     this.hurtFlash = 5;
     const emptiness = 1 - this.gauge / this.maxGauge;
-    const speed = (kb + kbScale * emptiness) / this.cfg.stats.weight * PHYS.KNOCKBACK_MULT;
+    const speed = (kb * PHYS.KB_BASE_MULT + kbScale * PHYS.KB_SCALE_MULT * emptiness) / this.cfg.stats.weight;
     const rad = kbAngle * Math.PI / 180;
     let vx = Math.cos(rad) * speed * dir;
     let vy = -Math.sin(rad) * speed;
@@ -272,6 +283,7 @@ export class Fighter {
         if (whiffed && m.whiffStagger) this.tripOnLand = true;     // Faceplant: whiffed dair, botched landing
       }
       if (this.tripOnLand) { this.tripOnLand = false; this.stagger(SELF_STAGGER, true); }
+      this.recoveryUsed = false;
       this.world.fx.dust(this.x, this.y, '#cbbfa6', 3);
     }
     if (this.landLag > 0) this.landLag--;
@@ -283,7 +295,7 @@ export class Fighter {
     for (const slot of SLOT_PRIORITY) {
       if (!c.buffered(slot)) continue;
       c.consume(slot);
-      const aim = !this.grounded ? (intent.down ? 'd' : c.held('up') ? 'u' : (intent.left || intent.right) ? 's' : 'n') : null;
+      const aim = intent.down ? 'd' : (!this.grounded && c.held('up')) ? 'u' : (intent.left || intent.right) ? 's' : 'n';
       if (this.startMove(slot, aim)) return;
     }
   }
@@ -301,7 +313,7 @@ export class Fighter {
       this.body = new MovementBody(this.stats, pos);
       this.body.facing = this.opp && this.opp.x < pos.x ? -1 : 1;
       this.state = 'normal'; this.stateT = 0;
-      this.attack = null; this.landLag = 0;
+      this.attack = null; this.landLag = 0; this.recoveryUsed = false;
     }
   }
 
@@ -353,6 +365,9 @@ export class Fighter {
     if (a.hasHit && !multi) return null;
     if (multi && a.frame < (a.nextHitAt || 0)) return null;
     const reach = m.range || 60, h = this.body.h, b = this.body;
+    if (m.lift) return { x: b.x + b.facing * 10, y: b.y - h * 0.7, w: reach, h: 90, move: m, slot: a.slot };   // recovery: tall rising arc
+    if (m.dive) return { x: b.x, y: b.y + 10, w: reach, h: 50, move: m, slot: a.slot };                            // ground pound: under the feet
+    if (m.low) return { x: b.x + b.facing * (reach * 0.5), y: b.y - 22, w: reach, h: 44, move: m, slot: a.slot };   // low sweeps
     if (a.aerial && a.aim === 'u') return { x: b.x, y: b.y - h - 10, w: reach, h: 50, move: m, slot: a.slot };
     if (a.aerial && a.aim === 'd') return { x: b.x, y: b.y + 14, w: reach, h: 46, move: m, slot: a.slot };
     if (m.bothSides || (a.aerial && a.aim === 'n')) return { x: b.x, y: b.y - h * 0.5, w: reach * 1.7, h: 64, move: m, slot: a.slot };

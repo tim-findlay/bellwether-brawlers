@@ -46,6 +46,7 @@ export class AIController {
     this.plan = { kind: 'wait' };
     this.mode = 'neutral';         // 'neutral' | 'recovery' | 'chair' (for tests/debug)
     this.aim = null; this.aimUntil = -1; this.aimDir = 1;
+    this.gAim = null; this.gAimUntil = -1; this.gAimDir = 1;   // ground light/heavy direction (actions.groundAim)
     this.dash = 0;                 // ±1 on the tick a dash is requested
     this.tapDown = false;          // fresh down tap this tick (drop-through)
     this.swungThisAir = false;
@@ -133,6 +134,11 @@ export class AIController {
       else if (this.aim === 'd') this.helds.add('down');
       else if (this.aim === 's') this.helds.add(this.aimDir > 0 ? 'right' : 'left');
     } else if (this.aim && !this.buffered('light')) this.aim = null;
+    if (this.gAim && f.grounded && this.frame <= this.gAimUntil && (this.buffered('light') || this.buffered('heavy'))) {
+      this.helds.delete('left'); this.helds.delete('right'); this.helds.delete('down');
+      if (this.gAim === 's') this.helds.add(this.gAimDir > 0 ? 'right' : 'left');
+      else if (this.gAim === 'd') this.helds.add('down');
+    } else if (this.gAim && this.frame > this.gAimUntil) this.gAim = null;
 
     let left = this.helds.has('left'), right = this.helds.has('right');
     let dashL = this.dash < 0 && f.grounded, dashR = this.dash > 0 && f.grounded;

@@ -127,8 +127,25 @@ export function pressMove(ai, f, opp, slot) {
   const toward = opp.x >= f.x ? 1 : -1;
   const facingFree = m && ['buff', 'parry', 'catch', 'teleport', 'bell', 'columns', 'zoneSuper'].includes(m.kind);
   if (!facingFree && f.grounded && f.facing !== toward && !f.attack) { ai.helds.add(dirKey(toward)); return; }
+  if ((slot === 'light' || slot === 'heavy') && f.grounded) groundAim(ai, f, opp, slot);
   ai.press(slot);
   ai.plan = { kind: 'wait' };
+}
+
+// Which ground variant? Side when they're at the edge of reach (the step-in
+// versions reach further), down when they're fresh (the launcher starts the
+// air chase) or airborne just above us, neutral otherwise. Held for the
+// press's buffer window via ai.gAim (see AIController._compose).
+function groundAim(ai, f, opp, slot) {
+  const dist = Math.abs(opp.x - f.x), r = ai.rng();
+  const base = f.cfg[slot], side = slot === 'light' ? f.cfg.lights?.s : f.cfg.sigs?.s;
+  const emptiness = 1 - opp.gauge / opp.maxGauge;
+  let aim = 'n';
+  if (side && dist > (base.range || 60) * 0.8 && r < 0.75) aim = 's';
+  else if (opp.y < f.y - 30 && r < 0.6) aim = 'd';                       // they're above: the launcher / low sweep tracks up
+  else if (emptiness < 0.45 && r < 0.4) aim = 'd';
+  else if (r < 0.3) aim = 's';
+  ai.gAim = aim; ai.gAimDir = opp.x >= f.x ? 1 : -1; ai.gAimUntil = ai.frame + PHYS.INPUT_BUFFER;
 }
 
 // Which aerial (if any) would connect right now? Spikes off-stage only with a
