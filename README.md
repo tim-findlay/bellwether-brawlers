@@ -40,16 +40,16 @@ Bindings are by **physical key position** (US labels shown), so they work on any
 
 | Fighter | Archetype | Specials | Super |
 |---|---|---|---|
-| **BEN** — The Big Boss | Long-range bully | Hawk Toss (lobbed football) · Off the Lip (chair-surf lunge, works in the air — his recovery) | TWELFTH MAN — unparryable stadium roar (jump it) |
-| **TIM** — The Operator | Tempo all-rounder | Prompt Injection (cursed e-mail, briefly reverses movement) · Zulu Time (rewinds his cooldowns) | AGI MOMENT — dash-through auto-combo |
-| **ADRIAN** — The Walking Hazard | Chaos rushdown | Clumsy Charge (trips if he misses — in the air, on the landing) · Nero Spill (slippery puddle) | FULL AUDIT — multi-hit flail, trips at the end |
-| **RICHY** — The Market | Dual-candle zoner | Bull Run (rising candle — his kill shot) · Bear Raid (ground roller — jump it); alternating *landed* candles build bonus damage. Short Squeeze (heavy) **pulls you in** | TO THE MOON — telegraphed chart eruptions |
-| **NICK** — The Concierge | Teleport glass cannon | Status Match (teleport behind — also his recovery) · Points Redemption (card fan — sets up his signatures, doesn't kill) | LIFETIME PLATINUM — 4 s lounge buff, builds no meter |
-| **ABI** — The Gatekeeper | Counter-puncher | Calendar Block (melee parry → "DECLINED!") · House Rosé (slowing lob) | PUB O'CLOCK — locks specials, regen until she's hit |
-| **MIKE** — The Site Manager | Armored grappler tank | Scaffold Slam (unparryable command grab — jump it) · Demolition Day (shockwave that destroys projectiles) | WRECKING BALL — two dodgeable passes. No recovery special: knock him off and guard the edge |
-| **SEELYE** — The Pitmaster | Setplay / debt collector (a regular guy in a suit; the smoker is a hobby) | Brisket Bomb (ember zone) · Dad Reflexes (catches projectiles for meter) | LOW & SLOW — drifting smoke blanket |
+| **BEN** — The Big Boss | Long-range bully | My Office. Now. (a memo that drags you toward him — jump it) · Off the Lip (chair-surf lunge, works in the air — his recovery) | TWELFTH MAN — unparryable stadium roar (jump it) |
+| **TIM** — The Operator | Tempo all-rounder | Scheduled Send (marks the floor under you, strikes a beat later — move) · Zulu Time (rewinds Scheduled Send, next hit +2) | RUN FLOW — dash-through auto-combo |
+| **ADRIAN** — The Walking Hazard | Chaos rushdown | Clumsy Charge (trips if he misses — and the fall can still hit you) · Nero Spill (slippery puddle) | FULL AUDIT — multi-hit flail, trips at the end |
+| **RICHY** — The Market | Dual-candle zoner | Bull Run (rising candle) · Bear Raid (ground roller — jump it); alternating *landed* candles build bonus damage. Short Squeeze (heavy) **pulls you in** | RATE HIKES — telegraphed chart eruptions |
+| **NICK** — The Concierge | Teleport glass cannon | Status Match (teleport behind — also his recovery) · Points Redemption (card fan) | I KNOW YOUR GUY — borrows *your* first special for 10 s |
+| **ABI** — The Gatekeeper | Counter-puncher | Calendar Block (melee parry, works in the air → "DECLINED!" + your specials locked) · House Rosé (slowing lob) | PUB O'CLOCK — locks specials, regen until she's hit |
+| **MIKE** — The Site Manager | Armored grappler tank | Scaffold Slam (unparryable command grab — jump it; he can throw you either way) · Demolition Day (shockwave that destroys projectiles) | WRECKING BALL — two dodgeable passes. No recovery special: knock him off and guard the edge |
+| **SEELYE** — The Lender | Setplay / debt collector, new dad | Drawdown (binder lob, leaves burning paperwork) · Dad Reflexes (catches projectiles for meter) | ENFORCEMENT — parryable cone that collects a LIEN for +8 |
 
-Seelye's LIEN: his heavy marks you and his next special collects +4. If Mike is in the match the fight can suddenly relocate to **Berlin** (his home turf) — that's an event, not a stage pick.
+Seelye's LIEN: his heavy and his recovery mark you; his next special collects +4 and Enforcement collects +8. If Mike is in the match the fight can suddenly relocate to **Berlin** (his home turf) — that's an event, not a stage pick.
 
 ### Stages
 

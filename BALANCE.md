@@ -8,14 +8,14 @@
 2. **Telegraph rule (canonical, OR-form).** Any move dealing ≥ 12 gauge, carrying a status, **unparryable**, or **spiking** needs at least one of: ≥ 18f readable startup, a distinct sound cue, or a fixed/marked arrival point.
    **Unparryable (v3 definition, replaces v2 "unblockable"):** pierces Calendar Block's parry and Dad Reflexes' catch and cannot be armored through; whiffs against airborne and non-actionable fighters; dodge i-frames avoid it. The universal answer is *jump it*.
 3. **Counterplay is a hard requirement.** Every special and super ships with a written counter in DESIGN.md. No counter, no ship. Spikes are covered collectively by the spike counter-rules (telegraph rule; heaviest landing lag; spiking off-stage risks your own stock) — an individual spike needs its own written counter only if it breaks those defaults.
-4. **Statuses are short, visible, worded.** *Impairing* statuses (slow, reversed, silence, burn) cap at 3.5 s, callouts + duration bars, nothing self-stacks, reversal still ends when its owner converts. Marks and self-buffs (lien 8 s, LIFETIME PLATINUM's haste/dmgUp 4 s, Zulu Time's nextHit 10 s) are exempt from the cap — they impair nobody — but keep callouts and declared durations. The two staggers are fixed-frame *states* (Numbers doctrine), not statuses.
+4. **Statuses are short, visible, worded.** *Impairing* statuses (slow, silence, burn — and `reversed`, which no roster move applies since the kit rethink) cap at 3.5 s, callouts + duration bars, nothing self-stacks, reversal still ends when its owner converts. Marks and self-buffs (lien 8 s, Zulu Time's nextHit 10 s, I KNOW YOUR GUY's borrowed special 10 s) are exempt from the cap — they impair nobody — but keep callouts and declared durations. The two staggers are fixed-frame *states* (Numbers doctrine), not statuses.
 5. **Hazards never decide matches.** Telegraphed ≥ 1 s; knockback ≤ 6.0 (below kill-class, see Knockback); never directed toward a blast zone; symmetric or dodgeable; suppressed during supers; hazard staggers are never comboable (recovery invulnerability).
-6. **No camping packages.** Composure refills **only** on stock loss — waiting heals nothing. *The single exception:* ABI's PUB O'CLOCK regen (2/s for 5 s), which cancels on any hit — it forces her opponent to engage, the opposite of camping; gates 2–4 cover any abuse. Hazard rewards are meter-only. Off-stage time is risk by construction (no ledge invulnerability, air dodge once per airtime). Hazards push toward centre. Self-buff supers that don't commit their user to engaging (LIFETIME PLATINUM) build no meter while active. Camping and ledge-stalling must sim worse than fighting (gates 2–4).
+6. **No camping packages.** Composure refills **only** on stock loss — waiting heals nothing. *The single exception:* ABI's PUB O'CLOCK regen (2/s for 5 s), which cancels on any hit — it forces her opponent to engage, the opposite of camping; gates 2–4 cover any abuse. Hazard rewards are meter-only. Off-stage time is risk by construction (no ledge invulnerability, air dodge once per airtime). Hazards push toward centre. Self-buff supers that don't commit their user to engaging build no meter while active (none on the roster since LIFETIME PLATINUM was retired; the `noMeter` status remains). I KNOW YOUR GUY is not one: its payoff is a special Nick still has to land, so it builds meter. Camping and ledge-stalling must sim worse than fighting (gates 2–4).
 7. **Recovery is a balance axis, not a right.** Who has a recovery special is deliberate (Ben, Adrian, Nick: yes; Mike: emphatically not). Tune kill power against recovery strength, not in isolation.
 
 ## Numbers doctrine
 
-- **Gauge band:** 85 (Nick) – 110 (Ben/Seelye). **Weight band:** 0.9 (Nick) – 1.08 (Mike) — narrowed in the Phase-3 pass: weight divides the launch speed linearly, so the old 0.85–1.45 spread alone swung kill thresholds by ~70 %. **Run band:** 4.4 (Mike) – 6.2 (Nick) px/frame at base zoom. Fall speed correlates with weight (floaties live longer upward, die earlier sideways). Per-character values live in `src/data/characters/<id>.js`, inside these bands; `physics.js` holds the universal constants and formulas.
+- **Gauge band:** 94 (Adrian) – 110 (Ben). **Weight band:** 0.97 (Nick/Adrian) – 1.12 (Mike) — narrowed in the Phase-3 pass (the bands were restated from the data in pass 3; the old 85–110 / 0.9–1.08 text had gone stale after pass 2): weight divides the launch speed linearly, so the old 0.85–1.45 spread alone swung kill thresholds by ~70 %. **Run band:** 4.4 (Mike) – 6.2 (Nick) px/frame at base zoom. Fall speed correlates with weight (floaties live longer upward, die earlier sideways). Per-character values live in `src/data/characters/<id>.js`, inside these bands; `physics.js` holds the universal constants and formulas.
 - **Knockback (canonical formula):**
   `kb = (move.kb × KB_BASE_MULT + move.kbScale × KB_SCALE_MULT × emptiness) / weight`, where `emptiness = 1 − gauge/maxGauge` (multipliers 0.8 / 2.0 since the Phase-3b feel pass: early hits flinch, late hits kill).
   **kb is the launch speed in px/frame at base zoom, set (not added) along `kbAngle`** (per-move data, degrees; spikes use 270 ± 15) on the frame the hit lands. Hitstun = `round(kb × HITSTUN_PER_KB)` frames.
@@ -78,7 +78,35 @@ Two independent samples before shipping a tuning pass: n ≈ 420–560 games per
 
 ## Current results
 
-**v3 balance pass 2 — Phase 3b (2026-09-25) — all five gates PASS on two independent seeds at N = 30** (`node src/dev/sim.js 30 1337` / `… 2024`, 1680 matches + 840 camp + 840 stall each, five selectable stages, n = 420 games per fighter, 95 % CI ≈ ±5).
+**v3 balance pass 3 — kit rethink (2026-09-25) — all five gates PASS on two independent seeds at N = 30** (`node src/dev/sim.js 30 1337` / `… 2024`, same methodology as pass 2).
+
+| Fighter | seed 1337 | seed 2024 |
+|---|---|---|
+| Ben | 54.5 % | 48.8 % |
+| Tim | 45.6 % | 47.1 % |
+| Adrian | 51.8 % | 54.6 % |
+| Richy | 46.7 % | 49.9 % |
+| Nick | 47.6 % | 48.1 % |
+| Abi | 52.1 % | 47.6 % |
+| Mike | 50.1 % | 49.8 % |
+| Seelye | 51.5 % | 54.0 % |
+| **camp (≤ 55)** | 30.4 % | 28.3 % |
+| **stall (≤ 45)** | 3.0 % | 2.7 % |
+| **engagement flags (< 2 %)** | 0.89 % | 0.95 % |
+| **recovery dishonest (< 10 %)** | 0.76 % | 0.84 % |
+
+Spread 45.6–54.6 % (pass 2: 44.4–55.0 %). Avg match 6658 / 6696 f (111–112 s); 14 / 13 capped, 0 stuck. Matrix, seed 1337 (row beats column, /30): Ben v Tim 18 · Adrian 21 · Richy 19 · Nick 17 · Abi 17 · Mike 15 · Seelye 13 — Tim v Ben 16 · Adrian 12.5 · Richy 17 · Nick 17 · Abi 10 · Mike 12 · Seelye 16 — Adrian v Ben 12 · Tim 17 · Richy 12 · Nick 21 · Abi 17 · Mike 17 · Seelye 19 — Richy v Ben 14 · Tim 13 · Adrian 18 · Nick 14 · Abi 17 · Mike 19 · Seelye 13 — Nick v Ben 16 · Tim 20 · Adrian 10 · Richy 22 · Abi 13 · Mike 9 · Seelye 17 — Abi v Ben 13 · Tim 14 · Adrian 20 · Richy 17 · Nick 17 · Mike 14 · Seelye 16 — Mike v Ben 11 · Tim 17 · Adrian 14 · Richy 15 · Nick 20 · Abi 13 · Seelye 14 — Seelye v Ben 19 · Tim 20 · Adrian 12 · Richy 20 · Nick 11 · Abi 15 · Mike 17.5. **Known soft spots:** Tim sits lowest on both seeds (45–47 %) — retiring the reversed-controls e-mail cost him the CPU stumble it caused, and Scheduled Send sets up rather than kills; Seelye leads seed 2024 (54 %, 26/30 over Abi); Nick loses ~2:1 to Adrian. A human pass should confirm the new verbs read before any numbers-only fix.
+
+**What pass 3 changed and why** (`docs/PROPOSAL-kits.md` is the signed-off plan; final numbers below differ from it where the sim said so):
+
+- *Hardcoded → data (no sign-off needed, called out):* the `columns` behaviour reads offsets / delay / step / kbAngle / colour / slot / onTarget from the move (defaults = Richy's super); the parry riposte reads `counter` from the parry move (defaults = the old Declined numbers).
+- *Defect fix:* the parry riposte was flagged unparryable and so whiffed against airborne attackers — Calendar Block did nothing to jump-ins. Repro in `tests/kits.test.mjs`; the riposte is now a normal hit.
+- *Approved engine items (Tim's sign-off on the proposal):* I KNOW YOUR GUY (move kind `borrow`: s2 becomes a copy of the opponent's s1 for 600f, +2 startup, cooldown capped at 150f, supers never copied), Happy Accident (`cfg.tripHit`: a whiffed-move self-stagger fires one 6-dmg 5/5 @75 hitbox at 70 px; the 30f stagger is unchanged), Declined silence (90f), aimable grabs (`aimable`: hold back at the release throws behind), air parry.
+- *New kits (data):* Ben My Office. Now. (dmg 7, 5/6 @150 — a pull; cooldown 380, speed 3.2), Corner Office side signature (range 100, 18f startup, recover 28), Chair Surf recovery (travel 110, lift 8) · Tim Scheduled Send (one strike under the target, 34f delay, 10 dmg 6/11 @70, cooldown 220), Zulu Time cooldown 600 → 480, gauge 100 → 104, run 5.4 → 5.7, Escalation recovery 8 dmg / kbScale 10 · Adrian Overshoot recovery (travel 140, lift 7, whiff-stagger), Facedown whiff-stagger, Table Flip kbScale 12 → 11 · Nick Priority Boarding recovery (lift 12, 8 i-frames), Fund Structure kbScale 11 → 11.5, Card Fan kbScale 11 → 12 · Abi gauge 96 → 100, RSVP recovery slows 60f · Mike Scaffold Rise lift 9 + armor [1, 10], Site Drop armor [4, 14] landLag 24, weight 1.15 → 1.12 · Seelye Enforcement super (shout, 12 dmg 8/14 @40, range 90, 24f startup, +8 on a lien — 20 total), Drawdown dmg 9 → 8, Term Sheet Rise applies lien, gauge 110 → 106.
+- *Tuning path:* the first cut (proposal numbers) failed gate 1 — Ben 61 % (the pull fed Wingspan / Corner Office: 61 % hit rate), Tim 39 %, Adrian 61 % (relative: his own changes barely register). Four rounds of the adjustments above brought everyone inside the band; each approved engine item was then added one commit at a time with both seeds re-run (all passed; Nick needed the borrow cooldown cap and the two kbScale nudges after losing Lifetime Platinum's haste/+3 damage).
+- *AI:* `columns` counts as a ranged special; the CPU aims an aimable throw at the nearer edge and fires a borrowed special the way its owner's archetype would.
+
+**v3 balance pass 2 — Phase 3b (2026-09-25, superseded) — all five gates PASS on two independent seeds at N = 30** (`node src/dev/sim.js 30 1337` / `… 2024`, 1680 matches + 840 camp + 840 stall each, five selectable stages, n = 420 games per fighter, 95 % CI ≈ ±5).
 
 | Fighter | seed 1337 | seed 2024 |
 |---|---|---|

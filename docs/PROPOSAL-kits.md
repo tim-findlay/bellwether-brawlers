@@ -1,6 +1,8 @@
 # Kit rethink — proposal for sign-off (2026-09-25)
 
-Status: **proposal, nothing implemented.** Tim's note: "fully challenge and potentially rethink the abilities of each character, they are a bit stale / dated."
+Status: **approved by Tim ("go") and implemented 2026-09-25**; all four decisions taken as yes and all five [ENGINE] items built. The final numbers differ from the ones below where the sim said so; DESIGN.md (roster) and BALANCE.md (pass 3) are canonical. Deltas: Nick's borrow lasts 10 s, caps the borrowed cooldown at 150f and builds meter; Enforcement is 12 dmg (+8 lien), range 90; Scheduled Send is 10 dmg on a 34f delay; Ben's Corner Office is range 100 at 18f; Mike ended at weight 1.12 with lift 9. Implementing the air parry also exposed a defect (the parry riposte whiffed against airborne attackers), fixed separately.
+
+Original proposal text follows. Tim's note: "fully challenge and potentially rethink the abilities of each character, they are a bit stale / dated."
 Every change is tagged:
 
 - **[DATA]** — character-file values or kit overrides using move kinds and fields the engine already honours (`travel`, `lift`, `dive`, `armor`, `applyStatus`, `zoneOnLand`, `whiffStagger`, `iframes`, `kbAngle` past 90 for pulls, per-fighter `hooks`). No sign-off needed, but every batch re-runs `node src/dev/sim.js 30 1337` and `… 2024` against the five BALANCE.md gates.
