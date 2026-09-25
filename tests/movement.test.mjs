@@ -257,7 +257,7 @@ test('jump wins a same-tick drop + jump', () => {
   step(b, { down: true, downTapped: true, jump: true });
   assert.equal(b.grounded, false);
   assert.equal(b.airJumps, 1, 'full ground jump, double jump preserved');
-  assert.ok(b.vy < -MID.jumpImpulse * PHYS.DOUBLE_JUMP_FACTOR, 'full impulse, not the weaker air jump');
+  assert.equal(b.vy, -MID.jumpImpulse + PHYS.GRAV, 'full impulse, not the weaker air jump');
 });
 
 test('spot dodge: in place, i-frames exactly 2-13 (0-indexed stateT), shared cooldown starts', () => {
@@ -339,4 +339,29 @@ test('blast asymmetry: generous going up, strict going down', () => {
   const out = (pos, vy = 0) => { const b = new MovementBody(MID, pos); b.vy = vy; step(b); return b.out; };
   assert.equal(out({ x: 640, y: 1150 }), false);           // feet past bottom, head (~1054) not: alive
   assert.equal(out({ x: 640, y: -250 }, -1), false);       // head (~-346) past top, feet not: alive
+});
+
+test('launch(): stun locks intent, applies launch drag in the air, and landing clears it', () => {
+  const b = landed();
+  b.launch(9, -8, 30);
+  assert.equal(b.grounded, false);
+  assert.equal(b.stun, 30);
+  step(b, { left: true, jump: true, dodge: true });        // all ignored under stun
+  assert.equal(b.airJumps, 1);
+  assert.equal(b.consumedJump, false);
+  assert.ok(b.vx > 0 && b.vx < 9, 'drag, not steering');
+  assert.equal(b.stun, 29);
+  step(b, IDLE, 120);                                      // falls back to the slab
+  assert.equal(b.grounded, true);
+  assert.equal(b.stun, 0, 'landing ends hitstun');
+  step(b, { jump: true });
+  assert.ok(b.vy < 0, 'actionable again');
+});
+
+test('skid-turn accelerates harder than a normal run start', () => {
+  const b = landed();
+  step(b, { right: true }, 20);
+  const before = b.vx;
+  step(b, { left: true });
+  assert.ok(Math.abs(b.vx - before) > PHYS.RUN_ACCEL + 1e-9, 'turnaround multiplier applied');
 });

@@ -30,30 +30,33 @@
 - **Self-stagger** (Adrian's tax, replaces v2 trips): 30f non-actionable, fully vulnerable, no invulnerability on exit. **Hazard stagger:** 20f, never comboable, invulnerable through recovery.
 - **Respawn:** invulnerable until first action, hard cap 180f; spawn platform (the chair) descends from centre-top over 60f.
 
-## physics.js — frozen values (graybox sign-off 2026-06-12)
+## physics.js — Phase-3 retune (2026-09-25)
 
-*Tim played the Phase-1 graybox and signed off on the starting values unchanged — these are now canonical. Tuning later is fine, but `src/data/physics.js` and this table change in the same commit. World units: px at base zoom (960×540 viewport; stages ~2.5 viewports wide including blast-zone margins). Per-character entries are bands the character files must respect.*
+*Tim's Phase-3 brief ("seriously improve the physics — fast paced") is the sign-off for this retune; it supersedes the graybox-frozen table (kept in git history). Everything got faster and heavier: run speeds ≈ ×1.7, gravity ×1.55 with taller impulses (jumps of the same height that resolve in fewer frames), a skid-turn multiplier, stronger air control, shorter dash and dodge cooldowns. `src/data/physics.js` and this table change in the same commit. World units: px at base zoom (960×540 viewport). Per-character entries are bands the character files must respect.*
 
-| Constant | Start | Constant | Start |
+| Constant | Value | Constant | Value |
 |----------|-------|----------|-------|
-| GRAV (global) | 0.55 px/f² | RUN_ACCEL | 0.35 |
-| RUN_FRICTION | 0.82 | RUN_MAX | per-char 2.4–3.7 |
-| JUMP_IMPULSE | per-char 10–12 | DOUBLE_JUMP | 0.92 × jump |
-| AIR_ACCEL | 0.22 | AIR_MAX | 0.85 × run |
-| FAST_FALL_MULT | 2.5 | FALL_MAX | per-char 9–13 |
-| DASH_SPEED | 1.8 × run | DASH_DURATION | 14f |
-| DASH_TAP_WINDOW | 12f | DASH_COOLDOWN | 24f after dash ends |
-| DASH_JUMP_CARRY | 1.0 (full) | COYOTE_FRAMES | 5 |
-| INPUT_BUFFER | 6f | HITSTUN_PER_KB | 2.4 |
-| DODGE_COOLDOWN | 72f | STEP_DODGE_IMPULSE | 3.5 |
-| DROP_THROUGH_GRACE | 8f soft-plat collision ignored after a drop | | |
-| AIR_MOMENTUM_DECAY | 0.985 | GROUND_DEADZONE | 0.05 |
-| SPOT_DODGE_DURATION | 18f (i-frames 2–13) | AIR_DODGE_DURATION | 22f (i-frames 3–15) |
-| AIR_DODGE_IMPULSE | 4.5 | | |
+| GRAV (global) | 0.85 px/f² | RUN_ACCEL | 0.9 |
+| TURN_ACCEL_MULT | 2.2 (accel × this while vx opposes the held direction) | RUN_FRICTION | 0.76 |
+| RUN_MAX | per-char 4.4–6.2 | JUMP_IMPULSE | per-char 14–16 |
+| DOUBLE_JUMP | 0.95 × jump | AIR_ACCEL | 0.55 |
+| AIR_MAX | 0.9 × run | FAST_FALL_MULT | 2.2 |
+| FALL_MAX | per-char 12–16 | DASH_SPEED | 1.7 × run |
+| DASH_DURATION | 12f | DASH_TAP_WINDOW | 12f |
+| DASH_COOLDOWN | 16f after dash ends | DASH_JUMP_CARRY | 1.0 (full) |
+| COYOTE_FRAMES | 5 | INPUT_BUFFER | 6f |
+| HITSTUN_PER_KB | 2.4 | LAUNCH_DRAG | 0.98 (vx × this per frame while stunned in the air) |
+| STUN_LANDING_CLEARS | true (landing ends hitstun — no tech) | DODGE_COOLDOWN | 60f |
+| STEP_DODGE_IMPULSE | 6 | SPOT_DODGE_DURATION | 18f (i-frames 2–13) |
+| AIR_DODGE_DURATION | 22f (i-frames 3–15) | AIR_DODGE_IMPULSE | 7 |
+| DROP_THROUGH_GRACE | 8f | AIR_MOMENTUM_DECAY | 0.985 |
+| GROUND_DEADZONE | 0.05 | | |
+
+Jump arcs under the new table (MID: impulse 15): single-jump rise ≈ 132 px in 18 frames; jump → double-jump ≈ 250 px. **Consequence called out:** the low platforms (≈110 px above the slab) are now single-jump reachable — the Phase-2 "deliberately just short" rule is retired in favour of pace; upper platforms still need the double jump or a platform hop.
 
 I-frame windows are **0-indexed engine ticks** counted from the dodge's first full tick (the start tick is tick 0) — combat code must read them with that convention.
 
-Movement semantics frozen with the values: dash initiates grounded-only (air double-taps do nothing) and its **direction latches at start — dashes are not steerable**; dash-jump carries the momentum airborne; a double jump cancels a still-live dash; jump wins a same-tick drop+jump; fast-fall (down held) lands **on** soft platforms; drop-through needs a fresh tap (DESIGN.md, Movement). Air dodge suspends gravity for its 22f and a neutral air dodge zeroes all momentum — **re-confirm that interaction when Phase-2 knockback lands** (an air dodge that cancels launch momentum is a big defensive lever).
+Movement semantics unchanged from the graybox freeze: dash initiates grounded-only (air double-taps do nothing) and its **direction latches at start — dashes are not steerable**; dash-jump carries the momentum airborne; a double jump cancels a still-live dash; jump wins a same-tick drop+jump; fast-fall (down held) lands **on** soft platforms; drop-through needs a fresh tap (DESIGN.md, Movement). **New (Phase 3):** `MovementBody.launch(vx, vy, stun)` is the only way combat moves a body — while `stun > 0` the body ignores intent, keeps gravity, and its vx decays by LAUNCH_DRAG in the air (RUN_FRICTION on the ground). Air dodge still suspends gravity for its 22f; a neutral air dodge zeroes all momentum — a real defensive lever against launches (dodge cooldown 60f makes it one read per launch).
 
 ## Sim methodology
 

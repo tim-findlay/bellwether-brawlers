@@ -2,30 +2,33 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { PHYS } from '../src/data/physics.js';
 
-// These values are canonical in BALANCE.md ("physics.js — graybox starting
-// values"). If you tune them, change BALANCE.md in the same commit.
-test('PHYS matches the BALANCE.md starting-value table', () => {
-  assert.equal(PHYS.GRAV, 0.55);
-  assert.equal(PHYS.RUN_ACCEL, 0.35);
-  assert.equal(PHYS.RUN_FRICTION, 0.82);
-  assert.equal(PHYS.AIR_ACCEL, 0.22);
-  assert.equal(PHYS.AIR_MAX_FACTOR, 0.85);
-  assert.equal(PHYS.FAST_FALL_MULT, 2.5);
-  assert.equal(PHYS.DASH_SPEED_FACTOR, 1.8);
-  assert.equal(PHYS.DASH_DURATION, 14);
+// These values are canonical in BALANCE.md ("physics.js — Phase-3 retune").
+// If you tune them, change BALANCE.md in the same commit.
+test('PHYS matches the BALANCE.md Phase-3 table', () => {
+  assert.equal(PHYS.GRAV, 0.85);
+  assert.equal(PHYS.RUN_ACCEL, 0.9);
+  assert.equal(PHYS.TURN_ACCEL_MULT, 2.2);
+  assert.equal(PHYS.RUN_FRICTION, 0.76);
+  assert.equal(PHYS.AIR_ACCEL, 0.55);
+  assert.equal(PHYS.AIR_MAX_FACTOR, 0.9);
+  assert.equal(PHYS.FAST_FALL_MULT, 2.2);
+  assert.equal(PHYS.DASH_SPEED_FACTOR, 1.7);
+  assert.equal(PHYS.DASH_DURATION, 12);
   assert.equal(PHYS.DASH_TAP_WINDOW, 12);
-  assert.equal(PHYS.DASH_COOLDOWN, 24);
+  assert.equal(PHYS.DASH_COOLDOWN, 16);
   assert.equal(PHYS.DASH_JUMP_CARRY, 1.0);
-  assert.equal(PHYS.DOUBLE_JUMP_FACTOR, 0.92);
+  assert.equal(PHYS.DOUBLE_JUMP_FACTOR, 0.95);
   assert.equal(PHYS.COYOTE_FRAMES, 5);
   assert.equal(PHYS.INPUT_BUFFER, 6);
-  assert.equal(PHYS.DODGE_COOLDOWN, 72);
-  assert.equal(PHYS.STEP_DODGE_IMPULSE, 3.5);
+  assert.equal(PHYS.DODGE_COOLDOWN, 60);
+  assert.equal(PHYS.STEP_DODGE_IMPULSE, 6);
   assert.equal(PHYS.SPOT_DODGE_DURATION, 18);
   assert.equal(PHYS.AIR_DODGE_DURATION, 22);
-  assert.equal(PHYS.AIR_DODGE_IMPULSE, 4.5);
+  assert.equal(PHYS.AIR_DODGE_IMPULSE, 7);
   assert.equal(PHYS.DROP_THROUGH_GRACE, 8);
   assert.equal(PHYS.HITSTUN_PER_KB, 2.4);
+  assert.equal(PHYS.LAUNCH_DRAG, 0.98);
+  assert.equal(PHYS.STUN_LANDING_CLEARS, true);
   assert.equal(PHYS.AIR_MOMENTUM_DECAY, 0.985);
   assert.equal(PHYS.GROUND_DEADZONE, 0.05);
 });

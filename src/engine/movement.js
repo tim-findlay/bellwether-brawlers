@@ -26,6 +26,8 @@ export class MovementBody {
     this.dodgeVec = null;        // {x,y} during step/air dodge
     this.dropT = 0;              // soft-platform collision ignored while > 0
     this.out = false;            // crossed a blast zone
+    this.stun = 0;               // hitstun frames left: intent ignored, launch drag applies
+    this.landed = false;         // true on the tick the body touched down (landing lag hook)
     this.consumedJump = false;   // adapter reads these to consume buffered presses
     this.consumedDodge = false;
   }
@@ -41,12 +43,33 @@ export class MovementBody {
     return false;
   }
 
+  // Knockback entry point (combat): set the launch velocity, lock intent for
+  // `frames`, cancel whatever the body was doing. vy < 0 lifts off the ground.
+  launch(vx, vy, frames) {
+    this.vx = vx; this.vy = vy;
+    this.stun = Math.max(this.stun, frames | 0);
+    this.dashT = 0; this.dodgeT = 0; this.dodgeVec = null; this.fastFalling = false;
+    if (vy < 0) { this.grounded = false; this.onPlatform = false; this.coyoteT = 0; }
+    this._setState(this.grounded ? 'idle' : 'air');
+  }
+
   update(intent, stage) {
-    this.consumedJump = false; this.consumedDodge = false;
+    this.consumedJump = false; this.consumedDodge = false; this.landed = false;
     this.stateT++;
     if (this.dashCd > 0) this.dashCd--;
     if (this.dodgeCd > 0) this.dodgeCd--;
     if (this.dropT > 0) this.dropT--;
+
+    if (this.stun > 0) {                     // hitstun: no steering, gravity + drag only
+      this.stun--;
+      if (this.grounded) { this.vx *= PHYS.RUN_FRICTION; if (Math.abs(this.vx) < PHYS.GROUND_DEADZONE) this.vx = 0; }
+      else { this.vx *= PHYS.LAUNCH_DRAG; this.vy = Math.min(this.vy + PHYS.GRAV, this.stats.fallMax); }
+      const pb = this.y;
+      this.x += this.vx; this.y += this.vy;
+      this._collide(stage, pb);
+      this._blast(stage);
+      return;
+    }
 
     // drop-through: fresh tap, only on one-way platforms (slabs are solid)
     // jump wins a same-tick drop+jump (guard: !intent.jump)
@@ -98,7 +121,8 @@ export class MovementBody {
 
     if (this.grounded) {
       if (dir !== 0) {
-        this.vx += dir * PHYS.RUN_ACCEL;
+        const turning = this.vx !== 0 && Math.sign(this.vx) === -dir;   // skid-turn: bite harder
+        this.vx += dir * PHYS.RUN_ACCEL * (turning ? PHYS.TURN_ACCEL_MULT : 1);
         const max = this.stats.runMax;
         if (Math.abs(this.vx) > max && Math.sign(this.vx) === dir) this.vx = dir * max;
         this._setState('run');
@@ -198,8 +222,9 @@ export class MovementBody {
   }
 
   _land(top) {
-    this.y = top; this.vy = 0; this.grounded = true;
+    this.y = top; this.vy = 0; this.grounded = true; this.landed = true;
     this.airJumps = 1; this.airDodgeOk = true; this.fastFalling = false;
+    if (PHYS.STUN_LANDING_CLEARS) this.stun = 0;
     if (this.state === 'air' || this.state === 'airdodge') this._setState('idle');
   }
 
