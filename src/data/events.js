@@ -186,8 +186,10 @@ export const EVENTS = [
       return t >= data.drop + data.stay + data.lift;
     },
     end({ world, data }) { if (data.home) world.stage = data.home; },
-    drawWorld({ data, t }, c) {
+    drawWorld(ctx, c) {
+      const { data, t } = ctx;
       if (!data.decks) return;
+      const img = art(ctx, 'ev-scaffold');
       for (const d of data.decks) {
         let off = 0;
         if (t < data.drop) off = -(1 - t / data.drop) * 420;
@@ -195,6 +197,12 @@ export const EVENTS = [
         const blink = t > data.drop + data.stay - 90 && t <= data.drop + data.stay && ((t >> 3) & 1);
         if (blink) continue;
         const y = Math.round(d.y + off);
+        if (img) {                                                                         // Higgsfield deck: top edge = walkable top
+          const h = Math.round(img.height * (d.w / img.width)), hook = Math.round(h * 0.465);   // plank top sits 46.5 % down the art
+          c.fillStyle = '#4a443c'; c.fillRect(d.x + d.w / 2 - 2, y - hook - 900, 4, 900);
+          c.imageSmoothingEnabled = false; c.drawImage(img, d.x, y - hook, d.w, h);
+          continue;
+        }
         c.fillStyle = '#4a443c'; c.fillRect(d.x + d.w / 2 - 2, y - 900, 4, 870);         // crane cable
         c.fillStyle = BRASS; c.fillRect(d.x + d.w / 2 - 10, y - 34, 20, 10);               // hook block
         c.fillStyle = INK; c.fillRect(d.x + 10, y - 26, 3, 26); c.fillRect(d.x + d.w - 13, y - 26, 3, 26);
@@ -323,9 +331,15 @@ function crosswind(o) {
       }
       return t >= data.dur;
     },
-    drawWorld({ slab, stage, t }, c) {
-      const mid = midX(slab), B = stage.cameraBounds;
-      if (o.kind === 'train') {                                   // the train blurs past behind the platform
+    drawWorld(ctx, c) {
+      const { slab, stage, t } = ctx;
+      const mid = midX(slab), B = stage.cameraBounds, img = o.kind === 'train' ? art(ctx, 'ev-train') : null;
+      if (img) {                                                  // Higgsfield carriages, coupled, blurring past behind the platform
+        const h = 150, w = Math.round(img.width * (h / img.height)), n = 4, tx = B.x + ((t * 38) % (B.w + n * w)) - n * w;
+        c.globalAlpha = 0.8; c.imageSmoothingEnabled = false;
+        for (let k = 0; k < n; k++) c.drawImage(img, tx + k * w, slab.y - h - 6, w, h);
+        c.globalAlpha = 1;
+      } else if (o.kind === 'train') {                            // the train blurs past behind the platform
         const tx = B.x + ((t * 38) % (B.w + 1400)) - 1400;
         c.fillStyle = 'rgba(39,66,95,0.55)'; c.fillRect(tx, slab.y - 130, 1400, 96);
         c.fillStyle = 'rgba(242,233,216,0.5)'; for (let k = 40; k < 1400; k += 120) c.fillRect(tx + k, slab.y - 110, 70, 28);

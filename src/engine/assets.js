@@ -29,9 +29,10 @@ export async function loadStageArt(stageIds, onProgress) {
 }
 
 // Map name -> Image | null for front-end art (assets/ui/<name>.png): the
-// Higgsfield title logo, VS emblem and trophy. Missing files -> null and the
-// UI kit (render/ui.js) draws its own version instead — same drop-in rule.
-export const UI_ART = ['logo', 'vs', 'trophy'];
+// Higgsfield title logo, VS emblem and trophy, plus the event props (ev-*:
+// signature page, scaffold deck, tube carriage). Missing files -> null and the
+// UI kit / event hooks draw their own version instead — same drop-in rule.
+export const UI_ART = ['logo', 'vs', 'trophy', 'ev-page', 'ev-scaffold', 'ev-train'];
 export async function loadUIArt(names = UI_ART) {
   const art = new Map();
   await Promise.all(names.map(async (n) => art.set(n, await loadImage(`assets/ui/${n}.png`))));
