@@ -167,6 +167,20 @@ function airThink(ai, f, opp, world, { dist, dy, r, untouchable }) {
   return { kind: 'wait' };
 }
 
+// A borrowed special (Nick's I Know Your Guy) sits in s2: use it the way its
+// owner's archetype would, when it would connect from here.
+function borrowedPress(f, opp, dist, sameLevel, r) {
+  const m = f.hasStatus('borrowed') && f.statusData('borrowed').move;
+  if (!m || f.cd.s2 > 0 || f.hasStatus('silence') || (f.airborne && !m.air) || r > 0.6) return null;
+  let ok;
+  if (RANGED.includes(m.kind)) ok = dist > 110 && hasLineOfFire(f, m, opp);
+  else if (m.kind === 'grab') ok = opp.grabbable && sameLevel && dist <= (m.range || 68) + 20;
+  else if (m.kind === 'lunge') ok = lungeReaches(f, m, opp);
+  else if (m.kind === 'teleport') ok = dist > 170;
+  else ok = m.kind !== 'parry' && dist < 160;
+  return ok ? { kind: 'press', slot: 's2' } : null;
+}
+
 function neutral(ai, f, opp, world, { dist, dy, r, sameLevel, untouchable }) {
   const P = ai.profile, ai_ = f.cfg.ai || {}, style = ai_.style || 'allround';
   const stage = world.stage, slab = mainSlab(stage), b = f.body;
@@ -178,6 +192,8 @@ function neutral(ai, f, opp, world, { dist, dy, r, sameLevel, untouchable }) {
   const dash = r < P.dash;
   const jumpIn = { kind: 'jump', dir: opp.x >= f.x ? 1 : -1, then: 'approach' };
   if (untouchable) return dist > 120 ? { kind: 'approach' } : { kind: 'wait' };
+  const lent = borrowedPress(f, opp, dist, sameLevel, r);
+  if (lent) return lent;
 
   // cornered with the opponent between us and centre: hop over rather than trade on the lip
   const centreSide = Math.sign(midOf(slab) - f.x) === Math.sign(opp.x - f.x);

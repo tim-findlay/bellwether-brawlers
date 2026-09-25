@@ -103,6 +103,7 @@ export class Fighter {
   // aim: aerial direction for Light in the air (n/s/u/d); null on the ground.
   startMove(slot, aim = null) {
     let move = this.cfg[slot];
+    if (slot === 's2' && this.hasStatus('borrowed')) move = this.statusData('borrowed').move;   // I Know Your Guy
     if (!move) return false;
     const air = this.airborne;
     let aerial = false;
@@ -154,7 +155,7 @@ export class Fighter {
     if (m.dive && this.airborne && a.frame >= (m.startup || 0)) this.body.vy = Math.max(this.body.vy, m.dive);   // ground pound: drop
     if (!a.fired && a.frame >= (m.startup || 0)) { a.fired = true; this.world.fire(this, a); }
     if (a.frame >= total) {
-      const whiffed = !a.hasHit && !['buff', 'parry', 'catch', 'bell', 'zoneSuper', 'teleport'].includes(m.kind);
+      const whiffed = !a.hasHit && !['buff', 'parry', 'catch', 'bell', 'zoneSuper', 'teleport', 'borrow'].includes(m.kind);
       this.attack = null;
       // Adrian's tax: a whiffed lunge trips — on the ground now, in the air on the
       // botched landing (DESIGN: "self-staggers on a botched landing").

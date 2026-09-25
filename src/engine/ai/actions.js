@@ -125,7 +125,7 @@ export function poke(ai, f, opp, heavyBias = 0.5) {
 export function pressMove(ai, f, opp, slot) {
   const m = f.cfg[slot];
   const toward = opp.x >= f.x ? 1 : -1;
-  const facingFree = m && ['buff', 'parry', 'catch', 'teleport', 'bell', 'columns', 'zoneSuper'].includes(m.kind);
+  const facingFree = m && ['buff', 'parry', 'catch', 'teleport', 'bell', 'columns', 'zoneSuper', 'borrow'].includes(m.kind);
   if (!facingFree && f.grounded && f.facing !== toward && !f.attack) { ai.helds.add(dirKey(toward)); return; }
   if ((slot === 'light' || slot === 'heavy') && f.grounded) groundAim(ai, f, opp, slot);
   ai.press(slot);

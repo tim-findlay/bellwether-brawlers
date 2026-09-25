@@ -139,7 +139,8 @@ export const STATUS_LABEL = {
   nextHit: ['NEXT HIT +', BRASS],
   regen: ['LAST ORDERS', GREEN],
   berlin: ['HOME TURF', NAVY],
-  noMeter: ['PLATINUM', BRASS],
+  noMeter: ['NO METER', BRASS],
+  borrowed: ['ON LOAN', NAVY],
 };
 
 function drawStatusTags(c, f, camera) {

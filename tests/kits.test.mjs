@@ -95,3 +95,17 @@ test('Adrian: a whiffed-lunge trip can hit (Happy Accident) and still self-stagg
   assert.equal(a.state, 'stagger', 'the whiff trips him');
   assert.ok(b.gauge < g0, 'the fall hits the fighter in reach');
 });
+
+test("Nick: I Know Your Guy turns his s2 into the opponent's s1, then hands it back", () => {
+  const { w, c, a, b } = mk('nick', 'ben');
+  b.body.x = a.x + 200; a.meter = 100;
+  c[0].q.add('super'); run(w, 1); run(w, a.cfg.super.startup + a.cfg.super.recover + 2);
+  assert.ok(a.hasStatus('borrowed'));
+  c[0].q.add('s2'); run(w, 1);
+  assert.equal(a.attack?.move.name, byId('ben').s1.name, 's2 fires the borrowed special');
+  assert.equal(a.attack.move.startup, byId('ben').s1.startup + 2, '+2 startup on a borrowed move');
+  run(w, 620);
+  assert.equal(a.hasStatus('borrowed'), false, 'the loan runs out');
+  a.cd.s2 = 0; c[0].q.add('s2'); run(w, 1);
+  assert.equal(a.attack?.move.name, a.cfg.s2.name, 'his own s2 is back');
+});

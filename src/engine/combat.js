@@ -369,6 +369,20 @@ const BEHAVIORS = {
   zone(w, f, m) {
     w.addZone({ ...m.zone, x: f.x + f.facing * (m.zone.ahead || 100), y: f.y, owner: f, ownerImmune: !!m.zone.ownerImmune });
   },
+  // Nick's I Know Your Guy: s2 becomes a copy of the opponent's s1 for m.dur
+  // frames (startup + m.extraStartup; its own cooldown, capped at m.cooldownCap). Supers are never copied.
+  borrow(w, f, m) {
+    const src = w.other(f).cfg.s1;
+    if (!src) return;
+    const dur = m.dur || 480;
+    const move = { ...src, startup: (src.startup || 0) + (m.extraStartup ?? 2), borrowed: true };
+    if (m.cooldownCap && move.cooldown > m.cooldownCap) move.cooldown = m.cooldownCap;
+    f.applyStatus('borrowed', dur, { move, from: w.other(f).cfg.name });
+    if (m.noMeter !== false) f.applyStatus('noMeter', dur);
+    f.cd.s2 = 0;
+    w.fx.text(f.x, f.y - 130, `BORROWED: ${src.name.toUpperCase()}`, '#c9a227');
+    w.audio.play('heal');
+  },
   grab() {}, parry() {}, catch() {},
   bell(w, f, m) {
     const def = w.other(f);
