@@ -130,6 +130,7 @@ export class FightWorld {
     this.fx.hitstop(slot === 'super' ? 12 : heavy ? 6 : 3);
     if (heavy) this.fx.shake(3, 8);
     this.fx.spark(def.x, def.y - 50, '#c4452e', heavy ? 9 : 5, 3);
+    this.fx.burst?.(def.x, def.y - 50, { big: heavy, color: slot === 'super' ? '#c9a227' : '#c4452e' });   // cosmetic
     this.fx.text(def.x, def.y - 104, String(dmg), '#f2e9d8');
   }
 

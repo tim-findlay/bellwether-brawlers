@@ -28,6 +28,39 @@ export function drawHUD(c, world, camera, extra = {}) {
     fighters.forEach((f) => f && drawStatusTags(c, f, camera));
     fighters.forEach((f, i) => f && drawEdgeArrow(c, f, i, camera));
   }
+  fighters.forEach((f, i) => f && drawCutIn(c, f, i, extra.sprites));
+  c.restore();
+}
+
+// Super cut-in: a slanted band in the player's colour slides in from their
+// side for the first 36 frames of a super, the fighter posed big in the key
+// frame of their special (or heavy) strip, the super's name in ink on paper.
+const CUT_T = 36;
+function drawCutIn(c, f, side, sprites) {
+  const a = f.attack;
+  if (a?.slot !== 'super' || a.frame > CUT_T) return;
+  const k = a.frame < 6 ? a.frame / 6 : a.frame > CUT_T - 6 ? (CUT_T - a.frame) / 6 : 1;
+  const dir = side ? -1 : 1, off = (1 - k) * VIEW_W * 0.7 * -dir, y0 = 196, H = 104;
+  c.save();
+  c.translate(off, 0);
+  const band = (inset, col) => {
+    c.fillStyle = col; c.beginPath();
+    c.moveTo(0, y0 + inset + 18); c.lineTo(VIEW_W, y0 + inset - 18); c.lineTo(VIEW_W, y0 + H - inset - 18); c.lineTo(0, y0 + H - inset + 18); c.closePath(); c.fill();
+  };
+  band(-6, INK); band(0, SIDE_COLOR[side]); band(14, PAPER);
+  const sheet = sprites?.get?.(f.cfg?.id), pose = hasAnim(sheet, 'special') ? 'special' : hasAnim(sheet, 'heavy') ? 'heavy' : 'idle';
+  const px = side ? VIEW_W - 170 : 170;
+  if (hasAnim(sheet, pose)) {
+    c.save(); c.beginPath(); c.rect(0, y0 - 40, VIEW_W, H + 80); c.clip();
+    drawSprite(c, sheet, pose, sheet.anims[pose].key ?? 0, px, y0 + H + 34, dir, 3.1);
+    c.restore();
+  }
+  c.fillStyle = INK; c.font = "700 40px 'Pixelify Sans'"; c.textAlign = side ? 'right' : 'left';
+  const tx = side ? VIEW_W - 290 : 290, ty = y0 + H / 2 + 12;
+  c.fillText(String(a.move.name || 'SUPER').toUpperCase(), tx + 3, ty + 3);
+  c.fillStyle = SIDE_COLOR[side]; c.fillText(String(a.move.name || 'SUPER').toUpperCase(), tx, ty);
+  c.font = "700 12px 'Silkscreen'"; c.fillStyle = INK;
+  c.fillText(`${f.cfg?.name ?? ''} · SUPER`, tx, ty - 38);
   c.restore();
 }
 

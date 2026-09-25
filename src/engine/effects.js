@@ -16,6 +16,7 @@ export class FX {
     this.slowFrames = 0;
     this.slowScale = 1;
     this.particles = [];
+    this.bursts = [];         // comic impact stars (world px)
     this.floaters = [];
     this.banners = [];        // {text, sub, t, dur, color}
     this.flashFrames = 0;
@@ -44,6 +45,12 @@ export class FX {
       const v = spd * 2 * (0.4 + Math.random() * 0.8);
       this.particles.push({ x, y, vx: Math.cos(a) * v, vy: Math.sin(a) * v - 1.2, g: 0.16, life: 14 + (Math.random() * 8 | 0), color, size: Math.random() < 0.4 ? 4 : 2 });
     }
+  }
+
+  // Comic impact: a jagged paper star with an ink rim and radial speed lines,
+  // popping out over a few frames. `dir` (+1/-1) leans the lines with the hit.
+  burst(x, y, { big = false, dir = 0, color = '#c4452e' } = {}) {
+    this.bursts.push({ x, y, t: 0, dur: big ? 11 : 7, big, dir, color, rot: Math.random() * Math.PI });
   }
 
   dust(x, y, color = '#cbbfa6', n = 4) {
@@ -86,6 +93,8 @@ export class FX {
       p.x += p.vx; p.y += p.vy; p.vy += p.g; p.life--;
     }
     this.particles = this.particles.filter(p => p.life > 0);
+    for (const b of this.bursts) b.t++;
+    this.bursts = this.bursts.filter(b => b.t < b.dur);
     for (const f of this.floaters) { f.t++; f.y -= 0.7; }
     this.floaters = this.floaters.filter(f => f.t < f.dur);
     for (const b of this.banners) b.t++;
@@ -100,6 +109,7 @@ export class FX {
       ctx.fillRect(Math.round(p.x), Math.round(p.y), p.size, p.size);
     }
     ctx.globalAlpha = 1;
+    for (const b of this.bursts) drawBurst(ctx, b);
   }
 
   // Screen space (identity transform). `camera` projects the floaters; with
@@ -154,6 +164,30 @@ export class FX {
       ctx.globalAlpha = 1;
     }
   }
+}
+
+function drawBurst(ctx, b) {
+  const k = b.t / b.dur, R = (b.big ? 46 : 28) * (0.55 + 0.6 * easeOut(Math.min(1, k * 1.6))), pts = b.big ? 10 : 8;
+  ctx.save();
+  ctx.translate(Math.round(b.x), Math.round(b.y));
+  ctx.globalAlpha = k > 0.6 ? (1 - k) / 0.4 : 1;
+  ctx.fillStyle = '#2b2620';                                   // radial speed lines
+  for (let i = 0; i < 8; i++) {
+    const a = b.rot + i * Math.PI / 4 + b.dir * 0.2, r0 = R * 0.9, r1 = R * (1.35 + 0.25 * (i % 2));
+    ctx.save(); ctx.rotate(a); ctx.fillRect(r0, -1.5, r1 - r0, 3); ctx.restore();
+  }
+  const star = (r, inner) => {
+    ctx.beginPath();
+    for (let i = 0; i < pts * 2; i++) {
+      const a = b.rot + (i / (pts * 2)) * Math.PI * 2, rr = i % 2 ? r * inner : r;
+      ctx.lineTo(Math.cos(a) * rr, Math.sin(a) * rr);
+    }
+    ctx.closePath();
+  };
+  star(R, 0.5); ctx.fillStyle = '#2b2620'; ctx.fill();
+  star(R - 4, 0.48); ctx.fillStyle = '#f2e9d8'; ctx.fill();
+  star(R * 0.5, 0.55); ctx.fillStyle = b.color; ctx.fill();
+  ctx.restore();
 }
 
 function easeOut(t) { return 1 - (1 - t) * (1 - t); }

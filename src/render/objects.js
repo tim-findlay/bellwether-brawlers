@@ -6,11 +6,22 @@
 import { INK, PAPER, BRICK } from './palette.js';
 
 const r = (g, x, y, w, h) => g.fillRect(Math.round(x), Math.round(y), w, h);
+const SPIN = new Set(['memo', 'binder', 'card', 'football', 'glass', 'bomb']);   // tumbling throwables
 
 export function drawProjectiles(g, world, t) {
   for (const p of world.projectiles ?? []) {
+    // motion trail: fading squares back along the path (lobs curve with vy)
+    const vx = p.vx ?? 0, vy = p.vy ?? 0;
+    for (let i = 1; i <= 4; i++) {
+      const s = 8 - i * 1.5;
+      g.globalAlpha = 0.5 - i * 0.1;
+      g.fillStyle = i % 2 ? PAPER : (p.color || INK);
+      r(g, (p.x ?? 0) - vx * i * 2.2 - s / 2, (p.y ?? 0) - (vy - (p.grav ?? 0) * i) * i * 2.2 - s / 2, s, s);
+    }
+    g.globalAlpha = 1;
     g.save();
     g.translate(Math.round(p.x ?? 0), Math.round(p.y ?? 0));
+    if (SPIN.has(p.shape)) g.rotate(((p.t ?? t) * 0.22) * (Math.sign(vx) || 1));
     g.fillStyle = p.color || INK;
     const w = p.w ?? 16, h = p.h ?? 12;
     switch (p.shape) {
