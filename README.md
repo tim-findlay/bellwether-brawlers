@@ -53,7 +53,7 @@ Seelye's LIEN: his heavy marks you and his next special collects +4. If Mike is 
 
 ### Stages
 
-**The Office** · **Buckingham Palace Forecourt** · **The Bellwether Arms** (pub) · **The Rooftop** · **The Platform** (tube station) — one main slab with grabbable ledges, soft platforms, blast zones on all four sides, a painted backdrop (`assets/stages/<id>.png`, drop-in like the sprites) and a camera that zooms to keep both fighters framed. **Berlin** exists but only Mike's travel schedule can take you there.
+**The Office** · **Buckingham Palace Forecourt** · **The Bellwether Arms** (pub) · **The Rooftop** · **The Platform** (tube station) — one main slab with grabbable ledges, soft platforms, blast zones on all four sides, a hazy painted far layer (`assets/stages/<id>.png`) plus a designed arena piece for the main slab (`assets/stages/<id>-slab.png`), both drop-in like the sprites and a camera that zooms to keep both fighters framed. **Berlin** exists but only Mike's travel schedule can take you there.
 
 ### Office events (Settings → can be toggled; ON by default)
 
@@ -94,7 +94,7 @@ Runs N CPU-vs-CPU matches per ordered pairing (seeded RNG, events on, 3 stocks) 
 Everything is data-driven — see [DESIGN.md](DESIGN.md) for the full architecture.
 
 - **A fighter:** add `src/data/characters/<id>.js` (stats inside the BALANCE.md bands, light/heavy/aerials — the side/down lights, signatures, recovery and ground pound are derived for you, override any of them under `kit` — two specials, super, AI hints, drawn-body palette) and list it in `src/data/characters/index.js`. Drop `assets/headshots/<id>.png` (square photo) for the select card, and `assets/sprites/<id>/{idle,run,jump,attack}.png` (64 px cells, described in `src/data/sprites.js`) for animation — **no code change**; without them the drawn cartoon head / body is used.
-- **A stage:** add an object to `src/data/stages.js` (geometry: slab, soft platforms, spawns, respawn, camera bounds, blast zones; plus palette/art metadata) and drop a 480×270 `assets/stages/<id>.png` backdrop (optional — without it the procedural layers draw). `selectable: false` keeps it event-only, like Berlin.
+- **A stage:** add an object to `src/data/stages.js` (geometry: slab, soft platforms, spawns, respawn, camera bounds, blast zones; plus palette/art metadata) and optionally drop a 480×270 `assets/stages/<id>.png` far backdrop and a 512 px wide `assets/stages/<id>-slab.png` arena piece (top edge = walkable top). Without them the procedural layers and slab draw. `selectable: false` keeps it event-only, like Berlin.
 - **An event:** add an object to `src/data/events.js` (telegraph, weight, optional `requiresCharacter`, and small start/update/draw hooks).
 
 ## License
