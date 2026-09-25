@@ -34,7 +34,7 @@ export function drawSky(ctx, stage, viewW = 960, viewH = 540) {
   ctx.fillRect(0, 0, viewW, viewH);
 }
 
-const DEPTH_WASH = 0.34;          // backdrop haze: it is the FAR layer, the fighters are the near one
+const DEPTH_WASH = 0.18;          // backdrop haze over the (already hazy) far layer; 0.34 read as fog
 const SLAB_ART_SCALE = 2;         // arena piece px -> world px (sprites are 1.5, backdrop 4)
 const SLAB_ART_INSET = 6;         // world px the piece's top edge sits below the collision top
 
