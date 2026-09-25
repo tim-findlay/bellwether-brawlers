@@ -11,6 +11,8 @@ A lightly pixelated browser fighting game (HTML5 canvas + vanilla JS ES modules)
 - **Everything is data-driven.** Characters live in `src/data/characters.js`, stages in `src/data/stages.js`, events in `src/data/events.js`. Engine code (`src/engine/`, `src/render/`) never hard-codes content. Adding content must not require engine changes.
 - **Headshots are drop-in.** `assets/headshots/<id>.png` keyed by character id, loaded by manifest with cartoon-head fallback. Adding `abi.png` later must Just Work.
 - **Sprites are drop-in too.** `assets/sprites/<id>/{idle,run,jump,attack}.png` (64 px cells, described in `src/data/sprites.js`) with the drawn-body fallback in `src/render/body.js`. A missing sheet must never break a fight. Sheets come from Higgsfield (style formula + per-character prompt, see DESIGN.md Art direction) — keep the `sprites.js` frame counts in step with the PNGs.
+- **Stage backdrops are drop-in.** `assets/stages/<id>.png` (480×270, PNG-8, drawn ×4 behind the slab) with the procedural-layer fallback in `src/render/stage.js`. A missing backdrop must never break a stage.
+- **Kits are derived.** A character file declares `light`, `heavy`, `aerials`; `expandKit()` in `src/data/characters/_shared.js` derives the side/down lights, the three signatures, the recovery and the ground pound. Tune per fighter under `kit`, never by hand-copying variants.
 - **Never commit `character photos/`** (the raw originals — gitignored). Only the processed `assets/headshots/*.png` are committed; the user explicitly approved publishing those.
 - **Display names are first names only.**
 - **Not neon.** Warm paper/ink palette, daylight stages, no glows/bloom/scanlines. Diegetic light is fine.

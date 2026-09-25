@@ -1,6 +1,6 @@
 # BELLWETHER BATTLERS
 
-A lightly pixelated office **platform fighter** starring your coworkers — eight fighters with real sprite animation, three British stages (plus Berlin), random office events, and a CPU-vs-CPU balance harness with five ship gates. Pure HTML5 canvas + vanilla JavaScript ES modules. **No framework, no bundler, no build step** — the only external resource is web fonts from the Google Fonts CDN (graceful system fallbacks).
+A lightly pixelated office **platform fighter** starring your coworkers — eight fighters with real sprite animation and a Brawlhalla-style directional kit, five painted stages (plus Berlin), random office events, keyboard or gamepad, and a CPU-vs-CPU balance harness with five ship gates. Pure HTML5 canvas + vanilla JavaScript ES modules. **No framework, no bundler, no build step** — the only external resource is web fonts from the Google Fonts CDN (graceful system fallbacks).
 
 **Play it live:** https://tim-findlay.github.io/bellwether-brawlers/ *(repo is currently private — Pages serves once it's public again)*
 
@@ -13,8 +13,8 @@ A lightly pixelated office **platform fighter** starring your coworkers — eigh
 - **3 stocks each, untimed.** The only KO is a **ring-out**: knock your colleague past the edge of the screen (any side).
 - **Composure** (your bar) never kills. It drains as you take hits and the emptier it is, the farther every hit sends you. It refills only when you lose a stock — waiting heals nothing.
 - **No block.** One **Dodge** button: spot dodge on the ground, dodge-step with a direction, **air dodge** in the air (once per airtime). Dodges share one cooldown.
-- **Movement is the game:** run, double-tap to dash, dash-jump for a long flat arc, double jump, fast-fall, drop through soft platforms, air-drift. Recover from a launch with your drift, your second jump and (last) your air dodge.
-- Every fighter has a light (four **aerials** in the air, aimed with the held direction), a ground-only heavy (the kill commit), **two specials** on cooldown (pips under the bar), and a **super** on a full gold meter. Statuses announce themselves in words above your head.
+- **Movement is the game:** run, double-tap to dash (on the ground *or once in the air*), dash-jump for a long flat arc, **three jumps** (one ground, two air), fast-fall, drop through soft platforms, air-drift. Fall past the edge of a stage and you **grab the ledge**: climb up (hold toward), jump straight up, or drop. Recover from a launch with your drift, your air jumps, your air dash, your recovery move and (last) your air dodge.
+- **Every button reads the direction you hold** (Brawlhalla-style). **Light** + neutral / side / down on the ground = three fast lights (the side one steps in, the down one pops them up); in the air, Light + direction = the four **aerials**. **Heavy** + neutral / side / down on the ground = three **signatures** — the kill moves (the side one lunges, the down one launches them up); in the air, Heavy = your **recovery** (a rising attack that lifts you, once per airtime) and Heavy + down = a **ground pound** dive. Plus **two specials** on cooldown (pips under the bar) and a **super** on a full gold meter. Statuses announce themselves in words above your head.
 - **KO** = ink-burst, then you ride the office chair back down from the top — invulnerable until you act.
 
 ### Controls
@@ -23,16 +23,18 @@ Bindings are by **physical key position** (US labels shown), so they work on any
 
 | Action | P1 | P2 | Notes |
 |---|---|---|---|
-| Move | A / D | ← / → | double-tap on the ground = dash |
-| Jump | W | ↑ | again in the air = double jump; *held* aims the up-air |
-| Down | S | ↓ | hold = fast-fall · tap on a platform = drop through · aims the down-air |
-| Light / aerials | F | K | + held direction in the air = neutral / side / up / down air |
-| Heavy | G | L | ground only |
+| Move | A / D | ← / → | double-tap = dash (ground, or once per airtime in the air) · toward the stage on the ledge = climb |
+| Jump | W | ↑ | again in the air = air jump (two per airtime); *held* aims the up-air; on the ledge = ledge jump |
+| Down | S | ↓ | hold = fast-fall · tap on a platform = drop through · aims the down-light / down-signature / ground pound · drops off the ledge |
+| Light | F | K | + neutral / side / down = the three lights; in the air + direction = the four aerials |
+| Heavy | G | L | + neutral / side / down = the three signatures; in the air = recovery, + down = ground pound |
 | Special 1 / 2 | H / J | ; / ' | some work in the air |
 | Dodge | V | / | spot · step · air dodge |
 | **Super** | Space | Enter | full meter |
 
 **Menus:** F / K / Enter confirm · Esc back · Esc pauses a fight (with the full controls overlay — also under HOW TO PLAY on the main menu).
+
+**Gamepads:** plug in any standard-mapping pad (Xbox, PlayStation, most USB pads) — the first pad drives P1, the second P2, alongside the keyboard. Stick / d-pad move, **A** jump, **X** light, **B** heavy, **RB / LB** specials, **Y** super, triggers dodge, Start = Enter, Back = Esc. No rebinding UI yet.
 
 ### The roster
 
@@ -42,16 +44,16 @@ Bindings are by **physical key position** (US labels shown), so they work on any
 | **TIM** — The Operator | Tempo all-rounder | Prompt Injection (cursed e-mail, briefly reverses movement) · Zulu Time (rewinds his cooldowns) | AGI MOMENT — dash-through auto-combo |
 | **ADRIAN** — The Walking Hazard | Chaos rushdown | Clumsy Charge (trips if he misses — in the air, on the landing) · Nero Spill (slippery puddle) | FULL AUDIT — multi-hit flail, trips at the end |
 | **RICHY** — The Market | Dual-candle zoner | Bull Run (rising candle — his kill shot) · Bear Raid (ground roller — jump it); alternating *landed* candles build bonus damage. Short Squeeze (heavy) **pulls you in** | TO THE MOON — telegraphed chart eruptions |
-| **NICK** — The Concierge | Teleport glass cannon | Status Match (teleport behind — also his recovery) · Points Redemption (card fan) | LIFETIME PLATINUM — 4 s lounge buff, builds no meter |
+| **NICK** — The Concierge | Teleport glass cannon | Status Match (teleport behind — also his recovery) · Points Redemption (card fan — sets up his signatures, doesn't kill) | LIFETIME PLATINUM — 4 s lounge buff, builds no meter |
 | **ABI** — The Gatekeeper | Counter-puncher | Calendar Block (melee parry → "DECLINED!") · House Rosé (slowing lob) | PUB O'CLOCK — locks specials, regen until she's hit |
 | **MIKE** — The Site Manager | Armored grappler tank | Scaffold Slam (unparryable command grab — jump it) · Demolition Day (shockwave that destroys projectiles) | WRECKING BALL — two dodgeable passes. No recovery special: knock him off and guard the edge |
-| **SEELYE** — The Pitmaster | Setplay / debt collector | Brisket Bomb (ember zone) · Dad Reflexes (catches projectiles for meter) | LOW & SLOW — drifting smoke blanket |
+| **SEELYE** — The Pitmaster | Setplay / debt collector (a regular guy in a suit; the smoker is a hobby) | Brisket Bomb (ember zone) · Dad Reflexes (catches projectiles for meter) | LOW & SLOW — drifting smoke blanket |
 
 Seelye's LIEN: his heavy marks you and his next special collects +4. If Mike is in the match the fight can suddenly relocate to **Berlin** (his home turf) — that's an event, not a stage pick.
 
 ### Stages
 
-**The Office** · **Buckingham Palace Forecourt** · **The Bellwether Arms** (pub) — one main slab, soft platforms, blast zones on all four sides, a camera that zooms to keep both fighters framed. **Berlin** exists but only Mike's travel schedule can take you there.
+**The Office** · **Buckingham Palace Forecourt** · **The Bellwether Arms** (pub) · **The Rooftop** · **The Platform** (tube station) — one main slab with grabbable ledges, soft platforms, blast zones on all four sides, a painted backdrop (`assets/stages/<id>.png`, drop-in like the sprites) and a camera that zooms to keep both fighters framed. **Berlin** exists but only Mike's travel schedule can take you there.
 
 ### Office events (Settings → can be toggled; ON by default)
 
@@ -91,8 +93,8 @@ Runs N CPU-vs-CPU matches per ordered pairing (seeded RNG, events on, 3 stocks) 
 
 Everything is data-driven — see [DESIGN.md](DESIGN.md) for the full architecture.
 
-- **A fighter:** add `src/data/characters/<id>.js` (stats inside the BALANCE.md bands, light/heavy/aerials, two specials, super, AI hints, drawn-body palette) and list it in `src/data/characters/index.js`. Drop `assets/headshots/<id>.png` (square photo) for the select card, and `assets/sprites/<id>/{idle,run,jump,attack}.png` (64 px cells, described in `src/data/sprites.js`) for animation — **no code change**; without them the drawn cartoon head / body is used.
-- **A stage:** add an object to `src/data/stages.js` (geometry: slab, soft platforms, spawns, respawn, camera bounds, blast zones; plus palette/art metadata). `selectable: false` keeps it event-only, like Berlin.
+- **A fighter:** add `src/data/characters/<id>.js` (stats inside the BALANCE.md bands, light/heavy/aerials — the side/down lights, signatures, recovery and ground pound are derived for you, override any of them under `kit` — two specials, super, AI hints, drawn-body palette) and list it in `src/data/characters/index.js`. Drop `assets/headshots/<id>.png` (square photo) for the select card, and `assets/sprites/<id>/{idle,run,jump,attack}.png` (64 px cells, described in `src/data/sprites.js`) for animation — **no code change**; without them the drawn cartoon head / body is used.
+- **A stage:** add an object to `src/data/stages.js` (geometry: slab, soft platforms, spawns, respawn, camera bounds, blast zones; plus palette/art metadata) and drop a 480×270 `assets/stages/<id>.png` backdrop (optional — without it the procedural layers draw). `selectable: false` keeps it event-only, like Berlin.
 - **An event:** add an object to `src/data/events.js` (telegraph, weight, optional `requiresCharacter`, and small start/update/draw hooks).
 
 ## License

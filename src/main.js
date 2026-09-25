@@ -60,7 +60,7 @@ async function boot() {
     rng: mulberry32(Date.now() & 0xffffffff),
     settings: loadJSON('bb.settings.v3', { events: true, difficulty: 'easy', sfx: true }),
     scores: loadJSON('bb.scores', {}),
-    saveSettings() { saveJSON('bb.settings', G.settings); },
+    saveSettings() { saveJSON('bb.settings.v3', G.settings); },
     saveScores() { saveJSON('bb.scores', G.scores); },
     screens: {},
     screen: null,
