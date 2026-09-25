@@ -103,7 +103,17 @@ export class AIController {
       if (hz) this.plan = hz;
     }
     if (f.state === 'normal') act(this, f, opp, world);
+    if (f.attack?.victim && f.attack.move.aimable) this._aimThrow(f, world);
     this._compose(f);
+  }
+
+  // Holding a victim with an aimable grab: throw toward the nearer edge (hold back
+  // when that edge is behind us).
+  _aimThrow(f, world) {
+    const slab = world.stage.slabs[0];
+    const toward = (slab.x + slab.w - f.x) < (f.x - slab.x) ? 1 : -1;
+    this.helds.delete('left'); this.helds.delete('right');
+    if (toward !== f.facing) this.helds.add(toward > 0 ? 'right' : 'left');
   }
 
   // Off-stage edge-guard swing: an aerial that reaches, with a jump in reserve.

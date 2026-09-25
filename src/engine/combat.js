@@ -309,8 +309,12 @@ export class FightWorld {
         const def = a.victim;
         a.victim = null; a.hasHit = true;
         const dmg = f.damageOut(a.move.dmg, 'special');
+        // aimable grabs: holding back at the release throws over the shoulder, toward the other edge
+        const back = !!a.move.aimable && f.controller.held(f.facing > 0 ? 'left' : 'right');
+        const dir = back ? -f.facing : f.facing;
+        if (back) { def.body.x = f.x - f.facing * 32; this.fx.text(f.x, f.y - 120, 'OVER THE SHOULDER!', '#c9a227'); }
         def.state = 'normal';                       // released into the slam
-        def.takeHit({ dmg, kb: a.move.kb ?? 8, kbScale: a.move.kbScale ?? 10, kbAngle: a.move.kbAngle ?? 45, dir: f.facing, unparryable: true });
+        def.takeHit({ dmg, kb: a.move.kb ?? 8, kbScale: a.move.kbScale ?? 10, kbAngle: a.move.kbAngle ?? 45, dir, unparryable: true, from: f, move: a.move });
         f.gainMeter(dmg * 0.8);
         this.hitFeedback(def, 'heavy', dmg);
         this.fx.shake(4, 10);

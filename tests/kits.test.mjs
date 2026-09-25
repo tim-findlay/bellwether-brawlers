@@ -70,3 +70,17 @@ test('Abi: Declined silences the attacker, and Calendar Block works in the air',
   b.body.facing = -1; c[1].q.add('light'); run(w, 12);
   assert.ok(b.hasStatus('silence'), 'Declined locks their specials');
 });
+
+test('Mike: holding back on Scaffold Slam throws over the shoulder', () => {
+  const throwVx = (back) => {
+    const { w, c, a, b } = mk('mike', 'tim');
+    b.body.x = a.x + 50;
+    c[0].q.add('s1'); run(w, 1);
+    if (back) c[0].helds.add('left');
+    for (let i = 0; i < 80 && b.state !== 'hitstun'; i++) run(w, 1);
+    assert.equal(b.state, 'hitstun', 'the slam lands');
+    return b.body.vx;
+  };
+  assert.ok(throwVx(false) > 0, 'forward throw sends them forward');
+  assert.ok(throwVx(true) < 0, 'back throw sends them behind Mike');
+});
