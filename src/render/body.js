@@ -110,8 +110,8 @@ export function drawFallbackBody(g, f, head) {
   const bob = pose.bob, legSwing = pose.legSwing, tuck = pose.legTuck;
   const torsoH = 22 * hScale, torsoTop = -22 - torsoH + bob;
 
-  // legs (tuck shortens them; sitting folds them forward)
-  g.fillStyle = shade(suit, -24);
+  // legs (tuck shortens them; sitting folds them forward); b.trousers overrides the suit shade
+  g.fillStyle = b.trousers || shade(suit, -24);
   if (pose.sit) {
     g.fillRect(-6, -22, 12, 8);                            // thighs forward
     g.fillRect(facing > 0 ? 2 : -8, -18, 6, 18);           // shins down
@@ -210,6 +210,8 @@ function cartoonHead(g, f, b, facing, skin, headY, flash) {
   g.fillStyle = hair;
   if (style === 'bob') {
     g.fillRect(-9, headY - 10, 18, 6); g.fillRect(-9, headY - 6, 3, 12); g.fillRect(6, headY - 6, 3, 12);
+  } else if (style === 'long') {                                  // past the shoulders, parted off the face
+    g.fillRect(-9, headY - 10, 18, 6); g.fillRect(-10, headY - 6, 4, 22); g.fillRect(6, headY - 6, 4, 22);
   } else if (style === 'cap') {
     g.fillRect(-8, headY - 11, 16, 5); g.fillRect(facing > 0 ? 2 : -12, headY - 8, 10, 2);
   } else if (style === 'beard') {
