@@ -406,3 +406,63 @@ test('skid-turn accelerates harder than a normal run start', () => {
   step(b, { left: true });
   assert.ok(Math.abs(b.vx - before) > PHYS.RUN_ACCEL + 1e-9, 'turnaround multiplier applied');
 });
+
+// ---- Phase 3b: two air jumps, air dash, ledge grab ---------------------------------
+
+test('two air jumps: both spend, the third press does nothing, landing refreshes', () => {
+  const b = new MovementBody(MID, { x: 100, y: 300 });
+  step(b, IDLE, 3);
+  assert.equal(b.airJumps, PHYS.AIR_JUMPS);
+  step(b, { jump: true }); assert.equal(b.airJumps, PHYS.AIR_JUMPS - 1);
+  step(b, IDLE, 3);
+  step(b, { jump: true }); assert.equal(b.airJumps, PHYS.AIR_JUMPS - 2);
+  step(b, IDLE, 3);
+  const vy = b.vy; step(b, { jump: true }); assert.equal(b.airJumps, 0); assert.ok(b.vy > vy - 1, 'no third jump');
+});
+
+test('air dash: a double-tap in the air bursts sideways with gravity suspended, once per airtime', () => {
+  const b = new MovementBody(MID, { x: 100, y: 300 });
+  step(b, IDLE, 4);
+  const y0 = b.y;
+  step(b, { dashRight: true });
+  assert.equal(b.state, 'dash'); assert.equal(b.airDash, true);
+  step(b, IDLE, PHYS.AIR_DASH_DURATION - 2);
+  assert.ok(Math.abs(b.y - y0) < 1.5, 'hangs during the air dash');
+  assert.ok(b.vx >= MID.runMax * PHYS.DASH_SPEED_FACTOR - 1e-9);
+  step(b, IDLE, 3);
+  assert.equal(b.airDash, false); assert.equal(b.airDashOk, false);
+  step(b, { dashRight: true }); assert.notEqual(b.state, 'dash', 'no second air dash this airtime');
+});
+
+test('ledge grab: falling past the lip beside the slab catches it; hold toward = climb', () => {
+  // STAGE slab spans x 0..640 at y 400 (see fixture); fall down the right edge
+  const slab = STAGE.slabs[0];
+  const b = new MovementBody(MID, { x: slab.x + slab.w + b0w(), y: slab.y - 60 });
+  let guard = 0;
+  while (b.state !== 'ledge' && guard++ < 120) step(b, IDLE);
+  assert.equal(b.state, 'ledge', 'grabbed the ledge');
+  assert.equal(b.airJumps, PHYS.AIR_JUMPS, 'jumps refreshed on the grab');
+  assert.ok(b.invulnerable(), 'i-frames on the grab');
+  step(b, IDLE, 3);
+  step(b, { left: true });                                  // toward the stage: climb
+  assert.equal(b.grounded, true); assert.ok(b.x < slab.x + slab.w, 'stands on the slab');
+  assert.ok(b.ledgeCd > 0, 'no immediate re-grab');
+});
+
+test('ledge grab: jump = ledge jump; hold away = drop, then no re-grab during the cooldown', () => {
+  const slab = STAGE.slabs[0];
+  const b = new MovementBody(MID, { x: slab.x - b0w(), y: slab.y - 60 });
+  let guard = 0;
+  while (b.state !== 'ledge' && guard++ < 120) step(b, IDLE);
+  assert.equal(b.state, 'ledge');
+  step(b, IDLE, 3); step(b, { jump: true });
+  assert.equal(b.state, 'air'); assert.ok(b.vy < 0, 'rose off the ledge');
+  // second body: drop
+  const c = new MovementBody(MID, { x: slab.x - b0w(), y: slab.y - 60 });
+  guard = 0; while (c.state !== 'ledge' && guard++ < 120) step(c, IDLE);
+  step(c, IDLE, 3); step(c, { left: true });                // away from the stage: let go
+  assert.equal(c.state, 'air'); assert.ok(c.ledgeCd > 0);
+  step(c, IDLE, 6);
+  assert.notEqual(c.state, 'ledge', 'cannot re-grab inside the cooldown');
+});
+function b0w() { return 18 + 8; }   // half body width + a little: start just outside the slab's edge
