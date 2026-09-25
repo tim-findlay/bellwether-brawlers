@@ -54,7 +54,7 @@ export class Renderer {
     const shake = fx?.camera?.() ?? { x: 0, y: 0 };
     camera.apply(c, shake.x, shake.y);
 
-    drawStageWorld(c, stage, geometry, camera, t, { art: stageArt?.get?.(stage?.id) ?? null, debug: !!args.debug });
+    drawStageWorld(c, stage, geometry, camera, t, { art: stageArt?.get?.(stage?.id) ?? null, slabArt: stageArt?.get?.(`${stage?.id}-slab`) ?? null, debug: !!args.debug });
     drawZones(c, world, t);
     drawStrikes(c, world, t);
     events?.drawWorld?.(c);

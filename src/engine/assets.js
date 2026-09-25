@@ -12,12 +12,15 @@ const TIMEOUT_MS = 4000;
 
 // Map stageId -> Image | null. A backdrop is a 480x270 pixel painting drawn
 // x4 with nearest-neighbour behind the slab (see render/stage.js).
+// A second drop-in per stage, `<id>-slab.png`, is the arena piece: the main
+// slab drawn as one designed object (a floating chunk of the scene, walkable
+// top edge at the top of the image), keyed as `${id}-slab` in the same map.
 export async function loadStageArt(stageIds, onProgress) {
   const art = new Map();
   let done = 0;
   await Promise.all(stageIds.map(async (id) => {
-    const img = await loadImage(`assets/stages/${id}.png`);
-    art.set(id, img);
+    const [img, slab] = await Promise.all([loadImage(`assets/stages/${id}.png`), loadImage(`assets/stages/${id}-slab.png`)]);
+    art.set(id, img); art.set(`${id}-slab`, slab);
     done++;
     if (onProgress) onProgress(done / stageIds.length, id);
   }));

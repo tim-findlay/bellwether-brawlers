@@ -34,7 +34,11 @@ export function drawSky(ctx, stage, viewW = 960, viewH = 540) {
   ctx.fillRect(0, 0, viewW, viewH);
 }
 
-// opts: { art: Image|null (drop-in backdrop), debug: bool (blast/camera hints) }
+const DEPTH_WASH = 0.34;          // backdrop haze: it is the FAR layer, the fighters are the near one
+const SLAB_ART_SCALE = 2;         // arena piece px -> world px (sprites are 1.5, backdrop 4)
+const SLAB_ART_INSET = 6;         // world px the piece's top edge sits below the collision top
+
+// opts: { art: Image|null (drop-in backdrop), slabArt: Image|null (arena piece), debug: bool }
 export function drawStageWorld(ctx, stage, geometry, camera, t, opts = {}) {
   if (!stage || !geometry) return;
   const art = stage.art || {};
@@ -71,8 +75,17 @@ export function drawStageWorld(ctx, stage, geometry, camera, t, opts = {}) {
     drawStageLayers(bb.ctx, stage, t, (camX - cx) / BUF_SCALE * 0.35);
     ctx.drawImage(bb, bx, by, BUF_W * BUF_SCALE, BUF_H * BUF_SCALE);
   }
+  // atmospheric perspective: a flat wash of the sky colour over everything
+  // behind the arena (no gradient glow — one tone, like distance haze on paper)
+  ctx.fillStyle = (stage.sky || [PAPER])[1] || PAPER;
+  ctx.globalAlpha = art.wash ?? DEPTH_WASH;
+  ctx.fillRect(bx - 2000, by - 2000, BUF_W * BUF_SCALE + 4000, b.h + 6000);
+  ctx.globalAlpha = 1;
 
-  for (const s of geometry.slabs || []) drawSlab(ctx, s, stage);
+  for (const s of geometry.slabs || []) {
+    if (opts.slabArt) drawSlabArt(ctx, s, opts.slabArt);
+    else drawSlab(ctx, s, stage);
+  }
   (geometry.platforms || []).forEach((p, i) => {
     const style = art.platforms?.[i] || 'shelf';
     PLATFORM_STYLES[style]?.(ctx, p, stage, geometry, t) || PLATFORM_STYLES.shelf(ctx, p, stage, geometry, t);
@@ -82,6 +95,16 @@ export function drawStageWorld(ctx, stage, geometry, camera, t, opts = {}) {
 }
 
 // ---- slabs ------------------------------------------------------------------
+
+// The arena piece: one designed object whose walkable top edge is the top of
+// the image. Stretched to the slab width (the collision rect), it hangs as far
+// below as the art goes; the geometry never changes with the art.
+function drawSlabArt(ctx, s, img) {
+  const w = s.w + 2 * SLAB_ART_INSET;
+  const h = Math.round(img.height * (w / img.width));
+  ctx.imageSmoothingEnabled = false;
+  ctx.drawImage(img, Math.round(s.x - SLAB_ART_INSET), Math.round(s.y - SLAB_ART_INSET), w, h);
+}
 
 function drawSlab(ctx, s, stage) {
   const fill = stage.groundFill || '#6e655c', line = stage.groundLine || shade(fill, -20), tile = stage.groundTile || shade(fill, 12);
