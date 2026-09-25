@@ -5,7 +5,7 @@ export default {
   tagline: 'Construction MD. Don’t test him.',
   win: 'Job’s done. United are top, an’ all.',
   tip: 'Worst recovery in the game by design — knock him off and guard the edge. Jump the grab wind-up.',
-  body: { suit: '#33302e', trim: '#e8a33d', skin: '#e0b490', hair: { color: '#8a8378', style: 'grey' }, height: 1.06, build: 'broad', extras: ['hivis', 'hardhat'] },   // fit and stocky, no belly (art only; weight is a stat)
+  body: { suit: '#33302e', trim: '#e8a33d', skin: '#e0b490', hair: { color: '#5a4030', style: 'side' }, height: 0.98, build: 'broad', extras: ['hivis', 'hardhat'] },   // fit and stocky, no belly (art only; weight is a stat)
   stats: { gauge: 102, runMax: 4.4, jumpImpulse: 14, fallMax: 16, weight: 1.15 },
   light: { name: 'Hard Hat', dmg: 5, kb: 5, kbScale: 6, kbAngle: 40, range: 60, startup: 6, active: 3, recover: 12 },
   heavy: { name: 'Wrecking Swing', dmg: 10, kb: 7, kbScale: 11.5, kbAngle: 35, range: 72, startup: 14, active: 4, recover: 22, armor: [7, 13] },
