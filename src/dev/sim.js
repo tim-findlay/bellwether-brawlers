@@ -69,7 +69,7 @@ function recoverable(f, stage) {
 export function runMatch(cfgA, cfgB, stageId, rng, profiles = ['normal', 'normal']) {
   const controllers = [new AIController(profiles[0], rng), new AIController(profiles[1], rng)];
   const world = new FightWorld({ cfgs: [cfgA, cfgB], controllers, stage: geometryOf(stageId), fx: new NullFX(), audio: nullAudio, rng, settings: { events: true } });
-  const director = new EventDirector(world, EVENTS, { enabled: true, difficulty: 'normal' });
+  const director = new EventDirector(world, EVENTS, { enabled: true, difficulty: 'normal', stageId });
   const F = world.fighters;
   let frames = 0, lastHit = 0, maxGap = 0, loiter = 0, stocksLost = 0, dishonest = 0, nan = false;
   const excursion = [false, false];              // "recovery was possible" during the current off-stage trip
@@ -77,7 +77,7 @@ export function runMatch(cfgA, cfgB, stageId, rng, profiles = ['normal', 'normal
   const stuckT = [0, 0]; let stuck = null;
   const snap = F.map(() => ({ y: 0, top: false }));
   // "hit interaction" = a fighter-sourced takeHit that connects. Hazards are the
-  // only sources with kbScale 0 (wave, bikes); fire-drill misses and burn write
+  // only sources with kbScale 0 (legacy hazard shoves); burn and event effects write
   // the gauge directly and never count.
   for (const f of F) {
     const orig = f.takeHit.bind(f);

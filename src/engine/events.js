@@ -6,7 +6,7 @@
 // never toward a blast zone, symmetric or dodgeable, never match-deciding.
 //
 // The director hangs itself on world.director so the CPU (engine/ai) can see
-// live hazards — a fire-drill marker or an incoming wave front is public info.
+// live events — a page on the floor or the IC room is public info.
 
 const FIRST_ROLL = 600;            // ~10 s in
 const FIRST_JITTER = 180;
@@ -17,11 +17,12 @@ const READY_GRACE = 120;           // ticks a telegraphed event waits for its st
 const RETRY = 45;
 
 export class EventDirector {
-  constructor(world, defs, { enabled = true, difficulty = 'normal' } = {}) {
+  constructor(world, defs, { enabled = true, difficulty = 'normal', stageId = null } = {}) {
     this.world = world;
     this.defs = defs;
     this.enabled = enabled;
     this.difficulty = difficulty;
+    this.stageId = stageId;        // events with `stages` only roll on those stages (unknown stage: all)
     this.active = null;            // { def, t, phase: 'telegraph'|'live', data, wait }
     this.usedThisMatch = new Set();
     this.firedThisStock = 0;
@@ -88,7 +89,8 @@ export class EventDirector {
     if (this.superActive() || w.fighters.some(f => f.chair || f.state === 'ko')) { this.nextRoll = w.frame + RETRY; return; }
 
     const roster = w.fighters.map(f => f.cfg.id);
-    const usable = (d) => !(d.oncePerMatch && this.usedThisMatch.has(d.id)) && (!d.requiresCharacter || roster.includes(d.requiresCharacter));
+    const usable = (d) => !(d.oncePerMatch && this.usedThisMatch.has(d.id)) && (!d.requiresCharacter || roster.includes(d.requiresCharacter))
+      && (!d.stages || !this.stageId || d.stages.includes(this.stageId));
     let def;
     if (this.forcedId) {
       def = this.defs.find(d => d.id === this.forcedId && usable(d));   // a forced once-per-match event still fires once

@@ -72,9 +72,17 @@ export function hazardResponse(f, world) {
   const a = world.director?.active;
   if (a && a.phase === 'live') {
     const d = a.data;
-    if (a.def.id === 'firedrill' && d.x !== undefined && a.t < d.deadline) return { kind: 'goto', x: d.x, to: slab };
-    if (a.def.id === 'wave' && onSlab && d.fronts) {
-      for (const fr of d.fronts) if (Math.sign(f.x - fr.x) === fr.dir && Math.abs(f.x - fr.x) < 90) return { kind: 'jump' };
+    // pages to sign: the nearest landed one if it's close (fight on the way)
+    if (a.def.id === 'deal' && d.pages) {
+      const p = d.pages.filter(q => q.taken < 0 && q.landed).sort((q, r) => Math.abs(q.x - f.x) - Math.abs(r.x - f.x))[0];
+      if (p && Math.abs(p.x - f.x) < 420) return { kind: 'goto', x: p.x, to: p.s };
+    }
+    // the IC room: get in it and stay in it
+    if (a.def.id === 'ic' && d.s && Math.abs(f.x - d.x) > d.w * 0.35) return { kind: 'goto', x: d.x, to: d.s };
+    // sprinklers: step out of the wet half
+    if (a.def.id === 'sprinkler' && d.first !== undefined && onSlab) {
+      const side = a.t < d.half ? d.first : -d.first, mid = slab.x + slab.w / 2;
+      if (Math.sign(f.x - mid) === side) return { kind: 'goto', x: mid - side * slab.w * 0.22, to: slab };
     }
   }
   for (const h of world.hazards) {                            // bikes and the wrecking ball's low return

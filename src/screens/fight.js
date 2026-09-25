@@ -38,7 +38,8 @@ export function makeFight(G) {
       const c1 = new PlayerController(G.input, P1MAP);
       const c2 = p.mode === '2p' ? new PlayerController(G.input, P2MAP) : new AIController(G.settings.difficulty, G.rng);
       world = new FightWorld({ cfgs, controllers: [c1, c2], stage: geometryOf(stage.id), fx: G.fx, audio: G.audio, rng: G.rng, settings: G.settings });
-      events = new EventDirector(world, EVENTS, { enabled: G.settings.events, difficulty: G.settings.difficulty });
+      events = new EventDirector(world, EVENTS, { enabled: G.settings.events, difficulty: G.settings.difficulty, stageId: params.stageId });
+      events.art = G.uiArt;                                  // event props (assets/ui/ev-*.png), optional
       if (G.devEvent) events.force(G.devEvent);
       camera = new Camera(960, 540, world.stage.cameraBounds);
       camera.update(targets()); camera.update(targets());

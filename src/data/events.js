@@ -1,225 +1,258 @@
-// Stage hazards (the office events, reworked for v3). Each is data + small
-// behaviour hooks; src/engine/events.js schedules and telegraphs them.
-// Coordinates are world px on world.stage (slab = main slab, y = its top).
+// Stage events (the office events, rethought for v3's platform fights). Each is
+// data + small behaviour hooks; src/engine/events.js schedules and telegraphs
+// them. Coordinates are world px on world.stage (slab = main slab, y = its top).
 // Rules (BALANCE.md philosophy 5): telegraphed >= 1 s, kb <= 6, never toward
-// a blast zone, symmetric or dodgeable, hazard rewards are meter-only.
+// a blast zone, symmetric or dodgeable, rewards are meter-only.
+// Design rule for this set: every event gives the fight a PLACE or a REASON to
+// move — contested pickups, a room to hold, new routes, ground to cede — and
+// the fighting never stops for it (no freezes, no mashing).
 // Hooks: canRoll(ctx) gates the roll · ready(ctx) gates telegraph -> live ·
 // start/update/end/abort · drawWorld (camera space) · drawUI (960x540).
+// `stages` limits an event to the stages it belongs to (omitted = everywhere).
 
-import { DIFFICULTY } from '../engine/ai.js';
-import { HAZARD_STAGGER } from '../engine/fighter.js';
 import { geometryOf } from './stages.js';
 
-const MASH_TARGET = 10;
-const PAPER = '#f2e9d8', INK = '#2b2620', BRICK = '#c4452e', NAVY = '#27425f', BRASS = '#c9a227';
+const PAPER = '#f2e9d8', INK = '#2b2620', BRICK = '#c4452e', NAVY = '#27425f', BRASS = '#c9a227', GREEN = '#3f5a40';
 
 const onSlab = (f, slab) => f.state === 'normal' && f.grounded && Math.abs(f.y - slab.y) < 3 && f.x >= slab.x && f.x <= slab.x + slab.w;
-const bothGrounded = ({ world }) => world.fighters.every(f => f.state === 'normal' && f.grounded && !f.chair);
 const bothOnSlab = ({ world, slab }) => world.fighters.every(f => onSlab(f, slab));
+const midX = (slab) => slab.x + slab.w / 2;
+const standingOn = (f, s) => f.grounded && !f.chair && Math.abs(f.y - s.y) < 4 && f.x >= s.x - 6 && f.x <= s.x + s.w + 6;
+const art = (ctx, name) => ctx.director?.art?.get?.(name) ?? null;
+// the highest platform near the middle of the stage (the natural "high ground"), else the slab
+function centrePerch(stage, slab) {
+  const mid = midX(slab);
+  const near = stage.platforms.filter(p => Math.abs(p.x + p.w / 2 - mid) < slab.w * 0.2);
+  return near.sort((a, b) => a.y - b.y)[0] || slab;
+}
+function room(data, i, slab) {
+  const s = data.rooms[i];
+  data.s = s; data.w = Math.min(s.w, 170); data.x = s === slab ? midX(slab) : s.x + s.w / 2;
+}
+const pips = (c, x, y, n, of, col) => { for (let i = 0; i < of; i++) { c.fillStyle = INK; c.fillRect(x + i * 18 - 1, y - 1, 14, 14); c.fillStyle = i < n ? col : PAPER; c.fillRect(x + i * 18, y, 12, 12); } };
 
 export const EVENTS = [
   {
-    id: 'underwriting',
-    name: 'URGENT UNDERWRITING',
-    banner: 'URGENT UNDERWRITING!',
-    sub: 'mash LIGHT to submit first!',
+    // Contested pickups. Five signature pages flutter down onto mirrored spots;
+    // touch one to sign it (+6 meter). First to sign three closes the deal (+15).
+    id: 'deal',
+    name: 'DEAL DEADLINE',
+    banner: 'DEAL DEADLINE!',
+    sub: 'the signature pages are coming down — sign three first',
     sound: 'klaxon',
-    telegraph: 70,
-    weight: 3,
-    maxFrames: 240,
-    canRoll: bothGrounded,
-    ready: bothGrounded,                                   // triggers only when both are grounded
-    abort({ fx }) { fx.banner('DEAL FELL THROUGH', { dur: 60, sub: 'nobody was at their desk' }); },
-    start({ world, data, difficulty }) {
-      data.mash = [0, 0];
-      data.window = 170;
-      data.resolved = false;
-      const d = DIFFICULTY[difficulty] || DIFFICULTY.normal;
-      data.cpu = world.fighters.map(f => f.controller.isCPU
-        ? { delay: d.mashDelay + ((world.rng() * 20) | 0), cps: d.mashCps } : null);
-      for (const f of world.fighters) {                  // freeze both: untouchable, unmoving
-        f.state = 'frozen'; f.stateT = 0; f.attack = null; f.landLag = 0;
-        f.body.vx = 0; f.body.vy = 0; f.body.fastFalling = false;
-        f.hazardInv = data.window + 4;
-      }
-    },
-    update(ctx) {
-      const { world, data, t, fx, audio } = ctx;
-      if (data.resolved) return true;
-      world.fighters.forEach((f, i) => {
-        if (f.state !== 'frozen') return;
-        const cpu = data.cpu[i];
-        if (cpu) { if (t > cpu.delay && world.rng() < cpu.cps / 60) data.mash[i]++; }
-        else if (f.controller.pressed('light')) { data.mash[i]++; audio.play('mash'); }
-      });
-      const first = data.mash.findIndex(m => m >= MASH_TARGET);
-      if (first < 0 && t < data.window) return false;
-      data.resolved = true;
-      const wIdx = first >= 0 ? first : (data.mash[0] === data.mash[1] ? -1 : (data.mash[0] > data.mash[1] ? 0 : 1));
-      world.fighters.forEach((f, i) => {
-        if (f.state === 'frozen') { f.state = 'normal'; f.stateT = 0; }
-        f.hazardInv = 0;
-        if (i === wIdx) {
-          f.gainMeter(20);                                  // meter only — hazards never heal
-          fx.text(f.x, f.y - 130, 'SUBMITTED! +20 METER', '#3f5a40');
-          audio.play('heal');
-        } else if (wIdx >= 0) {
-          f.stagger(HAZARD_STAGGER);                        // hazard stagger: brief, never comboable
-          fx.text(f.x, f.y - 130, 'TOO SLOW', BRICK);
-        }
-      });
-      if (wIdx < 0) fx.banner('DEAL FELL THROUGH', { dur: 60 });
-      return true;
-    },
-    drawUI(ctx, c) {
-      const { world, data, t } = ctx;
-      if (!data.mash) return;
-      c.font = "700 30px 'Pixelify Sans'"; c.textAlign = 'center';
-      c.fillStyle = INK;
-      c.fillText('SUBMIT!', 480, 250 + Math.sin(t * 0.4) * 3);
-      world.fighters.forEach((f, i) => {
-        const x = i === 0 ? 240 : 600;
-        c.fillStyle = INK; c.fillRect(x - 2, 268, 124, 16);
-        c.fillStyle = PAPER; c.fillRect(x, 270, 120, 12);
-        c.fillStyle = i === 0 ? NAVY : BRICK;
-        c.fillRect(x, 270, 120 * Math.min(1, data.mash[i] / MASH_TARGET), 12);
-      });
-    },
-  },
-  {
-    id: 'wave',
-    name: 'THE WAVE',
-    banner: 'THE WAVE!',
-    sub: 'offsite flashback — jump to ride it',
-    sound: 'wave',
     telegraph: 80,
     weight: 3,
-    maxFrames: 240,
-    // Two fronts roll in from both lips and meet at centre: every shove points
-    // at centre stage (symmetric, never toward a blast zone). Jumpers ride it.
-    start({ slab, data }) {
-      data.mid = slab.x + slab.w / 2;
-      data.speed = 6;
-      data.fronts = [{ x: slab.x - 30, dir: 1 }, { x: slab.x + slab.w + 30, dir: -1 }];
-      data.hit = new Set();
+    maxFrames: 560,
+    start({ world, slab, data, stage }) {
+      const mid = midX(slab), perch = centrePerch(stage, slab);
+      const spots = [
+        { x: mid, s: perch },
+        { x: mid - slab.w * 0.14, s: slab }, { x: mid + slab.w * 0.14, s: slab },
+        { x: mid - slab.w * 0.34, s: slab }, { x: mid + slab.w * 0.34, s: slab },
+      ];
+      data.pages = spots.map((p, i) => ({ x: p.x, s: p.s, y: p.s.y - 280 - i * 30, landed: false, taken: -1, wob: i * 1.7 }));
+      data.signed = [0, 0];
+      data.done = -1;
     },
-    update({ world, slab, data, audio }) {
-      for (const fr of data.fronts) fr.x += fr.dir * data.speed;
-      for (const f of world.fighters) {
-        if (data.hit.has(f) || !onSlab(f, slab) || f.invulnerable) continue;
-        for (const fr of data.fronts) {
-          if (Math.abs(f.x - fr.x) >= 18) continue;
-          data.hit.add(f);
-          const toCentre = f.x < data.mid ? 1 : -1;
-          f.takeHit({ dmg: 2, kb: 5, kbScale: 0, kbAngle: 60, dir: toCentre });
-          audio.play('wave');
-          break;
-        }
-      }
-      return data.fronts[0].x >= data.mid && data.fronts[1].x <= data.mid;
-    },
-    drawWorld({ slab, data }, ctx) {
-      if (!data.fronts) return;
-      for (const fr of data.fronts) {
-        ctx.fillStyle = 'rgba(157,184,217,0.55)';
-        for (let i = 0; i < 5; i++) {
-          const h = 68 - i * 10;
-          ctx.fillRect(fr.x - fr.dir * i * 14 - 10, slab.y - h, 20, h);
-        }
-        ctx.fillStyle = PAPER;
-        ctx.fillRect(fr.x - 12, slab.y - 76, 24, 8);
-      }
-    },
-    drawUI({ t }, c) {
-      if (t > 40) return;
-      c.font = "700 30px 'Pixelify Sans'"; c.textAlign = 'center'; c.fillStyle = NAVY;
-      c.fillText('→ →  ●  ← ←', 480, 240);
-    },
-  },
-  {
-    id: 'spin',
-    name: 'SPIN CLASS STAMPEDE',
-    banner: 'SPIN CLASS STAMPEDE!',
-    sub: 'the 7am class got loose — jump the bikes',
-    sound: 'bikeBell',
-    telegraph: 70,
-    weight: 3,
-    maxFrames: 420,
-    start({ world, data }) {
-      data.dir = world.rng() < 0.5 ? 1 : -1;
-      data.spawned = 0;
-      data.times = [0, 45, 90];
-    },
-    update({ world, slab, data, t, audio }) {
-      const mid = slab.x + slab.w / 2;
-      while (data.spawned < 3 && t >= data.times[data.spawned]) {
-        const dir = data.spawned === 1 ? -data.dir : data.dir;   // middle bike comes the other way
-        world.addHazard({
-          type: 'bike', x: dir > 0 ? slab.x - 40 : slab.x + slab.w + 40, y: slab.y - 16, w: 32, h: 32,
-          vx: dir * (4.5 + world.rng() * 1.5), dmg: 5, kb: 4, kbScale: 0, kbAngle: 65, groundedOnly: true, dir,
-          update(h, w) {
-            h.x += h.vx;
-            if (h.x < slab.x - 80 || h.x > slab.x + slab.w + 80) h.dead = true;
-            // the shove always points at centre stage, whoever it is about to hit
-            const near = w.fighters.find(f => Math.abs(f.x - h.x) < 60);
-            if (near) h.dir = near.x < mid ? 1 : -1;
-          },
+    update({ world, data, fx, audio, t }) {
+      for (const p of data.pages) {
+        if (p.taken >= 0) continue;
+        if (!p.landed) { p.y = Math.min(p.s.y - 8, p.y + 3.2); p.landed = p.y >= p.s.y - 8; continue; }
+        world.fighters.forEach((f, i) => {
+          if (p.taken >= 0 || f.chair || f.state === 'ko') return;
+          if (Math.abs(f.x - p.x) > 30 || Math.abs(f.y - p.s.y) > 70) return;
+          p.taken = i; data.signed[i]++;
+          f.gainMeter(6);                                     // meter only — events never heal
+          fx.text(p.x, p.s.y - 90, `SIGNED ${data.signed[i]}/3`, i ? BRICK : NAVY);
+          audio.play('pop');
         });
-        audio.play('bikeBell');
-        data.spawned++;
       }
-      return data.spawned >= 3 && !world.hazards.some(h => h.type === 'bike');
+      const winner = data.signed.findIndex(n => n >= 3);
+      if (winner >= 0) {
+        const f = world.fighters[winner];
+        f.gainMeter(15);
+        fx.banner('DEAL CLOSED!', { dur: 70, sub: `${f.cfg.name} +15 meter`, color: GREEN });
+        audio.play('heal');
+        return true;
+      }
+      if (data.pages.every(p => p.taken >= 0) || t > 520) { fx.banner('DEAL LAPSED', { dur: 50, sub: 'nobody got three signatures' }); return true; }
+      return false;
+    },
+    drawWorld(ctx, c) {
+      const { data, t } = ctx;
+      const img = art(ctx, 'ev-page');
+      for (const p of data.pages || []) {
+        if (p.taken >= 0) continue;
+        if (!p.landed) { c.fillStyle = 'rgba(43,38,32,0.25)'; c.fillRect(Math.round(p.x - 14), p.s.y - 3, 28, 3); }   // where it lands
+        const sway = p.landed ? 0 : Math.sin(t * 0.12 + p.wob) * 10, bob = p.landed ? Math.sin(t * 0.1 + p.wob) * 2 : 0;
+        const x = Math.round(p.x + sway), y = Math.round(p.y + bob);
+        if (img) { c.imageSmoothingEnabled = false; c.drawImage(img, x - 18, y - 44, 36, 44); continue; }
+        c.fillStyle = INK; c.fillRect(x - 15, y - 41, 30, 40);
+        c.fillStyle = PAPER; c.fillRect(x - 13, y - 39, 26, 36);
+        c.fillStyle = '#b8ad93'; for (let k = 0; k < 4; k++) c.fillRect(x - 9, y - 33 + k * 6, 18, 2);
+        c.fillStyle = NAVY; c.fillRect(x - 9, y - 10, 12, 2); c.fillRect(x + 2, y - 13, 2, 5);   // the signature line
+      }
+    },
+    drawUI({ world, data }, c) {
+      if (!data.signed) return;
+      world.fighters.forEach((f, i) => pips(c, i ? 830 : 76, 112, data.signed[i], 3, i ? BRICK : NAVY));
     },
   },
   {
-    id: 'firedrill',
-    name: 'FIRE DRILL',
-    banner: 'FIRE DRILL!',
-    sub: 'get to the assembly point!',
-    sound: 'alarm',
-    telegraph: 70,
-    weight: 2,
-    maxFrames: 900,
-    start({ world, slab, data }) {
-      data.side = world.rng() < 0.5 ? 0 : 1;
-      data.w = 130;
-      data.x = slab.x + slab.w * (data.side === 0 ? 0.3 : 0.7);   // well inside: never near a blast zone
-      // runtime window: the slowest fighter crossing the slab from the far lip, plus a platform descent and a breath
-      const slowest = Math.min(...world.fighters.map(f => f.effRunMax()));
-      data.deadline = Math.ceil((slab.w * 0.7) / slowest) + 60 + 45;
-      for (const z of world.zones) if (Math.abs(z.x - data.x) < (z.w + data.w) / 2) z.dead = true;   // no pick-your-poison
+    // King of the hill. The IC room lights up on the centre high ground (or moves
+    // between the side platforms where there is none): stand
+    // in it alone to bank votes; the majority after 5.5 s is APPROVED (+22 meter).
+    id: 'ic',
+    name: 'INVESTMENT COMMITTEE',
+    banner: 'INVESTMENT COMMITTEE!',
+    sub: 'hold the room alone to win the vote',
+    sound: 'bell',
+    telegraph: 80,
+    weight: 3,
+    maxFrames: 400,
+    start({ slab, stage, data, world }) {
+      // the centre high ground if there is one; otherwise the room moves between
+      // the two mirrored side platforms halfway through (left or right first)
+      const perch = centrePerch(stage, slab), mid = midX(slab);
+      const sides = stage.platforms.filter(p => Math.abs(p.x + p.w / 2 - mid) > slab.w * 0.2).sort((a, b) => a.x - b.x);
+      data.rooms = perch !== slab || sides.length < 2 ? [perch] : (world.rng() < 0.5 ? [sides[0], sides[sides.length - 1]] : [sides[sides.length - 1], sides[0]]);
+      data.votes = [0, 0]; data.contested = false;
+      room(data, 0, slab);
     },
-    update({ world, slab, data, t, fx, audio }) {
-      if (t < data.deadline) return false;
-      for (const f of world.fighters) {
-        const inside = Math.abs(f.x - data.x) < data.w / 2 && f.y <= slab.y + 4 && f.y > slab.y - 150;
-        const forgiven = ['hitstun', 'stagger', 'grabbed', 'frozen', 'ko', 'chair'].includes(f.state) || f.chair;
-        if (!inside && !forgiven) {
-          f.gauge = Math.max(0, f.gauge - 6);                       // no stun — never a free setup
-          f.hurtFlash = 5;
-          f.cancelRegen();
-          fx.text(f.x, f.y - 130, 'MISSED ROLL CALL -6', BRICK);
-        } else if (inside) fx.text(f.x, f.y - 130, 'PRESENT ✓', '#3f5a40');
+    update({ world, data, fx, audio, t, slab }) {
+      if (data.rooms.length > 1 && t === 165) { room(data, 1, slab); fx.text(data.x, data.s.y - 170, 'ROOM MOVED', BRASS); }
+      const inRoom = world.fighters.map(f => f.state !== 'ko' && !f.chair && standingOn(f, data.s) && Math.abs(f.x - data.x) <= data.w / 2);
+      data.contested = inRoom[0] && inRoom[1];
+      if (t > 30 && !data.contested) inRoom.forEach((on, i) => { if (on) data.votes[i]++; });
+      if (t < 330) return false;
+      const [a, b] = data.votes, w = a === b || Math.max(a, b) < 45 ? -1 : (a > b ? 0 : 1);
+      if (w < 0) fx.banner('DEFERRED', { dur: 50, sub: 'no majority — back to the office' });
+      else {
+        world.fighters[w].gainMeter(22);
+        fx.banner('APPROVED!', { dur: 70, sub: `${world.fighters[w].cfg.name} +22 meter`, color: GREEN });
+        audio.play('heal');
       }
-      audio.play('pop');
       return true;
     },
-    drawWorld({ slab, data, t }, ctx) {
-      if (data.x === undefined) return;
-      const pulse = (t % 30) < 15;
-      ctx.fillStyle = pulse ? 'rgba(196,69,46,0.25)' : 'rgba(196,69,46,0.15)';
-      ctx.fillRect(data.x - data.w / 2, slab.y - 120, data.w, 120);
-      ctx.fillStyle = BRICK;
-      ctx.fillRect(data.x - 3, slab.y - 118, 6, 30);
-      ctx.fillRect(data.x - 16, slab.y - 118, 32, 10);
+    drawWorld({ data, t }, c) {
+      if (!data.s) return;
+      const x0 = Math.round(data.x - data.w / 2), top = data.s.y, H = 150;
+      c.fillStyle = data.contested ? 'rgba(196,69,46,0.16)' : 'rgba(201,162,39,0.16)';
+      c.fillRect(x0, top - H, data.w, H);                      // the glass room
+      c.fillStyle = INK;
+      c.fillRect(x0, top - H, 4, H); c.fillRect(x0 + data.w - 4, top - H, 4, H); c.fillRect(x0, top - H, data.w, 4);
+      c.fillStyle = PAPER; c.fillRect(x0 + data.w / 2 - 34, top - H - 22, 68, 20);   // door sign
+      c.fillStyle = INK; c.font = "700 12px 'Silkscreen'"; c.textAlign = 'center';
+      c.fillText(data.contested ? 'CONTESTED' : 'IC ROOM', x0 + data.w / 2, top - H - 8);
     },
-    drawUI({ data, t }, c) {
-      if (data.deadline === undefined) return;
-      const left = Math.max(0, Math.ceil((data.deadline - t) / 60));
-      c.font = "700 22px 'Silkscreen'"; c.textAlign = 'center'; c.fillStyle = BRICK;
-      c.fillText(`ASSEMBLE: ${left}`, 480, 240);
+    drawUI({ world, data, t }, c) {
+      if (!data.votes) return;
+      const total = 330 - 30, left = Math.max(0, Math.ceil((330 - t) / 60));
+      world.fighters.forEach((f, i) => {
+        const x = i ? 600 : 240, k = Math.min(1, data.votes[i] / (total * 0.6));
+        c.fillStyle = INK; c.fillRect(x - 2, 108, 124, 16);
+        c.fillStyle = PAPER; c.fillRect(x, 110, 120, 12);
+        c.fillStyle = i ? BRICK : NAVY; c.fillRect(x, 110, 120 * k, 12);
+      });
+      c.font = "700 16px 'Silkscreen'"; c.textAlign = 'center'; c.fillStyle = INK;
+      c.fillText(`VOTE IN ${left}`, 480, 122);
     },
   },
+  {
+    // New routes. A crane lowers two scaffold decks over the stage for ~9 s
+    // (soft platforms, mirrored), then lifts them out — blinking first.
+    id: 'site',
+    name: 'SITE VISIT',
+    banner: 'SITE VISIT!',
+    sub: 'scaffolding going up — new ground for nine seconds',
+    sound: 'klaxon',
+    telegraph: 80,
+    weight: 2,
+    maxFrames: 900,
+    start({ world, slab, stage, data }) {
+      data.home = world.stage;
+      const w = 170, mid = midX(slab);
+      let y = slab.y - 200;
+      const xs = [slab.x + slab.w * 0.16, slab.x + slab.w * 0.84 - w];   // over the stage, not the lips: routes, not recovery ledges
+      const clash = (yy) => stage.platforms.some(p => Math.abs(p.y - yy) < 60 && xs.some(x => x < p.x + p.w && x + w > p.x));
+      for (let k = 0; k < 4 && clash(y); k++) y -= 70;
+      data.decks = xs.map(x => ({ x, y, w, scaffold: true }));
+      data.drop = 60; data.stay = 540; data.lift = 60;
+      data.mid = mid;
+    },
+    update({ world, data, t }) {
+      if (t === data.drop) world.stage = { ...data.home, platforms: [...data.home.platforms, ...data.decks] };   // solid once landed
+      if (t === data.drop + data.stay) world.stage = data.home;                                              // gone before it rises
+      return t >= data.drop + data.stay + data.lift;
+    },
+    end({ world, data }) { if (data.home) world.stage = data.home; },
+    drawWorld({ data, t }, c) {
+      if (!data.decks) return;
+      for (const d of data.decks) {
+        let off = 0;
+        if (t < data.drop) off = -(1 - t / data.drop) * 420;
+        else if (t > data.drop + data.stay) off = -((t - data.drop - data.stay) / data.lift) * 420;
+        const blink = t > data.drop + data.stay - 90 && t <= data.drop + data.stay && ((t >> 3) & 1);
+        if (blink) continue;
+        const y = Math.round(d.y + off);
+        c.fillStyle = '#4a443c'; c.fillRect(d.x + d.w / 2 - 2, y - 900, 4, 870);         // crane cable
+        c.fillStyle = BRASS; c.fillRect(d.x + d.w / 2 - 10, y - 34, 20, 10);               // hook block
+        c.fillStyle = INK; c.fillRect(d.x + 10, y - 26, 3, 26); c.fillRect(d.x + d.w - 13, y - 26, 3, 26);
+        c.fillRect(d.x + 10, y - 26, d.w - 20, 3);                                         // slings
+        c.fillStyle = INK; c.fillRect(d.x, y - 2, d.w, 14);
+        c.fillStyle = '#b07c3a'; c.fillRect(d.x + 2, y, d.w - 4, 10);                      // planks
+        c.fillStyle = '#8a5f2a'; for (let k = 16; k < d.w; k += 22) c.fillRect(d.x + k, y, 2, 10);
+        c.fillStyle = '#9aa0a6'; c.fillRect(d.x + 6, y + 12, 4, 34); c.fillRect(d.x + d.w - 10, y + 12, 4, 34);   // tube legs
+        c.fillStyle = BRICK; c.fillRect(d.x + 6, y + 30, d.w - 12, 3);                     // hazard rail
+      }
+    },
+  },
+  {
+    // Ground to cede. The sprinklers soak one half of the floor (grounded
+    // fighters there are slowed), then the other half — symmetric by turns.
+    id: 'sprinkler',
+    name: 'SPRINKLER TEST',
+    banner: 'SPRINKLER TEST!',
+    sub: 'facilities are testing the system — stay dry',
+    sound: 'alarm',
+    stages: ['office', 'pub'],
+    telegraph: 80,
+    weight: 3,
+    maxFrames: 700,
+    start({ world, data }) { data.first = world.rng() < 0.5 ? -1 : 1; data.half = 300; data.soaked = new Set(); },
+    update({ world, slab, data, fx, t }) {
+      const side = t < data.half ? data.first : -data.first, mid = midX(slab);
+      for (const f of world.fighters) {
+        if (f.chair || f.state === 'ko' || !f.grounded) continue;
+        const wet = Math.sign(f.x - mid) === side;
+        if (!wet) { data.soaked.delete(f); continue; }
+        if (!f.hasStatus('slow') || f.statuses.get('slow').dur < 10) f.applyStatus('slow', 24);
+        if (!data.soaked.has(f)) { data.soaked.add(f); fx.text(f.x, f.y - 120, 'SOAKED!', NAVY); }
+      }
+      if (t === data.half) data.soaked.clear();
+      return t >= data.half * 2;
+    },
+    drawWorld({ slab, data, t, stage }, c) {
+      if (data.first === undefined) return;
+      const side = t < data.half ? data.first : -data.first, mid = midX(slab);
+      const x0 = side < 0 ? stage.cameraBounds.x : mid, x1 = side < 0 ? mid : stage.cameraBounds.x + stage.cameraBounds.w;
+      c.fillStyle = 'rgba(157,184,217,0.14)'; c.fillRect(x0, stage.cameraBounds.y, x1 - x0, slab.y - stage.cameraBounds.y);
+      c.fillStyle = '#9db8d9';
+      for (let i = 0; i < 70; i++) {                              // falling drops
+        const x = x0 + ((i * 97) % Math.max(1, x1 - x0)), y = stage.cameraBounds.y + ((i * 53 + t * 9) % (slab.y - stage.cameraBounds.y));
+        c.fillRect(Math.round(x), Math.round(y), 3, 10);
+      }
+      c.fillStyle = 'rgba(157,184,217,0.6)'; c.fillRect(Math.max(slab.x, x0), slab.y - 3, Math.min(slab.x + slab.w, x1) - Math.max(slab.x, x0), 4);   // wet sheen
+    },
+    drawUI({ data, t }, c) {
+      const side = data.first === undefined ? null : (t < data.half ? data.first : -data.first);
+      if (side === null) return;
+      c.font = "700 18px 'Silkscreen'"; c.textAlign = 'center'; c.fillStyle = NAVY;
+      c.fillText(side < 0 ? '◀ WET SIDE' : 'WET SIDE ▶', 480, 122);
+    },
+  },
+  crosswind({ id: 'gust', stages: ['rooftop'], name: 'CROSSWIND', banner: 'CROSSWIND!', sub: 'the gusts blow anyone airborne back to the middle', sound: 'wave', kind: 'wind' }),
+  crosswind({ id: 'train', stages: ['tube'], name: 'TRAIN APPROACHING', banner: 'TRAIN APPROACHING!', sub: 'the draught pulls anyone airborne to the middle', sound: 'jet', kind: 'train' }),
   {
     id: 'berlin',
     name: 'BERLIN TRIP',
@@ -272,3 +305,44 @@ export const EVENTS = [
     },
   },
 ];
+
+// Air pushes toward centre stage (never toward a blast zone): only actionable
+// airborne fighters drift, 1.4 px/f — a recovery gets easier, a jump-in gets
+// harder, launches are untouched (stun > 0).
+function crosswind(o) {
+  return {
+    id: o.id, name: o.name, banner: o.banner, sub: o.sub, sound: o.sound, stages: o.stages,
+    telegraph: 90, weight: 3, maxFrames: 360,
+    start({ data }) { data.dur = 300; },
+    update({ world, slab, data, t }) {
+      const mid = midX(slab);
+      for (const f of world.fighters) {
+        if (f.chair || f.state !== 'normal' || f.grounded || f.body.stun > 0) continue;
+        const dir = Math.sign(mid - f.x);
+        if (Math.abs(mid - f.x) > 20) f.body.x += dir * 1.4;
+      }
+      return t >= data.dur;
+    },
+    drawWorld({ slab, stage, t }, c) {
+      const mid = midX(slab), B = stage.cameraBounds;
+      if (o.kind === 'train') {                                   // the train blurs past behind the platform
+        const tx = B.x + ((t * 38) % (B.w + 1400)) - 1400;
+        c.fillStyle = 'rgba(39,66,95,0.55)'; c.fillRect(tx, slab.y - 130, 1400, 96);
+        c.fillStyle = 'rgba(242,233,216,0.5)'; for (let k = 40; k < 1400; k += 120) c.fillRect(tx + k, slab.y - 110, 70, 28);
+        c.fillStyle = 'rgba(196,69,46,0.6)'; c.fillRect(tx, slab.y - 60, 1400, 6);
+      }
+      c.fillStyle = 'rgba(242,233,216,0.7)';                        // wind lines, both sides pointing inward
+      for (let i = 0; i < 26; i++) {
+        const side = i % 2 ? 1 : -1, y = B.y + 80 + ((i * 67) % (B.h - 200));
+        const span = (B.w / 2) * ((i * 37 + t * 6) % 100) / 100;
+        const x = side < 0 ? B.x + span : B.x + B.w - span;
+        if (Math.abs(x - mid) > 60) c.fillRect(Math.round(x), Math.round(y), 40, 3);
+      }
+    },
+    drawUI({ t }, c) {
+      if (t > 60) return;
+      c.font = "700 30px 'Pixelify Sans'"; c.textAlign = 'center'; c.fillStyle = NAVY;
+      c.fillText('→ →  ●  ← ←', 480, 240);
+    },
+  };
+}

@@ -22,11 +22,11 @@ function mulberry32(seed) {
     return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
   };
 }
-const mk = (a = 'mike', b = 'tim', stage = 'office', seed = 5) => {
+const mk = (a = 'mike', b = 'tim', stage = 'office', seed = 5, stageId = null) => {
   const rng = mulberry32(seed);
   const c = [new Idle(), new Idle()];
   const w = new FightWorld({ cfgs: [byId(a), byId(b)], controllers: c, stage: geometryOf(stage), fx: stubFx, audio: stubAudio, rng, settings: {} });
-  const d = new EventDirector(w, EVENTS, { enabled: true, difficulty: 'normal' });
+  const d = new EventDirector(w, EVENTS, { enabled: true, difficulty: 'normal', stageId });
   return { w, d, c };
 };
 const step = (w, d) => { for (const f of w.fighters) f.controller.update(f, w); w.update(); d.update(); };
@@ -43,9 +43,12 @@ const runEvent = (w, d, id, budget = 2400) => {
   return -1;
 };
 
+const EVENT_STAGE = { sprinkler: 'office', gust: 'rooftop', train: 'tube' };
+
 test('every event runs to completion headlessly without throwing and leaves both fighters actionable', () => {
-  for (const id of ['underwriting', 'wave', 'spin', 'firedrill', 'berlin']) {
-    const { w, d } = mk();
+  for (const ev of EVENTS) {
+    const id = ev.id, stage = EVENT_STAGE[id] || 'office';
+    const { w, d } = mk('mike', 'tim', stage, 5, stage);
     run(w, d, 5);
     const home = w.stage;
     const t = runEvent(w, d, id);
@@ -53,14 +56,108 @@ test('every event runs to completion headlessly without throwing and leaves both
     assert.ok(d.fired.includes(id));
     run(w, d, 40);
     for (const f of w.fighters) {
-      assert.equal(f.state, 'normal', `${id}: ${f.cfg.id} is back to normal`);
-      assert.equal(f.stocks, 3, `${id}: hazards never took a stock`);
+      assert.ok(['normal', 'hitstun'].includes(f.state), `${id}: ${f.cfg.id} is actionable again`);
+      assert.equal(f.stocks, 3, `${id}: events never took a stock`);
+      assert.equal(f.gauge, f.maxGauge, `${id}: events never cost or heal composure`);
       assert.ok(Number.isFinite(f.x) && Number.isFinite(f.y));
     }
     assert.equal(w.stage, home, `${id}: geometry restored`);
     assert.equal(d.stageOverride, null);
-    assert.equal(w.director, d, 'the director is reachable from the world (CPU reads hazards)');
+    assert.equal(w.director, d, 'the director is reachable from the world (CPU reads events)');
   }
+});
+
+test('stage-bound events only roll on their stages', () => {
+  const { w, d } = mk('tim', 'ben', 'palace', 5, 'palace');
+  for (let i = 0; i < 40000 && d.fired.length < 12 && !w.over; i++) {
+    step(w, d);
+    if (d.fired.length >= 2 && !d.active) { d.firedThisStock = 0; }   // keep rolling past the per-stock cap
+  }
+  for (const id of d.fired) assert.ok(!['sprinkler', 'gust', 'train'].includes(id), `${id} does not belong on the palace`);
+});
+
+test('deal deadline: pages fall on mirrored spots, signing gives meter only, three signatures close the deal', () => {
+  const { w, d } = mk('tim', 'ben');
+  run(w, d, 5);
+  const [a, b] = w.fighters, slab = w.stage.slabs[0], mid = slab.x + slab.w / 2;
+  d.force('deal');
+  let pages = null;
+  for (let i = 0; i < 400 && !pages; i++) { step(w, d); if (d.active?.phase === 'live') pages = d.active.data.pages; }
+  const xs = pages.map(p => Math.round(p.x - mid)).sort((x, y) => x - y);
+  assert.deepEqual(xs, xs.map(x => 0 - x || 0).reverse(), 'pages are mirror-symmetric about centre stage');
+  for (let i = 0; i < 200 && !pages.every(p => p.landed); i++) step(w, d);
+  const onSlab = pages.filter(p => p.s === slab).slice(0, 3);
+  for (const p of onSlab) { a.body.x = p.x; step(w, d); }
+  assert.ok(!d.active, 'three signatures close it at once');
+  assert.equal(a.meter, 6 * 3 + 15);
+  assert.equal(b.meter, 0);
+  assert.equal(a.gauge, a.maxGauge);
+});
+
+test('investment committee: the fighter holding the room alone wins the vote (+22), a contested room earns nothing', () => {
+  const { w, d } = mk('tim', 'ben');
+  run(w, d, 5);
+  const [a, b] = w.fighters;
+  d.force('ic');
+  for (let i = 0; i < 400 && d.active?.phase !== 'live'; i++) step(w, d);
+  const room = d.active.data;
+  let t = 0;
+  while (d.active && t++ < 600) { a.body.x = room.x; a.body.y = room.s.y; a.body.vy = 0; a.body.grounded = true; step(w, d); }
+  assert.ok(a.meter >= 22, 'Tim held the room: approved');
+  assert.equal(b.meter, 0);
+  const { w: w2, d: d2 } = mk('tim', 'ben');
+  run(w2, d2, 5);
+  d2.force('ic');
+  for (let i = 0; i < 400 && d2.active?.phase !== 'live'; i++) step(w2, d2);
+  const r2 = d2.active.data;
+  t = 0;
+  while (d2.active && t++ < 600) { for (const f of w2.fighters) { f.body.x = r2.x; f.body.y = r2.s.y; f.body.vy = 0; f.body.grounded = true; } step(w2, d2); }
+  assert.ok(w2.fighters.every(f => f.meter === 0), 'contested the whole time: deferred');
+});
+
+test('site visit: two mirrored scaffold decks are solid only while landed, then the geometry is restored exactly', () => {
+  const { w, d } = mk('tim', 'ben');
+  run(w, d, 5);
+  const home = w.stage, n = home.platforms.length, slab = home.slabs[0], mid = slab.x + slab.w / 2;
+  d.force('site');
+  let solid = 0;
+  for (let i = 0; i < 1400 && (d.fired.length === 0 || d.active); i++) {
+    step(w, d);
+    if (w.stage !== home) {
+      solid++;
+      const decks = w.stage.platforms.slice(n);
+      assert.equal(decks.length, 2);
+      assert.equal(Math.round(decks[0].x + decks[0].w / 2 - mid), -Math.round(decks[1].x + decks[1].w / 2 - mid), 'mirrored');
+    }
+  }
+  assert.ok(solid >= 520, 'the decks stay ~9 s');
+  assert.equal(w.stage, home);
+});
+
+test('sprinkler test: only grounded fighters on the wet half are slowed, and the halves swap', () => {
+  const { w, d } = mk('tim', 'ben', 'office', 5, 'office');
+  run(w, d, 5);
+  const [a, b] = w.fighters, slab = w.stage.slabs[0], mid = slab.x + slab.w / 2;
+  d.force('sprinkler');
+  for (let i = 0; i < 400 && d.active?.phase !== 'live'; i++) step(w, d);
+  const first = d.active.data.first;
+  const put = () => { a.body.x = mid + first * 200; b.body.x = mid - first * 200; };
+  put(); run(w, d, 20);
+  assert.ok(a.hasStatus('slow') && !b.hasStatus('slow'), 'wet side slowed, dry side not');
+  while (d.active && d.active.t < d.active.data.half + 40) { put(); step(w, d); }
+  assert.ok(b.hasStatus('slow'), 'second half: the other side is wet');
+});
+
+test('crosswind: airborne fighters drift toward centre, never outward; grounded and launched fighters are untouched', () => {
+  const { w, d } = mk('tim', 'ben', 'rooftop', 5, 'rooftop');
+  run(w, d, 5);
+  const slab = w.stage.slabs[0], mid = slab.x + slab.w / 2, [a] = w.fighters;
+  d.force('gust');
+  for (let i = 0; i < 400 && d.active?.phase !== 'live'; i++) step(w, d);
+  a.body.x = slab.x - 60; a.body.y = slab.y - 150; a.body.grounded = false; a.body.vx = 0; a.body.vy = -6;
+  const x0 = a.x; step(w, d);
+  assert.ok(a.x > x0, 'pushed back toward centre (inward), not toward the blast zone');
+  assert.ok(Math.abs(a.x - x0) < 4, 'a nudge, not a launch');
 });
 
 test('the Berlin trip swaps geometry both ways, buffs Mike while abroad, and only fires once', () => {
@@ -87,74 +184,6 @@ test('the Berlin trip swaps geometry both ways, buffs Mike while abroad, and onl
   d.force('berlin');
   run(w, d, 400);
   assert.equal(d.fired.filter(x => x === 'berlin').length, 1, 'oncePerMatch holds even when forced');
-});
-
-test('the wave never pushes toward a blast zone: every shove points at centre stage with kb <= 6', () => {
-  const { w, d } = mk('tim', 'ben', 'palace');
-  run(w, d, 5);
-  const slab = w.stage.slabs[0], mid = slab.x + slab.w / 2;
-  w.fighters[0].body.x = slab.x + 40; w.fighters[1].body.x = slab.x + slab.w - 40;
-  const hits = [];
-  for (const f of w.fighters) { const orig = f.takeHit.bind(f); f.takeHit = (o) => { hits.push({ f, x: f.x, ...o }); return orig(o); }; }
-  assert.ok(runEvent(w, d, 'wave') >= 0);
-  assert.equal(hits.length, 2, 'both grounded fighters got shoved once');
-  for (const h of hits) {
-    assert.equal(h.dir, h.x < mid ? 1 : -1, `${h.f.cfg.id} was shoved toward centre`);
-    assert.ok(h.kb <= 6 && (h.kbScale ?? 0) === 0, 'below kill-class, no emptiness scaling');
-  }
-  run(w, d, 120);
-  for (const f of w.fighters) { assert.equal(f.stocks, 3); assert.ok(f.x > slab.x && f.x < slab.x + slab.w, 'still over the slab'); }
-});
-
-test('fire drill: misses cost 6 gauge with no stun, present fighters pay nothing, the marker sits well inside the slab', () => {
-  const { w, d } = mk('tim', 'ben', 'office');
-  run(w, d, 5);
-  const slab = w.stage.slabs[0];
-  const [a, b] = w.fighters;
-  const g0 = a.gauge;
-  d.force('firedrill');
-  let live = false, resolved = -1;
-  for (let i = 0; i < 2400; i++) {
-    step(w, d);
-    const act = d.active;
-    if (act?.def.id === 'firedrill' && act.phase === 'live' && !live) {
-      live = true;
-      assert.ok(act.data.x > slab.x + 100 && act.data.x < slab.x + slab.w - 100, 'never near a blast zone');
-      a.body.x = act.data.x;                                     // Tim reports to the assembly point
-      b.body.x = act.data.x < slab.x + slab.w / 2 ? slab.x + slab.w - 40 : slab.x + 40;   // Ben stays at his desk
-    }
-    if (live && !d.active) { resolved = i; break; }
-  }
-  assert.ok(resolved > 0);
-  assert.equal(a.gauge, g0, 'present: no cost');
-  assert.equal(b.gauge, b.maxGauge - 6, 'missed roll call: -6');
-  assert.equal(b.state, 'normal'); assert.equal(b.body.stun, 0); assert.equal(b.attack, null);
-});
-
-test('urgent underwriting: only when both are grounded, winner +20 meter, loser gets a non-comboable hazard stagger', () => {
-  const { w, d } = mk('tim', 'ben');
-  run(w, d, 5);
-  const [a, b] = w.fighters;
-  b.body.y -= 200; b.body.grounded = false; b.body.vy = -14;     // Ben is in the air: the deal waits for him
-  d.force('underwriting');
-  let frozenSeen = false, done = -1;
-  for (let i = 0; i < 1200; i++) {
-    step(w, d);
-    if (w.fighters.some(f => f.state === 'frozen')) {
-      frozenSeen = true;
-      assert.ok(w.fighters.every(f => f.state === 'frozen' || f.state !== 'hitstun'), 'freeze covers both');
-    }
-    if (frozenSeen && !d.active) { done = i; break; }
-  }
-  assert.ok(frozenSeen && done > 0, 'the deal went through once both were grounded');
-  const winner = w.fighters.find(f => f.meter >= 20), loser = w.fighters.find(f => f !== winner);
-  assert.ok(winner, 'someone submitted first');
-  assert.equal(winner.gauge, winner.maxGauge, 'meter only, no gauge reward');
-  assert.equal(loser.state, 'stagger');
-  assert.ok(loser.hazardInv > 0, 'invulnerable through the recovery — never comboable');
-  assert.equal(loser.gauge, loser.maxGauge);
-  run(w, d, 60);
-  assert.ok(w.fighters.every(f => f.state === 'normal'));
 });
 
 test('pacing: nothing rolls before ~10 s and never more than two events per stock-fall', () => {
