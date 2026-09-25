@@ -102,6 +102,8 @@ export class PlayerController {
   consume(action) { this.input.consume(this.map[action]); }
   pressed(action) { return this.input.keyPressed(this.map[action]); }
   update() {}
+  // v3: one MovementBody intent per logic tick (see buildIntent below).
+  intent() { return buildIntent(this, this.input, this.map); }
 }
 
 // NOTE: `ctl.reversed` swaps held left/right but NOT the dash double-taps

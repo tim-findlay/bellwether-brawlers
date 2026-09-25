@@ -1,7 +1,7 @@
 // CPU controller. Implements the same interface as PlayerController so the
 // Fighter never knows who's driving. Archetype hints come from character data.
 
-import { STAGE_LEFT, STAGE_RIGHT } from './fighter.js';
+const STAGE_LEFT = 26, STAGE_RIGHT = 454;   // v2 art-space constants — the CPU is re-homed to stage geometry in the Phase-3 port
 
 export const DIFFICULTY = {
   easy:   { decide: 30, mistake: 0.28, mashDelay: 55, mashCps: 4.5, superChance: 0.4 },

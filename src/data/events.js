@@ -2,7 +2,7 @@
 // src/engine/events.js schedules and telegraphs them. Rules (BALANCE.md):
 // always telegraphed, symmetric or dodgeable, never match-deciding.
 
-import { GROUND_Y } from '../engine/fighter.js';
+const GROUND_Y = 232;   // v2 art-space constant — events are re-homed to world coords in the Phase-3 port
 import { DIFFICULTY } from '../engine/ai.js';
 
 const MASH_TARGET = 10;
