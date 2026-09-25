@@ -91,12 +91,12 @@ export const STAGES = [
     art: { platforms: ['shelf', 'shelf', 'tray'], far: '#b9c6cf', parallax: 0.3 },
     // THE OFFICE — symmetric tri-plat (the tournament stage)
     geometry: {
-      slabs: [{ x: 920, y: 760, w: 560, h: 70 }],
-      platforms: [{ x: 985, y: 650, w: 150 }, { x: 1265, y: 650, w: 150 }, { x: 1122, y: 552, w: 156 }],
-      spawns: [{ x: 1060, y: 760 }, { x: 1340, y: 760 }],
+      slabs: [{ x: 822, y: 760, w: 756, h: 70 }],
+      platforms: [{ x: 915, y: 650, w: 200 }, { x: 1285, y: 650, w: 200 }, { x: 1106, y: 552, w: 188 }],
+      spawns: [{ x: 1011, y: 760 }, { x: 1389, y: 760 }],
       respawn: { x: 1200, y: 700 },
-      cameraBounds: { x: 330, y: 60, w: 1740, h: 1280 },
-      blast: { left: 480, right: 1920, top: 130, bottom: 1190 },
+      cameraBounds: { x: 170, y: 60, w: 2060, h: 1370 },
+      blast: { left: 320, right: 2080, top: 130, bottom: 1280 },
     },
   },
   {
@@ -148,12 +148,12 @@ export const STAGES = [
     art: { platforms: ['rail', 'rail'], far: '#aaa393', parallax: 0.3 },
     // PALACE FORECOURT — widest, flattest (the zoner's stage)
     geometry: {
-      slabs: [{ x: 820, y: 780, w: 760, h: 70 }],
-      platforms: [{ x: 905, y: 668, w: 170 }, { x: 1325, y: 668, w: 170 }],
-      spawns: [{ x: 980, y: 780 }, { x: 1420, y: 780 }],
+      slabs: [{ x: 687, y: 780, w: 1026, h: 70 }],
+      platforms: [{ x: 814, y: 668, w: 204 }, { x: 1382, y: 668, w: 204 }],
+      spawns: [{ x: 903, y: 780 }, { x: 1497, y: 780 }],
       respawn: { x: 1200, y: 715 },
-      cameraBounds: { x: 230, y: 40, w: 1940, h: 1320 },
-      blast: { left: 390, right: 2010, top: 110, bottom: 1230 },
+      cameraBounds: { x: 70, y: 40, w: 2260, h: 1410 },
+      blast: { left: 230, right: 2170, top: 110, bottom: 1320 },
     },
   },
   {
@@ -205,14 +205,14 @@ export const STAGES = [
     art: { platforms: ['awning', 'sign', 'bench'], far: '#a58a6a', parallax: 0.3 },
     // THE BELLWETHER ARMS — asymmetric (the scrappy local)
     geometry: {
-      slabs: [{ x: 940, y: 770, w: 520, h: 70 }],
-      platforms: [{ x: 965, y: 658, w: 140 },   // awning (pub side)
-                  { x: 1000, y: 560, w: 96 },    // hanging sign (static)
-                  { x: 1295, y: 700, w: 130 }],  // bench (low, other side)
-      spawns: [{ x: 1075, y: 770 }, { x: 1330, y: 770 }],
+      slabs: [{ x: 849, y: 770, w: 702, h: 70 }],
+      platforms: [{ x: 893, y: 658, w: 168 },   // awning (pub side)
+                  { x: 938, y: 560, w: 115 },    // hanging sign (static)
+                  { x: 1338, y: 700, w: 156 }],  // bench (low, other side)
+      spawns: [{ x: 1031, y: 770 }, { x: 1376, y: 770 }],
       respawn: { x: 1200, y: 705 },
-      cameraBounds: { x: 350, y: 70, w: 1700, h: 1260 },
-      blast: { left: 500, right: 1900, top: 140, bottom: 1180 },
+      cameraBounds: { x: 190, y: 70, w: 2020, h: 1350 },
+      blast: { left: 340, right: 2060, top: 140, bottom: 1270 },
     },
   },
   {
@@ -253,12 +253,12 @@ export const STAGES = [
     art: { platforms: ['roof'], far: '#4d5674', parallax: 0.3 },
     // BERLIN — the gate (event-only)
     geometry: {
-      slabs: [{ x: 890, y: 790, w: 620, h: 70 }],
-      platforms: [{ x: 1040, y: 640, w: 320 }],  // gate roof: wide, high (double-jump territory)
-      spawns: [{ x: 1030, y: 790 }, { x: 1370, y: 790 }],
+      slabs: [{ x: 782, y: 790, w: 836, h: 70 }],
+      platforms: [{ x: 1008, y: 640, w: 384 }],  // gate roof: wide, high (double-jump territory)
+      spawns: [{ x: 970, y: 790 }, { x: 1430, y: 790 }],
       respawn: { x: 1200, y: 725 },
-      cameraBounds: { x: 320, y: 60, w: 1760, h: 1300 },
-      blast: { left: 470, right: 1930, top: 130, bottom: 1210 },
+      cameraBounds: { x: 160, y: 60, w: 2080, h: 1390 },
+      blast: { left: 310, right: 2090, top: 130, bottom: 1300 },
     },
   },
 ];

@@ -58,7 +58,7 @@ async function boot() {
   const G = {
     canvas, input, audio, fx, renderer, heads, sprites, stageArt,
     rng: mulberry32(Date.now() & 0xffffffff),
-    settings: loadJSON('bb.settings', { events: true, difficulty: 'normal', sfx: true }),
+    settings: loadJSON('bb.settings.v3', { events: true, difficulty: 'easy', sfx: true }),
     scores: loadJSON('bb.scores', {}),
     saveSettings() { saveJSON('bb.settings', G.settings); },
     saveScores() { saveJSON('bb.scores', G.scores); },

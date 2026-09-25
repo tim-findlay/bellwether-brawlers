@@ -8,6 +8,7 @@
 // double jump → air dodge. A lunge that self-staggers on a whiff (Adrian's
 // Clumsy Charge) is only used when its travel carries him over the slab.
 
+import { PHYS } from '../../data/physics.js';
 import { mainSlab, midOf, safeX, flightSim, EDGE_INSET } from './nav.js';
 
 // Which special (if any) is this fighter's recovery tool? Data-driven: an
@@ -23,6 +24,14 @@ export function recoverySpecial(cfg) {
 // Mutates the controller's helds/queue for this tick. `ai` is the AIController.
 export function recover(ai, f, world) {
   const stage = world.stage, slab = mainSlab(stage), b = f.body, z = stage.blast;
+  if (b.state === 'ledge') {                                // hanging: wait out the i-frames, then get up
+    if (b.stateT <= 6 + ai.profile.recoverDelay) return;
+    const opp = world.other(f), toward = -b.ledge.side;
+    const pressured = !!opp.attack && Math.abs(opp.x - b.x) < 140 && Math.abs(opp.y - b.y) < 140;
+    if (pressured && b.stateT < PHYS.LEDGE_HANG_MAX - 12 && ai.rng() < 0.6) return;   // let the swing whiff
+    if (ai.rng() < 0.45) ai.press('up'); else ai.helds.add(toward > 0 ? 'right' : 'left');
+    return;
+  }
   const inset = EDGE_INSET;
   const inSpan = b.x >= slab.x && b.x <= slab.x + slab.w;
   const under = inSpan && b.y > slab.y;                      // beneath the slab: go around, not up

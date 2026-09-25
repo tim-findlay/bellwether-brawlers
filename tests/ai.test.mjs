@@ -5,6 +5,7 @@ import { AIController, DIFFICULTY } from '../src/engine/ai.js';
 import { geometryOf } from '../src/data/stages.js';
 import { byId } from '../src/data/characters.js';
 import { isOffStage } from '../src/engine/ai/nav.js';
+import { PHYS } from '../src/data/physics.js';
 
 // A controller that does nothing (a training dummy).
 class Idle {
@@ -53,7 +54,7 @@ test('recovery never burns the double jump when drifting home is enough', () => 
   for (let t = 0; t < 200 && !f.grounded; t++) { step(w); sawOff = sawOff || isOffStage(w.stage, f); }
   assert.ok(sawOff, 'the setup really was off-stage');
   assert.equal(f.grounded, true);
-  assert.equal(f.body.airJumps, 1, 'double jump still in hand on landing');
+  assert.equal(f.body.airJumps, PHYS.AIR_JUMPS, 'air jumps still in hand on landing');
   assert.equal(f.stocks, 3);
 });
 

@@ -105,6 +105,11 @@ export class Renderer {
         break;
       }
       case 'land': anim = 'idle'; frame = 0; opts.squashX = 1.12; opts.squashY = 0.88; break;
+      case 'ledge': {                                     // hanging: the jump sheet's apex frame, leaning into the lip
+        const n = A.jump?.frames ?? 1;
+        anim = 'jump'; frame = Math.min(n - 1, Math.floor(n * 0.4)); opts.rot = -(f.body?.facing ?? 1) * 0.12;
+        break;
+      }
       case 'dodge': case 'airdodge':
         anim = 'run'; frame = 3; opts.alpha = f.invulnerable && (t & 1) ? 0.25 : 0.5;
         break;

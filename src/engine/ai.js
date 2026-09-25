@@ -20,9 +20,9 @@ import { act, aerialAim, aerialPress } from './ai/actions.js';
 // chance per approach · mixup: jump-in / aerial willingness · recoverDelay:
 // ticks of hesitation once actionable off-stage (the floor itself never scales).
 export const DIFFICULTY = {
-  easy:   { decide: 30, mistake: 0.28, mashDelay: 55, mashCps: 4.5, superChance: 0.4,  edgeGuard: 0.25, dash: 0.12, mixup: 0.25, recoverDelay: 12 },
-  normal: { decide: 16, mistake: 0.12, mashDelay: 40, mashCps: 6.5, superChance: 0.75, edgeGuard: 0.55, dash: 0.35, mixup: 0.5,  recoverDelay: 4 },
-  hard:   { decide: 9,  mistake: 0.04, mashDelay: 28, mashCps: 9,   superChance: 0.95, edgeGuard: 0.85, dash: 0.6,  mixup: 0.8,  recoverDelay: 0 },
+  easy:   { decide: 40, mistake: 0.4,  mashDelay: 60, mashCps: 4,   superChance: 0.3,  edgeGuard: 0.1,  dash: 0.05, mixup: 0.15, recoverDelay: 20 },
+  normal: { decide: 22, mistake: 0.2,  mashDelay: 45, mashCps: 6,   superChance: 0.6,  edgeGuard: 0.4,  dash: 0.25, mixup: 0.4,  recoverDelay: 8 },
+  hard:   { decide: 12, mistake: 0.06, mashDelay: 30, mashCps: 9,   superChance: 0.9,  edgeGuard: 0.7,  dash: 0.5,  mixup: 0.7,  recoverDelay: 2 },
   // sim-only (BALANCE.md gates 2/3): must lose to `normal`. Never offered in the menu.
   stall:  { decide: 16, mistake: 0.08, mashDelay: 40, mashCps: 6.5, superChance: 0.5,  edgeGuard: 0.2,  dash: 0.3,  mixup: 0.3,  recoverDelay: 4, stall: true },
   camp:   { decide: 16, mistake: 0.08, mashDelay: 40, mashCps: 6.5, superChance: 0.5,  edgeGuard: 0.3,  dash: 0.3,  mixup: 0.3,  recoverDelay: 4, camp: true },

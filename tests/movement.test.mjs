@@ -79,7 +79,7 @@ test('landing resets air resources', () => {
   const b = new MovementBody(MID, { x: 640, y: 690 });
   b.airJumps = 0; b.airDodgeOk = false; b.fastFalling = true;
   step(b, { down: true }, 30);
-  assert.equal(b.airJumps, 1);
+  assert.equal(b.airJumps, PHYS.AIR_JUMPS);
   assert.equal(b.airDodgeOk, true);
   assert.equal(b.fastFalling, false);
 });
@@ -115,7 +115,7 @@ test('ground jump applies full impulse and reports consumption', () => {
   assert.equal(b.vy, -MID.jumpImpulse + PHYS.GRAV);       // impulse, then this tick's gravity
   assert.equal(b.consumedJump, true);
   assert.equal(b.grounded, false);
-  assert.equal(b.airJumps, 1);                            // double jump intact
+  assert.equal(b.airJumps, PHYS.AIR_JUMPS);                            // double jump intact
 });
 
 test('double jump uses the air jump at DOUBLE_JUMP_FACTOR and is consumed', () => {
@@ -124,8 +124,10 @@ test('double jump uses the air jump at DOUBLE_JUMP_FACTOR and is consumed', () =
   step(b, IDLE, 10);
   step(b, { jump: true });
   assert.ok(Math.abs(b.vy - (-MID.jumpImpulse * PHYS.DOUBLE_JUMP_FACTOR + PHYS.GRAV)) < 1e-9);
+  assert.equal(b.airJumps, PHYS.AIR_JUMPS - 1);
+  for (let i = 1; i < PHYS.AIR_JUMPS; i++) { step(b, IDLE, 4); step(b, { jump: true }); assert.equal(b.consumedJump, true); }
   assert.equal(b.airJumps, 0);
-  step(b, { jump: true });
+  step(b, IDLE, 4); step(b, { jump: true });
   assert.equal(b.consumedJump, false);                    // nothing left to consume
 });
 
@@ -137,7 +139,7 @@ test('coyote jump within COYOTE_FRAMES is a free ground jump', () => {
   assert.equal(b.grounded, false);
   assert.ok(b.coyoteT > 0, 'should be inside the coyote window on the first airborne tick');
   step(b, { jump: true, left: true });                    // jump immediately
-  assert.equal(b.airJumps, 1);                            // did NOT spend the double jump
+  assert.equal(b.airJumps, PHYS.AIR_JUMPS);                            // did NOT spend the double jump
   assert.ok(b.vy < 0);
 });
 
@@ -193,10 +195,39 @@ test('dash bursts at dashSpeed for DASH_DURATION, then cools down', () => {
   assert.notEqual(b.state, 'dash');
 });
 
-test('air double-taps never dash', () => {
+test('air double-tap = air dash: gravity suspended for its duration, once per airtime', () => {
   const b = new MovementBody(MID, { x: 640, y: 300 });
+  step(b, IDLE, 3);
+  const y0 = b.y;
   step(b, { dashRight: true, right: true });
-  assert.notEqual(b.state, 'dash');
+  assert.equal(b.state, 'dash');
+  assert.equal(b.airDash, true);
+  step(b, IDLE, PHYS.AIR_DASH_DURATION - 2);
+  assert.equal(b.y, y0, 'no fall during the air dash');
+  assert.equal(b.vx, MID.runMax * PHYS.DASH_SPEED_FACTOR);
+  step(b, IDLE, 3);
+  assert.equal(b.airDash, false);
+  step(b, { dashRight: true, right: true });
+  assert.notEqual(b.state, 'dash', 'second air dash refused until landing');
+});
+
+test('ledge: falling past a slab lip catches it, i-frames, climb on hold-toward; no re-grab right after a drop', () => {
+  const b = new MovementBody(MID, { x: 380 - 18 - 2, y: 600 });      // just outside the left edge (slab x 380..900, top y 700)
+  step(b, IDLE, 20);
+  assert.equal(b.state, 'ledge', 'grabbed the ledge');
+  assert.ok(b.invulnerable(), 'ledge i-frames on the grab');
+  assert.equal(b.airJumps, PHYS.AIR_JUMPS, 'jumps refreshed on the grab');
+  step(b, { down: true }, 8);                                        // hold down: let go
+  assert.equal(b.state, 'air');
+  assert.ok(b.ledgeCd > 0);
+  step(b, IDLE, 10);
+  assert.notEqual(b.state, 'ledge', 'no immediate re-grab');
+  const c = new MovementBody(MID, { x: 380 - 18 - 2, y: 600 });
+  step(c, IDLE, 20);
+  assert.equal(c.state, 'ledge');
+  step(c, { right: true }, 4);                                       // hold toward the stage: climb
+  assert.equal(c.grounded, true);
+  assert.ok(c.x > 380 && c.y === 700, 'standing on the slab');
 });
 
 test('dash-jump carries full dash speed into the air', () => {
@@ -227,8 +258,8 @@ test('coyote boundary: free on airborne tick 5, spends the double jump on tick 6
     step(b, { jump: true });                               // jump on airborne tick `airTicks`
     return b.airJumps;
   };
-  assert.equal(run(PHYS.COYOTE_FRAMES), 1);                // tick 5: still a free ground jump
-  assert.equal(run(PHYS.COYOTE_FRAMES + 1), 0);            // tick 6: double jump spent
+  assert.equal(run(PHYS.COYOTE_FRAMES), PHYS.AIR_JUMPS);       // tick 5: still a free ground jump
+  assert.equal(run(PHYS.COYOTE_FRAMES + 1), PHYS.AIR_JUMPS - 1); // tick 6: an air jump spent
 });
 
 test('double jump after coyote expiry cancels a still-live dash', () => {
@@ -240,7 +271,7 @@ test('double jump after coyote expiry cancels a still-live dash', () => {
   assert.ok(b.dashT > 0, 'dash still live at ground loss');
   step(b, IDLE, PHYS.COYOTE_FRAMES);                       // outlive the coyote window
   step(b, { jump: true });
-  assert.equal(b.airJumps, 0, 'air jump consumed (not coyote)');
+  assert.equal(b.airJumps, PHYS.AIR_JUMPS - 1, 'air jump consumed (not coyote)');
   assert.equal(b.dashT, 0, 'double jump kills the dash');
 });
 
@@ -249,14 +280,14 @@ test('drop-through clears stale coyote time', () => {
   b.coyoteT = 3;                                           // stale window from a prior edge slip
   step(b, { down: true, downTapped: true });
   step(b, { jump: true });
-  assert.equal(b.airJumps, 0, 'jump after a deliberate drop is the air jump');
+  assert.equal(b.airJumps, PHYS.AIR_JUMPS - 1, 'jump after a deliberate drop is the air jump');
 });
 
 test('jump wins a same-tick drop + jump', () => {
   const b = onPlatform();
   step(b, { down: true, downTapped: true, jump: true });
   assert.equal(b.grounded, false);
-  assert.equal(b.airJumps, 1, 'full ground jump, double jump preserved');
+  assert.equal(b.airJumps, PHYS.AIR_JUMPS, 'full ground jump, double jump preserved');
   assert.equal(b.vy, -MID.jumpImpulse + PHYS.GRAV, 'full impulse, not the weaker air jump');
 });
 
@@ -347,7 +378,7 @@ test('launch(): stun locks intent, applies launch drag in the air, and times out
   assert.equal(b.grounded, false);
   assert.equal(b.stun, 30);
   step(b, { left: true, jump: true, dodge: true });        // all ignored under stun
-  assert.equal(b.airJumps, 1);
+  assert.equal(b.airJumps, PHYS.AIR_JUMPS);
   assert.equal(b.consumedJump, false);
   assert.ok(b.vx > 0 && b.vx < 9, 'drag, not steering');
   assert.equal(b.stun, 29);

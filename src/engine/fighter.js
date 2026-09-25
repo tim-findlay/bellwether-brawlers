@@ -51,7 +51,7 @@ export class Fighter {
   get airborne() { return !this.body.grounded; }
   get opp() { return this.world.other(this); }
   get actionable() {
-    return this.state === 'normal' && !this.attack && this.landLag === 0 && !this.body.dodging && this.body.stun === 0;
+    return this.state === 'normal' && !this.attack && this.landLag === 0 && !this.body.dodging && this.body.stun === 0 && this.body.state !== 'ledge';
   }
   get invulnerable() {
     if (this.state === 'chair' || this.state === 'ko') return true;
@@ -184,7 +184,7 @@ export class Fighter {
     this.attack = null; this.landLag = 0; this.tripOnLand = false;
     this.hurtFlash = 5;
     const emptiness = 1 - this.gauge / this.maxGauge;
-    const speed = (kb + kbScale * emptiness) / this.cfg.stats.weight;
+    const speed = (kb + kbScale * emptiness) / this.cfg.stats.weight * PHYS.KNOCKBACK_MULT;
     const rad = kbAngle * Math.PI / 180;
     let vx = Math.cos(rad) * speed * dir;
     let vy = -Math.sin(rad) * speed;
@@ -264,6 +264,7 @@ export class Fighter {
     this.body.update(mi, this.world.stage);
     if (this.body.consumedJump) this.controller.consume('up');
     if (this.body.consumedDodge) this.controller.consume('dodge');
+    if (this.body.dashT > 0 && this.body.dashT % 3 === 0) this.world.fx.dust(this.x - this.body.dashDir * 12, this.y - (this.body.airDash ? 34 : 0), '#cbbfa6', 2);
     if (this.body.landed) {
       if (this.attack?.aerial) {
         const m = this.attack.move, whiffed = !this.attack.hasHit;
@@ -330,6 +331,7 @@ export class Fighter {
     else if (this.state === 'grabbed' || this.state === 'frozen') n = 'hurt';
     else if (this.attack) n = 'attack';
     else if (this.landLag > 0) n = 'land';
+    else if (b.state === 'ledge') n = 'ledge';
     else if (b.state === 'dodge') n = 'dodge';
     else if (b.state === 'airdodge') n = 'airdodge';
     else if (b.state === 'dash') n = 'dash';
