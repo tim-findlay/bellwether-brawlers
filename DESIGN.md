@@ -205,13 +205,16 @@ All: blast zones on four sides, no walls, ledge grab on every slab lip; soft pla
 
 ## Stage hazards (the office events, reworked)
 
-Settings toggle (ON default). The EventDirector survives; pacing re-anchors to stocks: first roll ~10 s in, then spaced rolls, capped per stock-fall, suppressed while a super is active. Doctrine (canonical in BALANCE.md): **always telegraphed ≥ 1 s, never kill-class knockback, never pushing toward a blast zone, symmetric or dodgeable, never match-deciding.**
+Settings toggle (ON default). The EventDirector survives (plus an optional per-event stage filter); pacing re-anchors to stocks: first roll ~10 s in, then spaced rolls, capped per stock-fall, suppressed while a super is active. Doctrine (canonical in BALANCE.md): **always telegraphed ≥ 1 s, never kill-class knockback, never pushing toward a blast zone, symmetric or dodgeable, never match-deciding.**
 
-1. **URGENT UNDERWRITING** — triggers only when both fighters are grounded; freeze + "SUBMIT!" mash. Winner **+20 meter** (no gauge reward); loser gets a brief hazard stagger (never comboable, invulnerable on recovery).
-2. **THE WAVE** — chant + arrow, then the wave shoves grounded fighters **toward centre stage** (2 gauge). Jump to ride it.
-3. **SPIN CLASS STAMPEDE** — riderless bikes cross the main slab at staggered times; jumpable, platform-avoidable.
-4. **FIRE DRILL** — assembly marker on the main slab; runtime-computed window; misses cost 6 gauge, no stun, never near a blast zone.
+*Rethought 2026-09-25 (Tim: "the intermediary events … are still stale from the prior build"): every event gives the fight a **place** or a **reason to move** — contested pickups, a room to hold, new routes, ground to cede — and the fight never stops for it (no freezes, no mashing). Events can be stage-bound (`stages` in `src/data/events.js`). Props are Higgsfield drop-ins (`assets/ui/ev-*.png`) with drawn fallbacks.*
+
+1. **DEAL DEADLINE** — five signature pages flutter down (landing shadows first) onto mirror-symmetric spots: the centre high ground and four on the slab. Touch one to sign it (**+6 meter**); first to three **closes the deal (+15)**. Pages lapse after ~8.5 s. *Counterplay:* it is a race you fight through — trade a hit for a page, or punish the fighter who commits to a pickup.
+2. **INVESTMENT COMMITTEE** — an IC room lights up on the centre high ground; where a stage has none (Palace) it starts on one mirrored side platform and moves to the other halfway. Standing in it **alone** banks votes; both inside = CONTESTED, nobody scores. After 5.5 s the majority is **APPROVED (+22 meter)**; a tie or too few votes is DEFERRED. King of the hill on the high ground, where launches kill.
+3. **SITE VISIT** — a crane lowers two mirrored scaffold decks over the stage (inside the lips, so they are routes, not free recovery ledges); soft platforms, solid only once landed, for 9 s, blinking before they lift out. Geometry is restored exactly.
+4. **SPRINKLER TEST** (office, pub) — sprinklers soak one half of the floor (random side first, then the other half: symmetric by turns). Grounded fighters on the wet half are **slowed** (a short refreshed status). Ground to cede — or to fight for.
 5. **BERLIN TRIP** (Mike in match, ~once per match) — full mid-match geometry swap to the gate stage: triggers only while both fighters stand on the main slab; the crossfade repositions both onto the gate slab at equivalent footing, then back the same way. Home-turf buff while abroad. *Porting note: the v2 boarding-pass art shows a surname — v3 art must read first-name only (e.g. "MIKE · SEAT 1A").*
+6. **CROSSWIND** (rooftop) / **TRAIN APPROACHING** (tube) — for 5 s, actionable airborne fighters drift **toward centre** (1.4 px/f); launches (stun > 0) and grounded fighters are untouched. Recovering gets easier, jump-ins from the lip get harder. The tube version blurs a train past behind the platform.
 
 ## Audio
 

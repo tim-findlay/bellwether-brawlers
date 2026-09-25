@@ -57,12 +57,13 @@ Seelye's LIEN: his heavy and his recovery mark you; his next special collects +4
 
 ### Office events (Settings → can be toggled; ON by default)
 
-All events are telegraphed with a klaxon + banner, are dodgeable or symmetric, push toward the centre and never decide a match:
+All events are telegraphed with a klaxon + banner, are symmetric, never push toward a blast zone, reward meter only — and the fight never stops for them:
 
-- **URGENT UNDERWRITING** — both freeze; mash LIGHT; first to submit gets meter.
-- **THE WAVE** — a wave sweeps the slab; jump to ride it.
-- **SPIN CLASS STAMPEDE** — runaway spin bikes; jump them.
-- **FIRE DRILL** — get to the assembly point before roll call.
+- **DEAL DEADLINE** — signature pages flutter down onto mirrored spots; touch them to sign. First to three closes the deal.
+- **INVESTMENT COMMITTEE** — an IC room lights up on the high ground; hold it alone to win the vote.
+- **SITE VISIT** — a crane lowers two scaffold decks over the stage for a few seconds: new ground, then gone.
+- **SPRINKLER TEST** (office, pub) — one half of the floor is soaked and slows you, then the other.
+- **CROSSWIND** (rooftop) / **TRAIN APPROACHING** (tube) — anyone airborne drifts back toward the middle.
 - **BERLIN TRIP** — Mike only: the stage crossfades to Berlin and he gets a home-turf buff for a stretch.
 
 ## Run locally

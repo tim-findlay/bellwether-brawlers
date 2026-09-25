@@ -78,7 +78,26 @@ Two independent samples before shipping a tuning pass: n ≈ 420–560 games per
 
 ## Current results
 
-**v3 balance pass 3 — kit rethink (2026-09-25) — all five gates PASS on two independent seeds at N = 30** (`node src/dev/sim.js 30 1337` / `… 2024`, same methodology as pass 2).
+**v3 balance pass 4 — event rethink (2026-09-25) — all five gates PASS on two independent seeds at N = 30** (same methodology; the director now receives the stage id, so stage-bound events roll only where they belong).
+
+| Fighter | seed 1337 | seed 2024 |
+|---|---|---|
+| Ben | 50.0 % | 50.6 % |
+| Tim | 50.0 % | 53.0 % |
+| Adrian | 51.2 % | 51.4 % |
+| Richy | 46.8 % | 51.5 % |
+| Nick | 49.0 % | 46.4 % |
+| Abi | 52.1 % | 51.1 % |
+| Mike | 52.4 % | 46.2 % |
+| Seelye | 48.5 % | 49.8 % |
+| **camp (≤ 55)** | 29.5 % | 27.7 % |
+| **stall (≤ 45)** | 2.7 % | 2.5 % |
+| **engagement flags (< 2 %)** | 1.19 % | 1.85 % |
+| **recovery dishonest (< 10 %)** | 0.92 % | 0.89 % |
+
+Spread 46.2–53.0 % (pass 3: 45.6–54.6 %). Avg match 6909 / 7004 f (115–117 s, up ~5 s: the new events give meter, never gauge, where the old wave, bikes and fire drill drained composure); 18 / 29 capped, 0 stuck; Palace (widest slab, no centre platform) carries most of the caps. **What changed:** the v2-era events (Urgent Underwriting's freeze-and-mash, The Wave, Spin Class, Fire Drill) were replaced by Deal Deadline, Investment Committee, Site Visit, Sprinkler Test (office/pub) and Crosswind / Train Approaching (rooftop/tube); Berlin stays (DESIGN.md "Stage hazards"). The first cut failed gate 4 on one seed (2.62 % flagged, 41 capped) — the scaffold decks sat over the lips and doubled as recovery ledges, and a 7 s vote on Palace's open slab held both fighters at centre stage. Decks moved inside the lips (9 s), the vote cut to 5.5 s, and on stages without a centre perch the IC room now moves between the mirrored side platforms. Tim, who sat at the floor afterwards (41.7–42.5 %), got Hard Deadline kbScale 12 → 12.5. **Known soft spots:** engagement flags run close to the 2 % gate on seed 2024 (1.85 %) — Palace is the stage to watch; a human pass should say whether the events read and feel fair before any retune.
+
+**v3 balance pass 3 — kit rethink (2026-09-25, superseded) — all five gates PASS on two independent seeds at N = 30** (`node src/dev/sim.js 30 1337` / `… 2024`, same methodology as pass 2).
 
 | Fighter | seed 1337 | seed 2024 |
 |---|---|---|
