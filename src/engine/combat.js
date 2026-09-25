@@ -101,7 +101,7 @@ export class FightWorld {
       let dmg = att.damageOut(m.dmg, hb.slot);
       if (att.cfg.hooks?.preHit) dmg = att.cfg.hooks.preHit(att, def, dmg, hb.slot, m);
       const dir = Math.sign(def.x - att.x) || att.facing;
-      const res = def.takeHit({ dmg, kb: m.kb, kbScale: m.kbScale, kbAngle: m.kbAngle, dir, status: m.applyStatus, unparryable: m.unparryable });
+      const res = def.takeHit({ dmg, kb: m.kb, kbScale: m.kbScale, kbAngle: m.kbAngle, dir, status: m.applyStatus, unparryable: m.unparryable, from: att, move: m });
       if (res === 'parried') { this.parryCounter(def, att); continue; }
       if (res === 'hit' || res === 'armored') {
         att.gainMeter(dmg * 0.8);
@@ -116,7 +116,7 @@ export class FightWorld {
     this.audio.play('parry');
     this.fx.hitstop(8);
     this.fx.text(def.x, def.y - 120, 'DECLINED!', '#27425f');
-    att.takeHit({ dmg: 12, kb: 7, kbScale: 6, kbAngle: 50, dir: def.facing, unparryable: true });
+    att.takeHit({ dmg: 12, kb: 7, kbScale: 6, kbAngle: 50, dir: def.facing, unparryable: true, from: def, move: { name: 'Declined' } });
     def.gainMeter(10);
   }
 
@@ -176,7 +176,7 @@ export class FightWorld {
       }
       let dmg = p.dmg;
       if (p.owner.cfg.hooks?.preHit) dmg = p.owner.cfg.hooks.preHit(p.owner, def, dmg, 'special', p.move);
-      const res = def.takeHit({ dmg, kb: p.kb, kbScale: p.kbScale, kbAngle: p.kbAngle, dir: Math.sign(p.vx) || p.owner.facing, status: p.status, projectile: true });
+      const res = def.takeHit({ dmg, kb: p.kb, kbScale: p.kbScale, kbAngle: p.kbAngle, dir: Math.sign(p.vx) || p.owner.facing, status: p.status, projectile: true, from: p.owner, move: p.move });
       if (res === 'hit' || res === 'armored') {
         p.dead = true;
         p.owner.gainMeter(dmg * 0.8);
@@ -220,7 +220,7 @@ export class FightWorld {
           if (this.frame - last < 60) continue;
           z.lastTrip.set(f, this.frame);
           this.audio.play('slip');
-          f.takeHit({ dmg: 4, kb: 5, kbScale: 3, kbAngle: 60, dir: f.x < z.x ? -1 : 1, unparryable: false });
+          f.takeHit({ dmg: 4, kb: 5, kbScale: 3, kbAngle: 60, dir: f.x < z.x ? -1 : 1, unparryable: false, from: z.owner, move: { name: 'Nero Spill' } });
           this.fx.text(f.x, f.y - 110, 'SLIP!', '#7a4a3a');
         } else if (z.type === 'ember' || z.type === 'smoke') {
           if (!f.hasStatus('burn')) f.applyStatus('burn', 90, { amount: z.burn || 1 });
@@ -249,7 +249,7 @@ export class FightWorld {
       if (s.group && s.groupHit?.done) continue;            // only the first connecting column hits
       if (!overlap({ x: s.x, y: s.y - s.h / 2, w: s.w, h: s.h }, def.hurtbox())) continue;
       const dmg = s.owner.damageOut(s.dmg, 'super');
-      const res = def.takeHit({ dmg, kb: s.kb ?? 8, kbScale: s.kbScale ?? 14, kbAngle: s.kbAngle ?? 75, dir: def.x < s.x ? -1 : 1 });
+      const res = def.takeHit({ dmg, kb: s.kb ?? 8, kbScale: s.kbScale ?? 14, kbAngle: s.kbAngle ?? 75, dir: def.x < s.x ? -1 : 1, from: s.owner, move: s.move || { name: 'strike' } });
       if (res === 'hit') { s.owner.gainMeter(dmg * 0.8); this.hitFeedback(def, 'super', dmg); }
       if (res === 'hit' && s.groupHit) s.groupHit.done = true;
       s.dead = true;

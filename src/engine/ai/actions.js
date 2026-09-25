@@ -73,7 +73,7 @@ function approach(ai, f, opp, world, p) {
   const stopAt = f.cfg.ai?.stopAt ?? 60;
   const sameLevel = Math.abs(opp.y - f.y) < 70;
   if (f.grounded && sameLevel && dist <= stopAt) {                  // arrived: swing something that reaches
-    const slot = poke(ai, f, opp, p.heavyBias ?? 0.5);
+    const slot = poke(ai, f, opp, p.heavyBias ?? 0.35);
     if (slot) { ai.plan = { kind: 'press', slot }; pressMove(ai, f, opp, slot); }
     else ai.helds.add(dirKey(toward));
     return;
@@ -109,6 +109,8 @@ export function poke(ai, f, opp, heavyBias = 0.5) {
   const edgeDist = fly > 0 ? slab.x + slab.w - opp.x : opp.x - slab.x;
   const edgeSide = edgeDist < 170;
   const bias = Math.min(0.95, heavyBias + emptiness * 0.4 + (edgeSide ? 0.25 : 0));
+  const oa = opp.attack;                                                 // never feed a light into armor frames
+  if (oa?.move.armor && oa.frame < (oa.move.startup || 0) + (oa.move.active || 0) && !opp.airborne) return null;
   const hh = h && meleeHits(f, h, opp, null, 12);
   const l = f.cfg.light && meleeHits(f, f.cfg.light, opp, null, 10);
   if (hh && ai.rng() < bias) return 'heavy';

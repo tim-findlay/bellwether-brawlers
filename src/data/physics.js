@@ -21,7 +21,7 @@ export const PHYS = {
   DASH_TAP_WINDOW: 12,      // max frames between taps to register a dash
   DASH_COOLDOWN: 16,        // frames after a dash ends before the next
   DASH_JUMP_CARRY: 1.0,     // fraction of dash vx kept through a dash-jump
-  DOUBLE_JUMP_FACTOR: 0.95, // double-jump impulse = jumpImpulse * this
+  DOUBLE_JUMP_FACTOR: 1.0,  // double-jump impulse = jumpImpulse * this
   COYOTE_FRAMES: 5,
   INPUT_BUFFER: 6,          // shared with engine/input.js BUFFER_FRAMES
   DODGE_COOLDOWN: 60,       // shared by spot/step/air dodge
@@ -30,8 +30,8 @@ export const PHYS = {
   AIR_DODGE_DURATION: 22,   // i-frames 3-15
   AIR_DODGE_IMPULSE: 7,
   DROP_THROUGH_GRACE: 8,    // frames of soft-platform collision ignored after a drop
-  HITSTUN_PER_KB: 2.4,      // hitstun frames = round(kb * this)
-  LAUNCH_DRAG: 0.98,        // per-frame vx multiplier while stunned in the air
+  HITSTUN_PER_KB: 2.0,      // hitstun frames = round(kb * this)
+  LAUNCH_DRAG: 0.975,       // per-frame vx multiplier while stunned in the air
   STUN_LANDING_CLEARS: false,// hitstun is time-based; a landing keeps the remaining frames as ground flinch
   AIR_MOMENTUM_DECAY: 0.985, // per-frame decay of vx above AIR_MAX (dash-jump arc length)
   GROUND_DEADZONE: 0.05,    // |vx| snap-to-zero threshold under friction

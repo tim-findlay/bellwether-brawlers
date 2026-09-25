@@ -115,9 +115,16 @@ export function think(ai, f, opp, world) {
     const jumpIt = om.unparryable || om.kind === 'grab' || om.kind === 'shout' || om.kind === 'dashCombo';
     const inPath = dist < (om.range || 60) + (om.travel || 0) + 60 && sameLevel;
     if (jumpIt && of < su + ac && inPath && r < 0.9) return { kind: 'jump', dir: dx >= 0 ? -1 : 1, then: 'approach' };
-    if (of > su + ac && r < 0.7) {                                            // punish the recovery
+    // respect a heavy / armored swing: don't feed it a light — step out, then punish the recovery
+    const heavyish = opp.attack.slot === 'heavy' || !!om.armor;
+    if (heavyish && of < su + ac && inPath && r < 0.75) {
+      if (b.dodgeCd === 0 && dist < 130 && r < 0.45) return { kind: 'dodge', dir: dx >= 0 ? -1 : 1 };
+      return { kind: 'jump', dir: dx >= 0 ? -1 : 1, then: 'approach' };
+    }
+    if (of >= su + ac && r < 0.85) {                                          // punish the recovery
       if (meleeHits(f, f.cfg.heavy, opp, null, 10)) return { kind: 'press', slot: 'heavy' };
       if (meleeHits(f, f.cfg.light, opp, null, 10)) return { kind: 'press', slot: 'light' };
+      if (dist < 200 && sameLevel) return { kind: 'approach', dash: true, heavyBias: 0.7 };
     }
     if (f.cfg.s1?.kind === 'parry' && f.cfg.ai?.style === 'counter' && canSpecial(f, 's1') && of < su && inPath && dist < 110 && !om.unparryable && r < 0.6)
       return { kind: 'press', slot: 's1' };
@@ -177,8 +184,11 @@ function neutral(ai, f, opp, world, { dist, dy, r, sameLevel, untouchable }) {
 
   // kill mode: they launch now — convert with the heavy / a side-air rather than chip
   const emptiness = 1 - opp.gauge / opp.maxGauge;
+  const pullHeavy = (f.cfg.heavy?.kbAngle ?? 40) > 90;                       // Richy: the heavy drags them in, the side-air / candles kill
   if (emptiness > 0.5 && sameLevel && r < 0.6) {
-    if (close) return { kind: 'poke', heavyBias: 0.85 };
+    if (pullHeavy && ranged && dist > 110 && hasLineOfFire(f, f.cfg[ranged], opp) && r < 0.4) return { kind: 'press', slot: ranged };
+    if (pullHeavy && dist < 180 && r < 0.45) return jumpIn;
+    if (close) return { kind: 'poke', heavyBias: pullHeavy ? 0.4 : 0.85 };
     if (dist < 200 && r < P.mixup * 0.5) return jumpIn;
     return { kind: 'approach', dash, heavyBias: 0.85 };
   }
@@ -194,21 +204,21 @@ function neutral(ai, f, opp, world, { dist, dy, r, sameLevel, untouchable }) {
   if (style === 'zoner') {
     const pref = ai_.pref ?? 240;
     if (dist < 90) {
-      if (canRetreat && r < 0.35) return { kind: 'retreat' };
+      if (canRetreat && room > 200 && r < 0.35) return { kind: 'retreat' };   // a zoner never backs onto the lip
       if (b.dodgeCd === 0 && r < 0.5) return { kind: 'dodge', dir: opp.x >= f.x ? 1 : -1 };   // step through, back to centre
       if (canSpecial(f, 's2') && r < 0.6 && hasLineOfFire(f, f.cfg.s2, opp)) return { kind: 'press', slot: 's2' };
-      return { kind: 'poke', heavyBias: 0.6 };
+      return { kind: 'poke', heavyBias: 0.35 };
     }
     if (dist > 130 && canSpecial(f, 's1') && hasLineOfFire(f, f.cfg.s1, opp) && r < 0.65) return { kind: 'press', slot: 's1' };
     if (dist > 130 && canSpecial(f, 's2') && hasLineOfFire(f, f.cfg.s2, opp) && r < 0.5) return { kind: 'press', slot: 's2' };
     if (dist > pref) return { kind: 'approach', dash: false };
     if (dist < 150 && r < 0.3 && sameLevel) return jumpIn;                    // meme slap from above
-    return canRetreat && dist < pref * 0.6 ? { kind: 'retreat' } : { kind: 'wait' };
+    return canRetreat && room > 200 && dist < pref * 0.6 ? { kind: 'retreat' } : { kind: 'wait' };
   }
   if (style === 'grappler') {
     if (canSpecial(f, 's1') && opp.grabbable && sameLevel && dist <= (f.cfg.s1.range || 68) + 20 && r < 0.6) return { kind: 'press', slot: 's1' };
     if (canSpecial(f, 's2') && dist < 140 && (world.projectiles.length || (opp.grounded && sameLevel)) && r < 0.4) return { kind: 'press', slot: 's2' };
-    if (close) return { kind: 'poke', heavyBias: 0.6 };
+    if (close) return { kind: 'poke', heavyBias: 0.4 };
     return { kind: 'approach', dash };
   }
   if (style === 'rush') {
@@ -216,20 +226,20 @@ function neutral(ai, f, opp, world, { dist, dy, r, sameLevel, untouchable }) {
     if (dist > 170 && canSpecial(f, 's1') && f.cfg.s1.kind === 'teleport' && r < 0.4) return { kind: 'press', slot: 's1' };
     if (close) {
       if (canSpecial(f, 's2') && r > 0.85) return { kind: 'press', slot: 's2' };
-      return { kind: 'poke', heavyBias: 0.5 };
+      return { kind: 'poke', heavyBias: 0.35 };
     }
     if (dist < 220 && dist > 90 && sameLevel && r < P.mixup * 0.5) return jumpIn;
     return { kind: 'approach', dash };
   }
   if (style === 'counter') {
-    if (close) return { kind: 'poke', heavyBias: 0.5 };
+    if (close) return { kind: 'poke', heavyBias: 0.35 };
     if (dist > 140 && canSpecial(f, 's2') && hasLineOfFire(f, f.cfg.s2, opp) && r < 0.45) return { kind: 'press', slot: 's2' };
     if (dist < 200 && dist > 90 && sameLevel && r < P.mixup * 0.4) return jumpIn;
     return r < 0.7 ? { kind: 'approach', dash: dash && r < 0.3 } : { kind: 'wait' };
   }
   if (style === 'trap') {
     if (dist > 130 && canSpecial(f, 's1') && hasLineOfFire(f, f.cfg.s1, opp) && r < 0.55) return { kind: 'press', slot: 's1' };
-    if (close) return { kind: 'poke', heavyBias: 0.55 };
+    if (close) return { kind: 'poke', heavyBias: 0.35 };
     return { kind: 'approach', dash: dash && r < 0.4 };
   }
   // all-rounder
@@ -237,7 +247,7 @@ function neutral(ai, f, opp, world, { dist, dy, r, sameLevel, untouchable }) {
   if (canSpecial(f, 's1') && f.cfg.s1.kind === 'lunge' && lungeReaches(f, f.cfg.s1, opp) && r < 0.3) return { kind: 'press', slot: 's1' };
   if (close) {
     if (canSpecial(f, 's2') && r < 0.25) return { kind: 'press', slot: 's2' };
-    return { kind: 'poke', heavyBias: 0.55 };
+    return { kind: 'poke', heavyBias: 0.35 };
   }
   if (dist < 220 && dist > 90 && sameLevel && r < P.mixup * 0.4) return jumpIn;
   return { kind: 'approach', dash };
