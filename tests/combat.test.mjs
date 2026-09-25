@@ -113,3 +113,29 @@ test('every fighter can start every ground move and its four aerials without thr
     for (const f of w.fighters) assert.ok(Number.isFinite(f.x) && Number.isFinite(f.y), `${cfg.id}: no NaN positions`);
   }
 });
+
+test("Adrian's whiffed lunge trips on landing, not mid-air; a whiffed Faceplant trips on landing", () => {
+  const { w, c } = mk('adrian', 'tim');
+  const [a, b] = w.fighters;
+  run(w, 5);
+  a.body.x = w.stage.slabs[0].x + 40; b.body.x = a.x - 400;// off the platform stack, nobody in front
+  a.body.y -= 420; a.body.grounded = false;                // airborne: 16f hover + 18f recover falls ~150 px
+  c[0].q.add('s1'); run(w, 1);
+  assert.ok(a.attack, 'Clumsy Charge started in the air');
+  run(w, 34);                                              // startup 8 + active 8 + recover 18
+  assert.equal(a.attack, null);
+  assert.notEqual(a.state, 'stagger', 'no stagger while still airborne');
+  let landedTrip = false;                                  // land -> 30f self-stagger -> normal
+  for (let i = 0; i < 120; i++) { w.update(); if (a.grounded && a.state === 'stagger') landedTrip = true; }
+  assert.equal(a.grounded, true);
+  assert.ok(landedTrip, 'tripped on the botched landing');
+  // Faceplant
+  const { w: w2, c: c2 } = mk('adrian', 'tim');
+  const [a2, b2] = w2.fighters; run(w2, 5); b2.body.x = a2.x - 400;
+  a2.body.y -= 120; a2.body.grounded = false;
+  c2[0].q.add('light'); c2[0].it = { down: true }; run(w2, 1); c2[0].it = {};
+  assert.equal(a2.attack?.aim, 'd');
+  let tripped = false;
+  for (let i = 0; i < 120; i++) { w2.update(); if (a2.state === 'stagger') tripped = true; }
+  assert.ok(tripped, 'whiffed Faceplant self-staggers on landing');
+});

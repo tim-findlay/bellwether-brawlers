@@ -35,7 +35,7 @@ export class Fighter {
     this.gauge = this.maxGauge;
     this.cd = { s1: 0, s2: 0 };
     this.state = 'normal'; this.stateT = 0;
-    this.attack = null; this.landLag = 0; this.chair = null; this.hazardInv = 0;
+    this.attack = null; this.landLag = 0; this.chair = null; this.hazardInv = 0; this.tripOnLand = false;
     this.statuses = new Map();
     this.controller.reversed = false;
     this.hurtFlash = 0; this.animT = (this.side + 1) * 17;
@@ -145,7 +145,9 @@ export class Fighter {
     if (a.frame >= total) {
       const whiffed = !a.hasHit && !['buff', 'parry', 'catch', 'bell', 'zoneSuper', 'teleport'].includes(m.kind);
       this.attack = null;
-      if (whiffed && m.whiffTrip) this.stagger(SELF_STAGGER, true);
+      // Adrian's tax: a whiffed lunge trips — on the ground now, in the air on the
+      // botched landing (DESIGN: "self-staggers on a botched landing").
+      if (whiffed && m.whiffTrip) { if (this.grounded) this.stagger(SELF_STAGGER, true); else this.tripOnLand = true; }
       else if (m.endTrip) this.stagger(SELF_STAGGER, true);
       if (whiffed && this.cfg.hooks?.onWhiff) this.cfg.hooks.onWhiff(this, m);
     }
@@ -179,7 +181,7 @@ export class Fighter {
     this.gauge = Math.max(0, this.gauge - dmg);
     this.cancelRegen();
     this.gainMeter(dmg * 0.5);
-    this.attack = null; this.landLag = 0;
+    this.attack = null; this.landLag = 0; this.tripOnLand = false;
     this.hurtFlash = 5;
     const emptiness = 1 - this.gauge / this.maxGauge;
     const speed = (kb + kbScale * emptiness) / this.cfg.stats.weight;
@@ -263,7 +265,12 @@ export class Fighter {
     if (this.body.consumedJump) this.controller.consume('up');
     if (this.body.consumedDodge) this.controller.consume('dodge');
     if (this.body.landed) {
-      if (this.attack?.aerial) { this.landLag = this.attack.move.landLag || 8; this.attack = null; }
+      if (this.attack?.aerial) {
+        const m = this.attack.move, whiffed = !this.attack.hasHit;
+        this.landLag = m.landLag || 8; this.attack = null;
+        if (whiffed && m.whiffStagger) this.tripOnLand = true;     // Faceplant: whiffed dair, botched landing
+      }
+      if (this.tripOnLand) { this.tripOnLand = false; this.stagger(SELF_STAGGER, true); }
       this.world.fx.dust(this.x, this.y, '#cbbfa6', 3);
     }
     if (this.landLag > 0) this.landLag--;

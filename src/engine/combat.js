@@ -141,7 +141,7 @@ export class FightWorld {
       w: e.w || 24, h: e.h || 20, color: e.color || '#2b2620', shape: e.shape || 'rect',
       dmg, kb: e.kb ?? 5, kbScale: e.kbScale ?? 6, kbAngle: e.kbAngle ?? 40, owner: f,
       status: e.applyStatus || null, instance: over.instance ?? a_id(), tag: e.tag || null,
-      dead: false, t: 0, groundHug: !!e.groundHug, surface: e.surface || null, move: m,
+      dead: false, t: 0, groundHug: !!e.groundHug, surface: e.surface || null, move: m, name: m.name,
     });
   }
 

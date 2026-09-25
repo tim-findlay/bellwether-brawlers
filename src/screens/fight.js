@@ -18,7 +18,7 @@ const OUTRO_FRAMES = 150;
 
 export function makeFight(G) {
   let world, events, camera, params, stage;
-  let phase, phaseT, paused, t, ko;
+  let phase, phaseT, paused, t, ko, shownOverride = null;
 
   function targets() {
     return world.fighters.filter(f => f.state !== 'ko').map(f => ({ x: f.x, y: f.y - 48 }));
@@ -36,7 +36,7 @@ export function makeFight(G) {
       if (G.devEvent) events.force(G.devEvent);
       camera = new Camera(960, 540, world.stage.cameraBounds);
       camera.update(targets()); camera.update(targets());
-      phase = 'intro'; phaseT = 0; paused = false; t = 0; ko = null;
+      phase = 'intro'; phaseT = 0; paused = false; t = 0; ko = null; shownOverride = null;
       G.fx.banner(`${cfgs[0].name} vs ${cfgs[1].name}`, { dur: 80, sub: `${stage.name} · 3 stocks · ring-outs only` });
       G.audio.play('roundGo');
     },
@@ -75,6 +75,12 @@ export function makeFight(G) {
             G.fx.slowmo(0.3, 50); G.fx.flash('#f2e9d8', 8); G.fx.shake(6, 16);
             G.fx.banner(ev.winner < 0 ? 'DRAW!' : 'GAME!', { dur: 120, sub: ev.winner < 0 ? 'double ring-out' : `${world.fighters[ev.winner].cfg.name} takes it` });
           }
+        }
+        if (events.stageOverride !== shownOverride) {          // Berlin swap: re-bound the camera to the new geometry
+          shownOverride = events.stageOverride;
+          const old = camera;
+          camera = new Camera(960, 540, world.stage.cameraBounds);
+          camera.x = old.x; camera.y = old.y; camera.zoom = Math.max(camera.minZoom, Math.min(camera.maxZoom, old.zoom));
         }
         camera.update(targets());
         return;
