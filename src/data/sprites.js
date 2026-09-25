@@ -5,11 +5,13 @@
 // renderer mirrors for facing === -1. A missing PNG (or a missing id here)
 // falls back to the drawn body — the headshot drop-in rule applies.
 
+// Generated through Higgsfield (gpt-image strips, see docs/superpowers/plans/
+// 2026-09-25-phase3-revamp.md): 6-frame idle/jump/attack, 8-frame run.
 const KIT = () => ({
-  idle:   { frames: 8,  fps: 8,  loop: true },
-  run:    { frames: 10, fps: 14, loop: true },
-  jump:   { frames: 8,  fps: 12, loop: false },
-  attack: { frames: 10, fps: 16, loop: false },
+  idle:   { frames: 6, fps: 6,  loop: true },
+  run:    { frames: 8, fps: 14, loop: true },
+  jump:   { frames: 6, fps: 12, loop: false },
+  attack: { frames: 6, fps: 16, loop: false },
 });
 
 export const SPRITES = {

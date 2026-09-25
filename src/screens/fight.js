@@ -1,59 +1,44 @@
-// The fight screen: wraps FightWorld with round/match flow, events, pause,
-// HUD and all the juice. The world itself also runs headless in dev/sim.js.
+// The fight screen (v3): FightWorld + Camera + EventDirector with the match
+// flow (intro, stock banners, game over -> results), pause/help overlay and
+// the juice. The world itself also runs headless in dev/sim.js.
 
 import { FightWorld } from '../engine/combat.js';
+import { Camera } from '../engine/camera.js';
 import { EventDirector } from '../engine/events.js';
 import { PlayerController, P1MAP, P2MAP } from '../engine/input.js';
 import { AIController } from '../engine/ai.js';
 import { byId } from '../data/characters.js';
+import { stageById, geometryOf } from '../data/stages.js';
 import { EVENTS } from '../data/events.js';
 import { drawHUD } from '../render/hud.js';
 import { drawHelp, paperBG } from './menu.js';
 
-const ROUND_FRAMES = 3600;
+const INTRO_FRAMES = 90;
+const OUTRO_FRAMES = 150;
 
 export function makeFight(G) {
-  let world, events, params;
-  let phase, phaseT, roundNum, wins, roundTimer, paused, t;
+  let world, events, camera, params, stage;
+  let phase, phaseT, paused, t, ko;
 
-  function startRound() {
-    world.resetRound();
-    events.roundStart();
-    roundTimer = ROUND_FRAMES;
-    phase = 'intro';
-    phaseT = 0;
-    G.fx.banner(`ROUND ${roundNum}`, { dur: 80, sub: roundNum === 1 ? `${world.fighters[0].cfg.name} vs ${world.fighters[1].cfg.name}` : '' });
-    G.audio.play('roundGo');
-  }
-
-  function endRound(winnerIdx, reason) {
-    phase = 'roundend';
-    phaseT = 0;
-    if (winnerIdx >= 0) {
-      wins[winnerIdx]++;
-      const w = world.fighters[winnerIdx];
-      G.fx.banner(reason === 'ko' ? 'KO!' : 'TIME!', { dur: 90, sub: `${w.cfg.name} takes round ${roundNum}` });
-      if (reason === 'ko') { G.fx.slowmo(0.25, 60); G.fx.flash('#f2e9d8', 8); G.fx.shake(5, 14); }
-      G.audio.play('ko');
-    } else {
-      G.fx.banner('DRAW', { dur: 90, sub: 'extra round!' });
-    }
+  function targets() {
+    return world.fighters.filter(f => f.state !== 'ko').map(f => ({ x: f.x, y: f.y - 48 }));
   }
 
   return {
     enter(p) {
       params = p;
+      stage = stageById(p.stageId) || stageById('office');
       const cfgs = [byId(p.p1), byId(p.p2)];
       const c1 = new PlayerController(G.input, P1MAP);
       const c2 = p.mode === '2p' ? new PlayerController(G.input, P2MAP) : new AIController(G.settings.difficulty, G.rng);
-      world = new FightWorld({ cfgs, controllers: [c1, c2], fx: G.fx, audio: G.audio, rng: G.rng, settings: G.settings });
+      world = new FightWorld({ cfgs, controllers: [c1, c2], stage: geometryOf(stage.id), fx: G.fx, audio: G.audio, rng: G.rng, settings: G.settings });
       events = new EventDirector(world, EVENTS, { enabled: G.settings.events, difficulty: G.settings.difficulty });
       if (G.devEvent) events.force(G.devEvent);
-      roundNum = 1;
-      wins = [0, 0];
-      paused = false;
-      t = 0;
-      startRound();
+      camera = new Camera(960, 540, world.stage.cameraBounds);
+      camera.update(targets()); camera.update(targets());
+      phase = 'intro'; phaseT = 0; paused = false; t = 0; ko = null;
+      G.fx.banner(`${cfgs[0].name} vs ${cfgs[1].name}`, { dur: 80, sub: `${stage.name} · 3 stocks · ring-outs only` });
+      G.audio.play('roundGo');
     },
 
     update() {
@@ -62,15 +47,13 @@ export function makeFight(G) {
         if (phase === 'fight') { paused = !paused; G.audio.play(paused ? 'menuBack' : 'menuConfirm'); }
         else if (paused) paused = false;
       }
-      if (paused) {
-        if (G.input.keyPressed('KeyQ')) G.go('menu');
-        return;
-      }
+      if (paused) { if (G.input.keyPressed('KeyQ')) G.go('menu'); return; }
 
       if (phase === 'intro') {
         phaseT++;
         for (const f of world.fighters) f.animT++;
-        if (phaseT >= 80) { phase = 'fight'; }
+        camera.update(targets());
+        if (phaseT >= INTRO_FRAMES) phase = 'fight';
         return;
       }
 
@@ -78,61 +61,57 @@ export function makeFight(G) {
         if (G.fx.frozen()) return;                    // hitstop
         for (const f of world.fighters) f.controller.update?.(f, world);
         world.update();
-        events.update(roundTimer);
-        // platinum confetti ticks (no glow, just paper)
-        for (const f of world.fighters) {
-          if (f.hasStatus('noMeter') && t % 20 === 0) G.fx.confetti(f.x, f.y - 44, 3);
+        events.update();
+        for (const f of world.fighters) if (f.hasStatus('noMeter') && t % 20 === 0) G.fx.confetti(f.x, f.y - 90, 3);
+        for (const ev of world.events.splice(0)) {
+          if (ev.type === 'ko') {
+            const loser = world.fighters[ev.player];
+            G.audio.play('ko');
+            G.fx.shake(5, 12); G.fx.flash('#f2e9d8', 6);
+            G.fx.banner(ev.stocksLeft === 1 ? 'LAST STOCK!' : 'STOCK LOST!', { dur: 60, sub: `${loser.cfg.name} · ${ev.stocksLeft} left` });
+          } else if (ev.type === 'gameover') {
+            phase = 'outro'; phaseT = 0; ko = ev;
+            G.audio.play('bell');
+            G.fx.slowmo(0.3, 50); G.fx.flash('#f2e9d8', 8); G.fx.shake(6, 16);
+            G.fx.banner(ev.winner < 0 ? 'DRAW!' : 'GAME!', { dur: 120, sub: ev.winner < 0 ? 'double ring-out' : `${world.fighters[ev.winner].cfg.name} takes it` });
+          }
         }
-        roundTimer--;
-        const [a, b] = world.fighters;
-        if (a.state === 'ko' || b.state === 'ko') {
-          endRound(a.state === 'ko' ? 1 : 0, 'ko');
-        } else if (roundTimer <= 0) {
-          const pa = a.hp / a.maxhp, pb = b.hp / b.maxhp;     // timeout: % of max HP
-          endRound(pa === pb ? -1 : pa > pb ? 0 : 1, 'time');
-        }
+        camera.update(targets());
         return;
       }
 
-      if (phase === 'roundend') {
+      if (phase === 'outro') {
         phaseT++;
-        for (const f of world.fighters) f.update();
-        if (phaseT >= 130) {
-          if (wins[0] >= 2 || wins[1] >= 2) {
-            const wi = wins[0] >= 2 ? 0 : 1;
-            const winner = world.fighters[wi];
-            G.scores[winner.cfg.id] = (G.scores[winner.cfg.id] || 0) + 1;
-            G.saveScores();
-            G.go('results', { ...params, winnerId: winner.cfg.id, loserId: world.fighters[1 - wi].cfg.id, wins });
-          } else {
-            roundNum++;
-            startRound();
-          }
+        for (const f of world.fighters) f.animT++;
+        camera.update(targets());
+        if (phaseT >= OUTRO_FRAMES) {
+          if (ko.winner < 0) { G.go('select', { mode: params.mode }); return; }
+          const winner = world.fighters[ko.winner], loser = world.fighters[1 - ko.winner];
+          G.scores[winner.cfg.id] = (G.scores[winner.cfg.id] || 0) + 1;
+          G.saveScores();
+          G.go('results', { ...params, winnerId: winner.cfg.id, loserId: loser.cfg.id, stocks: winner.stocks });
         }
       }
     },
 
     draw() {
-      G.renderer.renderFight({ world, stageId: params.stageId, t, fx: G.fx, events, heads: G.heads });
       const c = G.renderer.ctx;
-      drawHUD(c, world, { roundTimer, wins, roundNum });
+      const shownStage = events.stageOverride ? stageById(events.stageOverride) : stage;
+      G.renderer.renderFight({ world, stage: shownStage, camera, fx: G.fx, t, sprites: G.sprites, heads: G.heads, stageArt: G.stageArt, events });
+      drawHUD(c, world, camera, { t });
       events.drawUI(c);
-      G.fx.drawUI(c);
+      G.fx.drawUI(c, camera);
 
-      if (phase === 'intro' && phaseT > 50) {
-        c.font = "700 44px 'Pixelify Sans'";
-        c.textAlign = 'center';
-        c.fillStyle = '#c4452e';
-        c.fillText('FIGHT!', 480, 300);
+      if (phase === 'intro' && phaseT > INTRO_FRAMES - 40) {
+        c.font = "700 44px 'Pixelify Sans'"; c.textAlign = 'center';
+        c.fillStyle = '#2b2620'; c.fillText('FIGHT!', 482, 302);
+        c.fillStyle = '#c4452e'; c.fillText('FIGHT!', 480, 300);
       }
       if (paused) {
-        c.fillStyle = 'rgba(242,233,216,0.94)';
-        c.fillRect(0, 0, 960, 540);
+        c.fillStyle = 'rgba(242,233,216,0.94)'; c.fillRect(0, 0, 960, 540);
         paperBG(c);
         drawHelp(c);
-        c.fillStyle = '#c4452e';
-        c.font = "700 20px 'Pixelify Sans'";
-        c.textAlign = 'center';
+        c.fillStyle = '#c4452e'; c.font = "700 20px 'Pixelify Sans'"; c.textAlign = 'center';
         c.fillText('PAUSED — ESC resume · Q quit to menu', 480, 525);
       }
     },

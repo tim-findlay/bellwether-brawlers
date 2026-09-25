@@ -125,13 +125,13 @@ export function drawHelp(c) {
 
   const rows = [
     ['', 'P1', 'P2'],
-    ['MOVE', 'A / D', '← / →'],
-    ['JUMP', 'W', '↑'],
-    ['BLOCK (hold)', 'S', '↓'],
-    ['LIGHT', 'F', 'K'],
-    ['HEAVY', 'G', 'L'],
-    ['SPECIAL 1', 'H', ';'],
-    ['SPECIAL 2', 'J', "'"],
+    ['MOVE (double-tap = dash)', 'A / D', '← / →'],
+    ['JUMP (again in air = double)', 'W', '↑'],
+    ['FAST-FALL hold · DROP tap', 'S', '↓'],
+    ['LIGHT / AERIALS (+ direction)', 'F', 'K'],
+    ['HEAVY (ground only)', 'G', 'L'],
+    ['SPECIAL 1 / 2', 'H / J', "; / '"],
+    ['DODGE (spot · step · air)', 'V', '/'],
     ['SUPER (full meter)', 'SPACE', 'ENTER'],
   ];
   c.font = "700 17px 'Silkscreen'";
@@ -148,11 +148,11 @@ export function drawHelp(c) {
   c.fillStyle = '#2b2620';
   c.textAlign = 'center';
   const tips = [
-    'First to 2 rounds. Timeout goes to the higher % of health.',
-    'Block holds off most damage, but attacks from BEHIND connect — watch for teleports.',
+    '3 stocks each. The only KO is a ring-out: knock them past the edge of the screen.',
+    'Composure (your bar) never kills — the emptier it is, the farther every hit sends you.',
+    'No block: dodge has i-frames, the air dodge is once per airtime. Recover with your double jump.',
     'Specials run on cooldowns (pips under your bar). Supers need a full gold meter.',
-    'OFFICE EVENTS interrupt rounds — they are telegraphed, fair, and switchable in Settings.',
-    'Statuses announce themselves in words. REVERSED flips movement only — block still works.',
+    'OFFICE EVENTS are telegraphed, fair and switchable in Settings. Statuses announce themselves in words.',
   ];
   tips.forEach((tip, i) => c.fillText(tip, 480, 408 + i * 24));
 }
