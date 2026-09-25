@@ -12,7 +12,7 @@ export async function loadSprites(manifest, onProgress) {
   const out = new Map();
   const jobs = [];
   for (const [id, def] of Object.entries(manifest)) {
-    const sheet = { anims: {}, scale: def.scale ?? 1 };   // per-fighter art height (render only)
+    const sheet = { anims: {}, scale: def.scale ?? 1, cell: def.cell || 64 };   // per-fighter art height (render only); base cell sets the pixel scale
     out.set(id, sheet);
     for (const [name, a] of Object.entries(def.anims)) {
       jobs.push({ id, name, sheet, def, a });
@@ -31,6 +31,7 @@ export async function loadSprites(manifest, onProgress) {
       frames: Math.max(1, Math.min(j.a.frames, cols * rows)),
       fps: j.a.fps,
       loop: !!j.a.loop,
+      key: j.a.key,
       cols,
       cell,
     };
