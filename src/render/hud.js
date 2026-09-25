@@ -5,9 +5,11 @@
 // off-screen edge arrows. No timer, no round pips — v3 has neither.
 
 import { INK, PAPER, BRICK, NAVY, BRASS, GREEN } from './palette.js';
+import { drawSprite, hasAnim } from './sprites.js';
 
 const VIEW_W = 960, VIEW_H = 540;
 const PLATE_W = 360;
+const PORTRAIT = 66;               // bust tile at the outer end of each plate
 const SIDE_COLOR = [NAVY, BRICK];
 
 // extra: { t } (frame counter for the meter shimmer), everything optional.
@@ -18,7 +20,9 @@ export function drawHUD(c, world, camera, extra = {}) {
   c.setTransform(1, 0, 0, 1, 0, 0);
   fighters.forEach((f, i) => {
     if (!f) return;
-    drawPlate(c, f, i === 0 ? 30 : VIEW_W - 30 - PLATE_W, i === 1, t);
+    const x = i === 0 ? 30 : VIEW_W - 30 - PLATE_W, W = PLATE_W - PORTRAIT - 6;
+    drawPortrait(c, f, i === 0 ? x - 4 : x + PLATE_W - PORTRAIT + 4, i, extra.sprites);
+    drawPlate(c, f, i === 0 ? x + PORTRAIT + 6 : x, i === 1, t, W);
   });
   if (camera?.worldToScreen) {
     fighters.forEach((f) => f && drawStatusTags(c, f, camera));
@@ -27,8 +31,7 @@ export function drawHUD(c, world, camera, extra = {}) {
   c.restore();
 }
 
-function drawPlate(c, f, x, flip, t) {
-  const W = PLATE_W;
+function drawPlate(c, f, x, flip, t, W = PLATE_W) {
   c.fillStyle = INK; c.fillRect(x - 4, 18, W + 8, 74);
   c.fillStyle = PAPER; c.fillRect(x - 1, 21, W + 2, 68);
 
@@ -42,7 +45,7 @@ function drawPlate(c, f, x, flip, t) {
   c.strokeStyle = INK; c.lineWidth = 2; c.strokeRect(x, 24, W, 20);
 
   // meter row: [meter][s1 s2 pips][3 chairs] (mirrored on the right plate)
-  const mw = 200;
+  const mw = Math.round(W * 0.52);
   const mx = flip ? x + W - mw : x;
   const meter = Math.max(0, Math.min(100, f.meter ?? 0));
   c.fillStyle = '#d8cfba'; c.fillRect(mx, 50, mw, 9);
@@ -78,13 +81,39 @@ function drawPlate(c, f, x, flip, t) {
   c.font = "700 16px 'Pixelify Sans'";
   c.textAlign = flip ? 'right' : 'left';
   const name = f.cfg?.name ?? `P${f.side != null ? f.side + 1 : '?'}`;
-  c.fillText(f.cfg?.title ? `${name} · ${f.cfg.title}` : name, flip ? x + W - 4 : x + 4, 82);
+  c.fillText(f.cfg?.title && meter < 100 ? `${name} · ${f.cfg.title}` : name, flip ? x + W - 4 : x + 4, 82);
   if (meter >= 100) {
     c.fillStyle = BRASS;
     c.font = "700 11px 'Silkscreen'";
     c.textAlign = flip ? 'left' : 'right';
     c.fillText('SUPER READY', flip ? x + 4 : x + W - 4, 82);
   }
+}
+
+// Bust tile: the fighter's idle sprite cropped to head + shoulders, framed in
+// their side colour; hurt flash tints it, a lost last stock greys it.
+function drawPortrait(c, f, x, side, sprites) {
+  const S = PORTRAIT, y = 18;
+  c.fillStyle = INK; c.fillRect(x, y, S, 74);
+  c.fillStyle = side ? BRICK : NAVY; c.fillRect(x + 3, y + 3, S - 6, 68);
+  c.fillStyle = '#efe7d3'; c.fillRect(x + 6, y + 6, S - 12, 62);
+  c.save();
+  c.beginPath(); c.rect(x + 6, y + 6, S - 12, 62); c.clip();
+  const sheet = sprites?.get?.(f.cfg?.id);
+  const flash = (f.hurtFlash ?? 0) > 0 && (f.hurtFlash % 2 === 0);
+  if (hasAnim(sheet, 'idle')) {
+    drawSprite(c, sheet, 'idle', 0, x + S / 2, y + 6 + 64 * 2.1, side ? -1 : 1, 2.1, flash ? { tint: PAPER, tintAlpha: 0.8 } : {});
+  } else {
+    const b = f.cfg?.body ?? {};
+    c.fillStyle = b.suit || INK; c.fillRect(x + 14, y + 48, S - 28, 30);
+    c.fillStyle = b.skin || '#e8c39a'; c.fillRect(x + 20, y + 14, S - 40, 34);
+    c.fillStyle = b.hair?.color || INK; c.fillRect(x + 18, y + 10, S - 36, 10);
+  }
+  if ((f.stocks ?? 3) <= 0) { c.fillStyle = 'rgba(43,38,32,0.55)'; c.fillRect(x, y, S, 74); }
+  c.restore();
+  c.fillStyle = side ? BRICK : NAVY; c.fillRect(x + 3, y + 57, S - 6, 14);
+  c.fillStyle = PAPER; c.font = "700 10px 'Silkscreen'"; c.textAlign = 'center';
+  c.fillText(side ? 'P2' : 'P1', x + S / 2, y + 68);
 }
 
 // A 16x14 office chair: back, seat, stem, base.

@@ -11,7 +11,10 @@ import { byId } from '../data/characters.js';
 import { stageById, geometryOf } from '../data/stages.js';
 import { EVENTS } from '../data/events.js';
 import { drawHUD } from '../render/hud.js';
-import { drawHelp, paperBG } from './menu.js';
+import { drawHelp, HELP_TABS } from './help.js';
+import { plaque, text, menuList, hints, header, makeNav, F, INK, PAPER, BRICK, BRASS, MUTED } from '../render/ui.js';
+
+const PAUSE_ITEMS = [{ label: 'RESUME' }, { label: 'HOW TO PLAY' }, { label: 'RESTART MATCH' }, { label: 'QUIT TO MENU' }];
 
 const INTRO_FRAMES = 90;
 const OUTRO_FRAMES = 150;
@@ -19,6 +22,9 @@ const OUTRO_FRAMES = 150;
 export function makeFight(G) {
   let world, events, camera, params, stage;
   let phase, phaseT, paused, t, ko, shownOverride = null;
+  let pIdx = 0, pPage = 'list', pTab = 0;
+  const pAnim = [];
+  const nav = makeNav(G);
 
   function targets() {
     return world.fighters.filter(f => f.state !== 'ko').map(f => ({ x: f.x, y: f.y - 48 }));
@@ -37,17 +43,16 @@ export function makeFight(G) {
       camera = new Camera(960, 540, world.stage.cameraBounds);
       camera.update(targets()); camera.update(targets());
       phase = 'intro'; phaseT = 0; paused = false; t = 0; ko = null; shownOverride = null;
-      G.fx.banner(`${cfgs[0].name} vs ${cfgs[1].name}`, { dur: 80, sub: `${stage.name} · 3 stocks · ring-outs only` });
       G.audio.play('roundGo');
     },
 
     update() {
       t++;
-      if (G.input.backPressed()) {
-        if (phase === 'fight') { paused = !paused; G.audio.play(paused ? 'menuBack' : 'menuConfirm'); }
-        else if (paused) paused = false;
+      if (paused) { this.updatePause(); return; }
+      if (G.input.backPressed() && phase !== 'outro') {
+        paused = true; pIdx = 0; pPage = 'list'; G.audio.play('menuBack');
+        return;
       }
-      if (paused) { if (G.input.keyPressed('KeyQ')) G.go('menu'); return; }
 
       if (phase === 'intro') {
         phaseT++;
@@ -100,26 +105,61 @@ export function makeFight(G) {
       }
     },
 
+    updatePause() {
+      const { dx, dy } = nav();
+      const ok = G.input.confirmPressed();
+      if (pPage === 'help') {
+        if (dx) { pTab = (pTab + dx + HELP_TABS.length) % HELP_TABS.length; G.audio.play('menuMove'); }
+        if (ok || G.input.backPressed()) { pPage = 'list'; G.audio.play('menuBack'); }
+        return;
+      }
+      if (G.input.backPressed()) { paused = false; G.audio.play('menuConfirm'); return; }
+      if (G.input.keyPressed('KeyQ')) { G.go('menu'); return; }
+      if (dy) { pIdx = (pIdx + dy + PAUSE_ITEMS.length) % PAUSE_ITEMS.length; G.audio.play('menuMove'); }
+      if (ok) {
+        G.audio.play('menuConfirm');
+        if (pIdx === 0) paused = false;
+        else if (pIdx === 1) { pPage = 'help'; pTab = 0; }
+        else if (pIdx === 2) G.go('fight', params);
+        else G.go('menu');
+      }
+    },
+
+    drawPause(c) {
+      c.fillStyle = 'rgba(43,38,32,0.62)'; c.fillRect(0, 0, 960, 540);
+      if (pPage === 'help') {
+        c.fillStyle = PAPER; c.fillRect(0, 0, 960, 540);
+        header(c, 'HOW TO PLAY', { sub: 'PAUSED' });
+        drawHelp(c, pTab);
+        hints(c, [[['←', '→'], 'Tab'], ['ESC', 'Back']], 520);
+        return;
+      }
+      plaque(c, 300, 110, 360, 330, { fill: PAPER, shadow: 8 });
+      c.fillStyle = INK; c.fillRect(303, 113, 354, 52);
+      c.fillStyle = BRASS; c.fillRect(303, 165, 354, 4);
+      text(c, 'PAUSED', 480, 150, { font: F.head(32), color: PAPER });
+      menuList(c, PAUSE_ITEMS, pIdx, 340, 190, { w: 280, h: 46, gap: 12, anim: pAnim });
+      hints(c, [[['W', 'S'], 'Move'], [['ENTER', 'F'], 'Select'], ['ESC', 'Resume']], 500, { color: PAPER });
+    },
+
     draw() {
       const c = G.renderer.ctx;
       const shownStage = events.stageOverride ? stageById(events.stageOverride) : stage;
       G.renderer.renderFight({ world, stage: shownStage, camera, fx: G.fx, t, sprites: G.sprites, heads: G.heads, stageArt: G.stageArt, events });
-      drawHUD(c, world, camera, { t });
+      drawHUD(c, world, camera, { t, sprites: G.sprites });
       events.drawUI(c);
       G.fx.drawUI(c, camera);
 
-      if (phase === 'intro' && phaseT > INTRO_FRAMES - 40) {
-        c.font = "700 44px 'Pixelify Sans'"; c.textAlign = 'center';
-        c.fillStyle = '#2b2620'; c.fillText('FIGHT!', 482, 302);
-        c.fillStyle = '#c4452e'; c.fillText('FIGHT!', 480, 300);
+      if (phase === 'intro' && phaseT > 30) {
+        const go = phaseT > INTRO_FRAMES - 30, k = go ? Math.min(1, (phaseT - (INTRO_FRAMES - 30)) / 6) : Math.min(1, (phaseT - 30) / 6);
+        const word = go ? 'FIGHT!' : 'READY?';
+        c.save(); c.translate(480, 290); c.scale(0.6 + 0.4 * k, 0.6 + 0.4 * k);
+        c.font = F.logo(go ? 84 : 60); c.textAlign = 'center';
+        for (let d = 6; d > 0; d--) { c.fillStyle = INK; c.fillText(word, d, d); }
+        c.fillStyle = go ? BRICK : PAPER; c.fillText(word, 0, 0);
+        c.restore();
       }
-      if (paused) {
-        c.fillStyle = 'rgba(242,233,216,0.94)'; c.fillRect(0, 0, 960, 540);
-        paperBG(c);
-        drawHelp(c);
-        c.fillStyle = '#c4452e'; c.font = "700 20px 'Pixelify Sans'"; c.textAlign = 'center';
-        c.fillText('PAUSED — ESC resume · Q quit to menu', 480, 525);
-      }
+      if (paused) this.drawPause(c);
     },
   };
 }
