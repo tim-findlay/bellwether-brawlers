@@ -12,6 +12,7 @@ export class FX {
     this.freeze = 0;          // hitstop frames remaining
     this.shakeMag = 0;
     this.shakeFrames = 0;
+    this.shakeScale = 1;      // Settings > Screen shake (cosmetic only; 0 = off)
     this.slowFrames = 0;
     this.slowScale = 1;
     this.particles = [];
@@ -31,7 +32,7 @@ export class FX {
   // Screenshake offset in SCREEN px (rides camera.apply's shake args). `mag`
   // keeps its v2 meaning (buffer px), hence the x2.
   camera() {
-    if (this.shakeFrames <= 0) return { x: 0, y: 0 };
+    if (this.shakeFrames <= 0 || !this.shakeScale) return { x: 0, y: 0 };
     const m = this.shakeMag * 2 * (this.shakeFrames > 4 ? 1 : this.shakeFrames / 4);
     return { x: (Math.random() * 2 - 1) * m, y: (Math.random() * 2 - 1) * m * 0.6 };
   }

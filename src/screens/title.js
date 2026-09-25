@@ -1,53 +1,61 @@
-// Title screen: office backdrop, paper masthead, press start.
+// Title screen: the Office far layer drifting behind its arena piece, all
+// eight fighters lined up on it (each throws the odd jab), the logo, and a
+// blinking PRESS START plaque. Any confirm goes to the main menu.
 
-import { drawStage, stageById } from '../data/stages.js';
+import { CHARACTERS } from '../data/characters.js';
+import { stageById } from '../data/stages.js';
+import { backdrop, logo, fighter, floorShadow, plaque, text, keycap, F, INK, PAPER, BRICK } from '../render/ui.js';
+
+const SLAB_W = 860, SLAB_Y = 432;
 
 export function makeTitle(G) {
   let t = 0;
+  const office = stageById('office');
   return {
     enter() { t = 0; },
     update() {
       t++;
-      if (G.input.confirmPressed() || G.input.keyPressed('Space')) {
+      if (t > 10 && (G.input.confirmPressed() || G.input.keyPressed('Space'))) {
         G.audio.play('menuConfirm');
         G.go('menu');
       }
     },
     draw() {
-      const w = G.renderer.wctx;
-      drawStage(w, stageById('office'), t, Math.sin(t * 0.004) * 30);
-      w.fillStyle = 'rgba(43,38,32,0.28)';
-      w.fillRect(0, 0, 480, 270);
       const c = G.renderer.ctx;
-      c.imageSmoothingEnabled = false;
-      c.drawImage(G.renderer.buf, 0, 0, 960, 540);
+      c.setTransform(1, 0, 0, 1, 0, 0);
+      backdrop(c, G, office, t, { wash: 0.12, drift: 60 });
 
-      // masthead
-      c.save();
-      c.translate(480, 200);
-      c.rotate(-0.02);
-      c.fillStyle = '#2b2620'; c.fillRect(-348, -86, 704, 158);
-      c.fillStyle = '#f2e9d8'; c.fillRect(-354, -94, 704, 158);
-      c.strokeStyle = '#2b2620'; c.lineWidth = 4; c.strokeRect(-344, -84, 684, 138);
-      c.fillStyle = '#c4452e';
-      c.font = "700 64px 'Pixelify Sans'";
-      c.textAlign = 'center';
-      c.fillText('BELLWETHER', 0, -22);
-      c.fillStyle = '#27425f';
-      c.fillText('BATTLERS', 0, 36);
-      c.restore();
+      // the arena piece, with the whole office standing on it
+      const slab = G.stageArt?.get?.('office-slab');
+      const sx = (960 - SLAB_W) / 2;
+      if (slab) { c.imageSmoothingEnabled = false; c.drawImage(slab, sx, SLAB_Y - 6, SLAB_W, slab.height * (SLAB_W / slab.width)); }
+      else plaque(c, sx, SLAB_Y, SLAB_W, 60, { fill: office.groundFill || '#8a7f6a' });
+      const n = CHARACTERS.length, step = (SLAB_W - 120) / (n - 1);
+      CHARACTERS.forEach((cfg, i) => {
+        const x = sx + 60 + i * step;
+        const phase = (t + i * 53) % 300;
+        const attacking = phase < 26;
+        floorShadow(c, x, SLAB_Y, 44);
+        fighter(c, G, cfg, x, SLAB_Y, 1.35, { anim: attacking ? 'attack' : 'idle', t: attacking ? phase : t + i * 13, facing: i < n / 2 ? 1 : -1 });
+      });
 
-      c.fillStyle = '#f2e9d8';
-      c.font = "700 16px 'Silkscreen'";
-      c.textAlign = 'center';
-      c.fillText('EIGHT COLLEAGUES. ONE WINNER.', 480, 320);
-      if ((t / 30 | 0) % 2 === 0) {
-        c.font = "700 18px 'Silkscreen'";
-        c.fillText('PRESS ENTER', 480, 396);
+      logo(c, 480, 140, 0.9, t, G);
+      text(c, 'EIGHT COLLEAGUES.  ONE WINNER.', 480, 284, { font: F.mono(16), color: PAPER, shadow: INK });
+
+      if ((t / 28 | 0) % 2 === 0 || t < 20) {
+        plaque(c, 480 - 140, 298, 280, 40, { fill: BRICK, shadow: 5 });
+        text(c, 'PRESS START', 480, 327, { font: F.head(26), color: PAPER });
       }
-      c.font = "600 15px 'Barlow Condensed'";
-      c.fillStyle = 'rgba(242,233,216,0.75)';
-      c.fillText('a parody fighting game · every face, move and grudge is editable', 480, 510);
+
+      // footer strip
+      c.fillStyle = INK; c.fillRect(0, 512, 960, 28);
+      const kx = 24;
+      let x = kx + keycap(c, 'ENTER', kx, 516) + 6;
+      text(c, 'or', x, 531, { font: F.body(15), color: '#d9ceb4', align: 'left' });
+      x += 18;
+      x += keycap(c, 'F', x, 516) + 6;
+      text(c, 'start   ·   pads: START / X', x, 531, { font: F.body(15), color: '#d9ceb4', align: 'left' });
+      text(c, 'a parody fighting game · every face, move and grudge is editable', 936, 531, { font: F.body(15), color: '#b8ad93', align: 'right' });
     },
   };
 }
