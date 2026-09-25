@@ -1,203 +1,233 @@
-// Character select (P1 → P2/CPU) then stage select. Cards show the fighter as
-// they play: the idle sprite sheet, or the drawn fallback body when a sheet is
-// missing (drop-in rule), plus the counterplay tip.
+// Character select → stage select. The roster strip shows every fighter as
+// they play (idle sprite, drawn body as the fallback); two player panels show
+// the hovered or locked fighter large with stats and moves. Versus CPU: P1
+// picks their fighter, then the opponent. Local Versus: both players pick at
+// once on their own keys (P1 WASD + F, P2 arrows + K). Then the arena
+// carousel, built from the real stage art, and on to the VS splash.
 
 import { CHARACTERS } from '../data/characters.js';
 import { SELECTABLE_STAGES } from '../data/stages.js';
-import { drawSprite, frameFor, hasAnim } from '../render/sprites.js';
-import { drawFallbackBody } from '../render/body.js';
-import { paperBG } from './menu.js';
+import {
+  backdrop, header, plaque, text, chip, stamp, hints, fighter, floorShadow, statBar, statFrac, vsBadge,
+  stageThumb, stageMap, makeNav, P1_DIRS, P2_DIRS, confirmP1, confirmP2, wrap,
+  F, INK, PAPER, BRICK, NAVY, BRASS, GREEN, CARD, MUTED, RULE, SIDE,
+} from '../render/ui.js';
 
-const CARD_SCALE = 1.4;               // 64 px cell -> ~90 px on the card
-
-const COLS = 4;
+const N = CHARACTERS.length;
+const TILE = 104, TGAP = 8, TX = (960 - (N * TILE + (N - 1) * TGAP)) / 2, TY = 90;
+const READY_HOLD = 36;                      // frames the READY stamps show before the arena pick
 
 export function makeSelect(G) {
-  let mode = 'cpu';
-  let step = 0;                       // 0: P1 pick, 1: P2 pick, 2: stage
-  let cursor = [0, 1];
-  let pick = [0, 1];
-  let stageIdx = 0;
-  let t = 0;
+  let mode = 'cpu', phase = 'fighters', t = 0, readyT = 0, lastMover = 0;
+  let cursor = [0, 1], locked = [false, false], lockT = [0, 0];
+  let stageIdx = 0, stageT = 0;
+  const navAny = makeNav(G), navP1 = makeNav(G, P1_DIRS), navP2 = makeNav(G, P2_DIRS);
 
-  function mapFor(stepIdx) {
-    // in 2P, player two drives their own cursor; vs CPU, P1 drives both picks
-    return (mode === '2p' && stepIdx === 1)
-      ? { left: 'ArrowLeft', right: 'ArrowRight', up: 'ArrowUp', down: 'ArrowDown' }
-      : { left: 'KeyA', right: 'KeyD', up: 'KeyW', down: 'KeyS' };
+  const active = () => (mode === 'cpu' ? (locked[0] ? 1 : 0) : -1);
+
+  function move(side, dx) {
+    if (!dx || locked[side]) return;
+    cursor[side] = (cursor[side] + dx + N) % N;
+    lastMover = side;
+    G.audio.play('menuMove');
   }
-
-  function moveCursor(stepIdx) {
-    const m = mapFor(stepIdx);
-    const n = CHARACTERS.length;
-    let c0 = cursor[stepIdx];
-    if (G.input.keyPressed(m.left) || (mode !== '2p' && G.input.keyPressed('ArrowLeft'))) c0 = (c0 % COLS === 0) ? c0 : c0 - 1;
-    if (G.input.keyPressed(m.right) || (mode !== '2p' && G.input.keyPressed('ArrowRight'))) c0 = (c0 % COLS === COLS - 1 || c0 + 1 >= n) ? c0 : c0 + 1;
-    if (G.input.keyPressed(m.up) || (mode !== '2p' && G.input.keyPressed('ArrowUp'))) c0 = c0 - COLS >= 0 ? c0 - COLS : c0;
-    if (G.input.keyPressed(m.down) || (mode !== '2p' && G.input.keyPressed('ArrowDown'))) c0 = c0 + COLS < n ? c0 + COLS : c0;
-    if (c0 !== cursor[stepIdx]) { cursor[stepIdx] = c0; G.audio.play('menuMove'); }
+  function lock(side) {
+    if (locked[side]) return;
+    locked[side] = true; lockT[side] = 0; lastMover = side;
+    G.audio.play('menuConfirm');
+  }
+  function unlockLast() {
+    const side = locked[1] ? 1 : locked[0] ? 0 : -1;
+    if (side < 0) return false;
+    locked[side] = false; readyT = 0;
+    G.audio.play('menuBack');
+    return true;
+  }
+  function randomFor(side) {
+    if (locked[side]) return;
+    cursor[side] = Math.floor(G.rng() * N); lastMover = side;
+    G.audio.play('pop');
   }
 
   return {
     enter(params) {
       mode = params?.mode || 'cpu';
-      step = 0;
-      cursor = [0, 1];
-      t = 0;
+      phase = 'fighters'; t = 0; readyT = 0;
+      locked = [false, false]; lockT = [0, 0];
+      if (params?.keep) { cursor = [CHARACTERS.findIndex(c => c.id === params.keep[0]), CHARACTERS.findIndex(c => c.id === params.keep[1])]; }
+      else cursor = [0, 1];
     },
+
     update() {
-      t++;
-      if (step < 2) {
-        moveCursor(step);
-        if (G.input.confirmPressed()) {
-          G.audio.play('menuConfirm');
-          pick[step] = cursor[step];
-          if (step === 0) { step = 1; cursor[1] = pick[0] === 1 ? 0 : 1; }
-          else step = 2;
-        }
-        if (G.input.backPressed()) {
-          G.audio.play('menuBack');
-          if (step === 1) step = 0; else G.go('menu');
-        }
+      t++; lockT[0]++; lockT[1]++;
+      if (phase === 'fighters') this.updateFighters();
+      else this.updateStage();
+    },
+
+    updateFighters() {
+      if (mode === 'cpu') {
+        const side = active(), { dx } = navAny();
+        move(side, dx);
+        if (G.input.keyPressed('KeyR')) randomFor(side);
+        if (G.input.confirmPressed() || G.input.keyPressed('Space')) lock(side);
       } else {
-        const l = G.input.keyPressed('KeyA') || G.input.keyPressed('ArrowLeft');
-        const r = G.input.keyPressed('KeyD') || G.input.keyPressed('ArrowRight');
-        if (l) { stageIdx = (stageIdx + SELECTABLE_STAGES.length - 1) % SELECTABLE_STAGES.length; G.audio.play('menuMove'); }
-        if (r) { stageIdx = (stageIdx + 1) % SELECTABLE_STAGES.length; G.audio.play('menuMove'); }
-        if (G.input.confirmPressed()) {
-          G.audio.play('roundGo');
-          G.go('fight', {
-            mode,
-            p1: CHARACTERS[pick[0]].id,
-            p2: CHARACTERS[pick[1]].id,
-            stageId: SELECTABLE_STAGES[stageIdx].id,
-          });
-        }
-        if (G.input.backPressed()) { G.audio.play('menuBack'); step = 1; }
+        move(0, navP1().dx); move(1, navP2().dx);
+        if (G.input.keyPressed('KeyR')) randomFor(0);
+        if (G.input.keyPressed('Backslash')) randomFor(1);
+        if (confirmP1(G)) lock(0);
+        if (confirmP2(G)) lock(1);
       }
-    },
-    draw() {
-      const c = G.renderer.ctx;
-      paperBG(c);
-      if (step < 2) this.drawRoster(c);
-      else this.drawStagePick(c);
+      if (G.input.backPressed() && !unlockLast()) { G.audio.play('menuBack'); G.go('menu'); return; }
+      if (locked[0] && locked[1]) {
+        if (++readyT >= READY_HOLD) { phase = 'stage'; stageT = 0; G.audio.play('menuConfirm'); }
+      } else readyT = 0;
     },
 
-    drawRoster(c) {
-      c.fillStyle = '#2b2620';
-      c.font = "700 30px 'Pixelify Sans'";
-      c.textAlign = 'center';
-      const who = step === 0 ? 'PLAYER 1 — CHOOSE YOUR FIGHTER'
-        : mode === '2p' ? 'PLAYER 2 — CHOOSE YOUR FIGHTER' : 'CHOOSE YOUR OPPONENT';
-      c.fillText(who, 480, 64);
-
-      const cw = 196, ch = 158, gx = 24, gy = 18;
-      const startX = (960 - (COLS * cw + (COLS - 1) * gx)) / 2;
-      CHARACTERS.forEach((ch0, i) => {
-        const col = i % COLS, row = (i / COLS) | 0;
-        const x = startX + col * (cw + gx), y = 88 + row * (ch + gy);
-        const selP1 = step === 0 && cursor[0] === i;
-        const selP2 = step === 1 && cursor[1] === i;
-        const lockedP1 = step === 1 && pick[0] === i;
-
-        c.fillStyle = '#2b2620'; c.fillRect(x + 4, y + 4, cw, ch);
-        c.fillStyle = '#faf5e9'; c.fillRect(x, y, cw, ch);
-        c.strokeStyle = selP1 ? '#27425f' : selP2 ? '#c4452e' : lockedP1 ? '#c9a227' : '#2b2620';
-        c.lineWidth = (selP1 || selP2) ? 5 : 2;
-        c.strokeRect(x, y, cw, ch);
-
-        // the fighter itself, idling on a strip of floor
-        const sel = selP1 || selP2;
-        c.fillStyle = sel ? '#ddd0b2' : '#e8dec6';
-        c.fillRect(x + cw / 2 - 62, y + 10, 124, 98);
-        c.fillStyle = '#d6cab0';
-        c.fillRect(x + cw / 2 - 62, y + 104, 124, 4);
-        this.fighter(c, ch0, x + cw / 2, y + 105, t + i * 11);
-        c.fillStyle = '#2b2620';
-        c.font = "700 22px 'Pixelify Sans'";
-        c.fillText(ch0.name, x + cw / 2, y + 124);
-        c.fillStyle = '#6e6450';
-        c.font = "600 14px 'Barlow Condensed'";
-        c.fillText(ch0.archetype, x + cw / 2, y + 142);
-        if (lockedP1) {
-          c.fillStyle = '#c9a227';
-          c.font = "700 12px 'Silkscreen'";
-          c.fillText('P1', x + 20, y + 22);
-        }
-        const wins = G.scores[ch0.id] || 0;
-        if (wins > 0) {
-          c.fillStyle = '#6e6450';
-          c.font = "600 12px 'Barlow Condensed'";
-          c.textAlign = 'right';
-          c.fillText(`★ ${wins}`, x + cw - 8, y + 18);
-          c.textAlign = 'center';
-        }
-      });
-
-      const hov = CHARACTERS[cursor[step]];
-      c.fillStyle = '#2b2620';
-      c.font = "700 18px 'Pixelify Sans'";
-      c.fillText(`${hov.title} — “${hov.tagline}”`, 480, 478);
-      c.fillStyle = '#c4452e';
-      c.font = "600 16px 'Barlow Condensed'";
-      c.fillText(`HOW TO BEAT: ${hov.tip}`, 480, 500);
-      c.fillStyle = '#6e6450';
-      c.fillText('move with your keys · F / K / ENTER confirm · ESC back', 480, 520);
-    },
-
-    // Idle sprite if the sheet loaded, else the drawn body (no photo head).
-    fighter(c, cfg, x, y, tt) {
-      const sheet = G.sprites?.get?.(cfg.id);
-      if (hasAnim(sheet, 'idle')) {
-        drawSprite(c, sheet, 'idle', frameFor(sheet.anims.idle, tt), x, y, 1, CARD_SCALE);
+    updateStage() {
+      stageT++;
+      const { dx } = navAny();
+      if (dx) { stageIdx = (stageIdx + dx + SELECTABLE_STAGES.length) % SELECTABLE_STAGES.length; stageT = 0; G.audio.play('menuMove'); }
+      if (G.input.keyPressed('KeyR')) { stageIdx = Math.floor(G.rng() * SELECTABLE_STAGES.length); stageT = 0; G.audio.play('pop'); }
+      if (G.input.confirmPressed() || G.input.keyPressed('Space')) {
+        G.audio.play('menuConfirm');
+        G.go('splash', { mode, p1: CHARACTERS[cursor[0]].id, p2: CHARACTERS[cursor[1]].id, stageId: SELECTABLE_STAGES[stageIdx].id });
         return;
       }
-      const h = 64 * CARD_SCALE;
-      drawFallbackBody(c, { cfg, x, y, anim: { name: 'idle', t: tt }, body: { x, y, h, facing: 1, grounded: false } }, null);
+      if (G.input.backPressed()) { phase = 'fighters'; locked[1] = false; readyT = 0; G.audio.play('menuBack'); }
     },
 
-    drawStagePick(c) {
-      c.fillStyle = '#2b2620';
-      c.font = "700 30px 'Pixelify Sans'";
-      c.textAlign = 'center';
-      c.fillText('CHOOSE YOUR ARENA', 480, 70);
-      const w = G.renderer.wctx;
-      SELECTABLE_STAGES.forEach((st, i) => {
-        const x = 80 + i * 280, y = 130, cw = 240, chh = 240;
-        const sel = i === stageIdx;
-        c.fillStyle = '#2b2620'; c.fillRect(x + 5, y + 5, cw, chh);
-        c.fillStyle = '#faf5e9'; c.fillRect(x, y, cw, chh);
-        // mini stage preview rendered to the world buffer then blitted
-        w.save();
-        w.clearRect(0, 0, 480, 270);
-        this.preview(w, st);
-        w.restore();
-        c.imageSmoothingEnabled = false;
-        c.drawImage(G.renderer.buf, 0, 0, 480, 270, x + 10, y + 12, cw - 20, 134);
-        c.strokeStyle = sel ? '#c4452e' : '#2b2620';
-        c.lineWidth = sel ? 5 : 2;
-        c.strokeRect(x, y, cw, chh);
-        c.fillStyle = '#2b2620';
-        c.font = "700 19px 'Pixelify Sans'";
-        c.fillText(st.name, x + cw / 2, y + 180);
-        c.fillStyle = '#6e6450';
-        c.font = "600 15px 'Barlow Condensed'";
-        c.fillText(st.blurb, x + cw / 2, y + 204);
+    draw() {
+      const c = G.renderer.ctx;
+      c.setTransform(1, 0, 0, 1, 0, 0);
+      if (phase === 'fighters') this.drawFighters(c);
+      else this.drawStage(c);
+    },
+
+    // ---- fighter select --------------------------------------------------------
+
+    drawFighters(c) {
+      backdrop(c, G, SELECTABLE_STAGES[0], t, { wash: 0.78 });
+      header(c, 'CHOOSE YOUR FIGHTER', { sub: mode === 'cpu' ? 'VERSUS CPU' : 'LOCAL VERSUS' });
+
+      CHARACTERS.forEach((cfg, i) => {
+        const x = TX + i * (TILE + TGAP), y = TY;
+        const on = [0, 1].filter(s => cursor[s] === i && (mode === '2p' || s <= Math.max(0, active())));
+        plaque(c, x, y, TILE, TILE, { fill: on.length ? '#efe3c2' : CARD, shadow: 4, lw: 2 });
+        c.fillStyle = '#e9dfc7'; c.fillRect(x + 4, y + 4, TILE - 8, TILE - 26);
+        fighter(c, G, cfg, x + TILE / 2, y + TILE - 20, 1.25, { t: t + i * 11 });
+        c.fillStyle = INK; c.fillRect(x + 2, y + TILE - 22, TILE - 4, 20);
+        text(c, cfg.name, x + TILE / 2, y + TILE - 7, { font: F.head(15), color: PAPER });
+        for (const s of on) {
+          const col = SIDE[s];
+          c.strokeStyle = col; c.lineWidth = 5;
+          const inset = s === 1 && on.length === 2 ? 6 : 0;
+          c.strokeRect(x - 3 + inset, y - 3 + inset, TILE + 6 - inset * 2, TILE + 6 - inset * 2);
+          chip(c, s === 0 ? 'P1' : mode === 'cpu' ? 'CPU' : 'P2', s === 0 ? x - 3 : x + TILE + 3, y - 20, col, { align: s === 0 ? 'left' : 'right' });
+        }
       });
-      c.fillStyle = '#6e6450';
-      c.font = "600 17px 'Barlow Condensed'";
-      c.fillText('A/D or ←/→ choose · F / K / ENTER fight · ESC back', 480, 478);
-      c.fillStyle = '#c4452e';
-      c.font = "700 14px 'Silkscreen'";
-      c.fillText('rumour: Mike sometimes drags the fight to BERLIN', 480, 508);
+
+      this.panel(c, 0, 30);
+      this.panel(c, 1, 510);
+      vsBadge(c, G, 480, 342, 92, 99);
+
+      const who = CHARACTERS[cursor[lastMover]];
+      plaque(c, 30, 488, 900, 26, { fill: INK, shadow: 0, lw: 0 });
+      text(c, `HOW TO BEAT ${who.name}: ${who.tip}`, 480, 506, { font: F.body(15), color: PAPER });
+      const keys = mode === 'cpu'
+        ? [[['A', 'D'], 'Choose'], [['ENTER', 'F'], 'Lock in'], ['R', 'Random'], ['ESC', 'Back']]
+        : [[['A', 'D'], 'P1'], ['F', 'Lock'], [['←', '→'], 'P2'], ['K', 'Lock'], [['R', '\\'], 'Random'], ['ESC', 'Back']];
+      hints(c, keys, 532);
     },
 
-    preview(w, st) {
-      const grad = w.createLinearGradient(0, 0, 0, 270);
-      grad.addColorStop(0, st.sky[0]); grad.addColorStop(1, st.sky[1]);
-      w.fillStyle = grad; w.fillRect(0, 0, 480, 270);
-      for (const layer of st.layers) layer.draw(w, t, 0);
-      w.fillStyle = st.groundFill; w.fillRect(0, 232, 480, 38);
+    panel(c, side, x) {
+      const w = 420, y = 214, h = 266;
+      const col = SIDE[side];
+      const waiting = mode === 'cpu' && side === 1 && !locked[0];
+      const cfg = CHARACTERS[cursor[side]];
+      plaque(c, x, y, w, h, { fill: CARD, shadow: 6 });
+      c.fillStyle = col; c.fillRect(x + 3, y + 3, w - 6, 8);
+
+      // fighter stand: P1 on the left of the panel, P2 on the right, facing in
+      const sx = side === 0 ? x + 16 : x + w - 176;
+      c.fillStyle = '#ece2cb'; c.fillRect(sx, y + 20, 160, 234);
+      c.fillStyle = RULE; c.fillRect(sx, y + 242, 160, 12);
+      const cx = sx + 80, fy = y + 244;
+      if (waiting) {
+        const ghost = CHARACTERS[((t / 12) | 0) % N];
+        fighter(c, G, ghost, cx, fy, 3.1, { t, facing: -1, tint: INK });
+        text(c, '?', cx, y + 140, { font: F.head(64), color: PAPER });
+      } else {
+        floorShadow(c, cx, fy - 2, 80);
+        const atk = locked[side] && lockT[side] < 26;
+        fighter(c, G, cfg, cx, fy, 3.1, { anim: atk ? 'attack' : 'idle', t: atk ? lockT[side] : t, facing: side === 0 ? 1 : -1 });
+      }
+
+      // info column
+      const ix = side === 0 ? x + 192 : x + 16, iw = 212;
+      const tag = side === 0 ? 'PLAYER 1' : mode === 'cpu' ? 'CPU OPPONENT' : 'PLAYER 2';
+      chip(c, tag, ix, y + 22, col);
+      if (waiting) {
+        text(c, 'WAITING…', ix, y + 84, { font: F.head(28), align: 'left', color: MUTED });
+        wrap(c, 'Lock in your fighter, then choose who you want to fight.', iw, F.body(17)).forEach((ln, i) =>
+          text(c, ln, ix, y + 116 + i * 22, { font: F.body(17), align: 'left', color: MUTED }));
+        return;
+      }
+      text(c, cfg.name, ix, y + 76, { font: F.head(34), align: 'left' });
+      text(c, cfg.title, ix, y + 96, { font: F.mono(10), align: 'left', color: col });
+      text(c, cfg.archetype, ix, y + 116, { font: F.body(16), align: 'left', color: MUTED });
+      const st = cfg.stats;
+      statBar(c, ix, y + 128, iw, 'COMPOSURE', statFrac(CHARACTERS, 'gauge', st.gauge), GREEN);
+      statBar(c, ix, y + 146, iw, 'SPEED', statFrac(CHARACTERS, 'runMax', st.runMax), NAVY);
+      statBar(c, ix, y + 164, iw, 'AIR', statFrac(CHARACTERS, 'jumpImpulse', st.jumpImpulse), BRASS);
+      statBar(c, ix, y + 182, iw, 'WEIGHT', statFrac(CHARACTERS, 'weight', st.weight), BRICK);
+      text(c, 'SPECIALS', ix, y + 210, { font: F.mono(9), align: 'left', color: MUTED });
+      text(c, `${cfg.s1.name} · ${cfg.s2.name}`, ix, y + 229, { font: F.body(15, 700), align: 'left' });
+      text(c, 'SUPER', ix, y + 248, { font: F.mono(9), align: 'left', color: MUTED });
+      text(c, cfg.super.name.toUpperCase(), ix + 44, y + 249, { font: F.head(15), align: 'left', color: col });
+      if (locked[side]) stamp(c, 'READY!', x + w / 2, y + 150, { color: col, size: 34, rot: side ? 0.1 : -0.1, alpha: Math.min(1, lockT[side] / 6) });
+    },
+
+    // ---- stage select -----------------------------------------------------------
+
+    drawStage(c) {
+      const S = SELECTABLE_STAGES, st = S[stageIdx];
+      backdrop(c, G, st, t, { wash: 0.7 });
+      header(c, 'CHOOSE YOUR ARENA', { sub: `${stageIdx + 1} / ${S.length}` });
+
+      // neighbours
+      const prev = S[(stageIdx - 1 + S.length) % S.length], next = S[(stageIdx + 1) % S.length];
+      for (const [s, x] of [[prev, 34], [next, 796]]) {
+        plaque(c, x, 150, 130, 80, { fill: INK, shadow: 4, lw: 0 });
+        stageThumb(c, G, s, x + 4, 154, 122, 69, t);
+        c.globalAlpha = 0.35; c.fillStyle = PAPER; c.fillRect(x + 4, 154, 122, 69); c.globalAlpha = 1;
+        text(c, s.name, x + 65, 248, { font: F.mono(9), color: INK });
+      }
+      text(c, '◀', 190, 262, { font: F.body(40, 700), color: INK });
+      text(c, '▶', 770, 262, { font: F.body(40, 700), color: INK });
+
+      // the pick: zoom-in on change
+      const k = Math.min(1, stageT / 10), w = 500 + 40 * k, h = Math.round(w * 9 / 16);
+      const px = 480 - w / 2, py = 96 + (22 - 22 * k) / 2;
+      plaque(c, px - 6, py - 6, w + 12, h + 12, { fill: INK, shadow: 7, lw: 0 });
+      stageThumb(c, G, st, px, py, w, h, t);
+
+      // name, blurb, layout map
+      plaque(c, 210, 414, 540, 70, { fill: CARD, shadow: 5 });
+      text(c, st.name, 230, 446, { font: F.head(28), align: 'left' });
+      text(c, st.blurb, 230, 470, { font: F.body(17), align: 'left', color: MUTED });
+      c.fillStyle = '#efe7d3'; c.fillRect(592, 420, 150, 58);
+      stageMap(c, st.id, 596, 424, 142, 50);
+      S.forEach((_, i) => { c.fillStyle = i === stageIdx ? BRICK : RULE; c.fillRect(480 - S.length * 9 + i * 18, 492, 12, 6); });
+
+      // the two fighters waiting either side
+      const a = CHARACTERS[cursor[0]], b = CHARACTERS[cursor[1]];
+      floorShadow(c, 96, 478, 70); floorShadow(c, 864, 478, 70);
+      fighter(c, G, a, 96, 478, 2.3, { t, facing: 1 });
+      fighter(c, G, b, 864, 478, 2.3, { t: t + 17, facing: -1 });
+      chip(c, 'P1', 96, 300, NAVY, { align: 'center' });
+      chip(c, mode === 'cpu' ? 'CPU' : 'P2', 864, 300, BRICK, { align: 'center' });
+
+      hints(c, [[['A', 'D'], 'Choose'], [['ENTER', 'F'], 'Fight!'], ['R', 'Random'], ['ESC', 'Back']], 528);
     },
   };
 }
