@@ -22,9 +22,9 @@ Each opener is followed by: `the identical character in every cell (same outfit,
 | Fighter | `{OUTFIT}` |
 |---|---|
 | Nick | slim navy suit, white open-collar shirt, clean white sneakers, dark hair in a tall quiff, clean-shaven, empty hands |
-| Mike | fit, athletic, broad-shouldered build with no belly, dark work jacket under an orange hi-vis vest, yellow hard hat, grey hair, red-and-white football scarf, empty hands |
+| Mike | a man in his early forties with a smooth young face and short dark brown hair under a yellow hard hat (no grey hair), fit, athletic, broad-shouldered build with no belly, dark work jacket under an orange hi-vis vest, red-and-white football scarf, olive work trousers, empty hands |
 | Abi | long straight blonde hair past the shoulders, fitted brick-red blazer over a cream blouse, crisp white trousers, flat black shoes, no bag, empty hands |
-| Seelye | charcoal-grey two-piece suit, white shirt, olive-green tie, short neat dark-brown hair, clean-shaven, brown leather shoes, empty hands |
+| Seelye | a clean-shaven man in his thirties with side-parted dark brown hair, a forest-green quarter-zip golf pullover (Peter Millar style) over a crisp white button-down with the collar showing, no tie, charcoal trousers, brown shoes, empty hands |
 
 ## Stage prompts used (for re-rolls)
 
