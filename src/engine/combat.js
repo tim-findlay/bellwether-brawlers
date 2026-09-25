@@ -118,7 +118,9 @@ export class FightWorld {
     this.audio.play('parry');
     this.fx.hitstop(8);
     this.fx.text(def.x, def.y - 120, c.callout, '#27425f');
-    att.takeHit({ dmg: c.dmg, kb: c.kb, kbScale: c.kbScale, kbAngle: c.kbAngle, dir: def.facing, unparryable: true, status: c.applyStatus || null, from: def, move: { name: c.name } });
+    // not `unparryable`: that flag whiffs vs airborne targets, and the riposte must
+    // land on the jump-in it just parried (the attacker is mid-attack, so it can't parry back)
+    att.takeHit({ dmg: c.dmg, kb: c.kb, kbScale: c.kbScale, kbAngle: c.kbAngle, dir: def.facing, status: c.applyStatus || null, from: def, move: { name: c.name } });
     def.gainMeter(c.meter);
   }
 
