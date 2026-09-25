@@ -87,7 +87,8 @@ export class Input {
 }
 
 // A player's view over Input + a key map. `reversed` flips left/right
-// (Tim's Prompt Injection) — block/jump/buttons are unaffected.
+// (the `reversed` status — unused by the roster since the 2026-09 kit rethink) —
+// block/jump/buttons are unaffected.
 export class PlayerController {
   constructor(input, map) {
     this.input = input;

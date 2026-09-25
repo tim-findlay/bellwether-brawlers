@@ -36,7 +36,7 @@ export class AIController {
     this.profileName = DIFFICULTY[profileName] ? profileName : 'normal';
     this.profile = DIFFICULTY[this.profileName];
     this.rng = rng || Math.random;
-    this.reversed = false;         // set by the Fighter when Prompt Injection lands
+    this.reversed = false;         // set by the Fighter while a `reversed` status is on (unused by the roster)
     this.isCPU = true;
     this.helds = new Set();        // left | right | down | up (aim only)
     this.queue = new Map();        // slot -> expiry frame (a human-style press buffer)
@@ -78,7 +78,7 @@ export class AIController {
     if (!this._gauges || g[0] !== this._gauges[0] || g[1] !== this._gauges[1]) this.lastHitFrame = this.frame;
     this._gauges = g;
 
-    // reversal (Prompt Injection): the CPU stumbles for a beat, then compensates like a human would
+    // reversal (the `reversed` status): the CPU stumbles for a beat, then compensates like a human would
     if (this.reversed && this.reversedAt < 0) this.reversedAt = this.frame;
     if (!this.reversed) this.reversedAt = -1;
 

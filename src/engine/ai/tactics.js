@@ -8,7 +8,7 @@
 
 import { mainSlab, midOf, roomOn, standingSurface, surfaceBelow, isOffStage } from './nav.js';
 
-const RANGED = ['projectile', 'lob', 'groundProjectile', 'fan'];
+const RANGED = ['projectile', 'lob', 'groundProjectile', 'fan', 'columns'];
 const MELEE_KINDS = [undefined, 'melee', 'lunge', 'flurry', 'shout', 'dashCombo', 'aerial'];
 const HURT_W = 44, BODY_H = 96;
 
@@ -44,6 +44,7 @@ export function hasLineOfFire(f, m, opp) {
   const dy = opp.y - f.y;
   if (m.kind === 'lob') return Math.abs(opp.x - f.x) > 90 && dy > -180 && dy < 220;
   if (m.kind === 'groundProjectile') return Math.abs(dy) < 30;
+  if (m.kind === 'columns') return opp.grounded || Math.abs(dy) < 120;             // marked strike under the target
   return Math.abs(dy) < 100;
 }
 

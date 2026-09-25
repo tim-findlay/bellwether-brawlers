@@ -111,13 +111,15 @@ export class FightWorld {
     }
   }
 
+  // The parry's riposte lives on the parry move as `counter` (Abi's Calendar Block).
   parryCounter(def, att) {
+    const c = { dmg: 12, kb: 7, kbScale: 6, kbAngle: 50, meter: 10, name: 'Declined', callout: 'DECLINED!', ...def.attack?.move.counter };
     def.attack = null;
     this.audio.play('parry');
     this.fx.hitstop(8);
-    this.fx.text(def.x, def.y - 120, 'DECLINED!', '#27425f');
-    att.takeHit({ dmg: 12, kb: 7, kbScale: 6, kbAngle: 50, dir: def.facing, unparryable: true, from: def, move: { name: 'Declined' } });
-    def.gainMeter(10);
+    this.fx.text(def.x, def.y - 120, c.callout, '#27425f');
+    att.takeHit({ dmg: c.dmg, kb: c.kb, kbScale: c.kbScale, kbAngle: c.kbAngle, dir: def.facing, unparryable: true, status: c.applyStatus || null, from: def, move: { name: c.name } });
+    def.gainMeter(c.meter);
   }
 
   hitFeedback(def, slot, dmg, move) {
@@ -232,7 +234,7 @@ export class FightWorld {
     this.zones = this.zones.filter(z => !z.dead);
   }
 
-  // ---- delayed strikes (Richy's columns) -------------------------------------------
+  // ---- delayed strikes (Richy's columns, Tim's Scheduled Send) --------------------
   addStrike(s) {
     const surface = s.surface || this.surfaceBelow(s.x, s.y ?? this.mainSlab.y) || this.mainSlab;
     this.strikes.push({ activeFor: 8, h: 130, w: 36, ...s, y: surface.y });
@@ -248,9 +250,10 @@ export class FightWorld {
       if (def.state === 'ko' || def.chair || def.invulnerable) continue;
       if (s.group && s.groupHit?.done) continue;            // only the first connecting column hits
       if (!overlap({ x: s.x, y: s.y - s.h / 2, w: s.w, h: s.h }, def.hurtbox())) continue;
-      const dmg = s.owner.damageOut(s.dmg, 'super');
+      const slot = s.slot || 'super';
+      const dmg = s.owner.damageOut(s.dmg, slot);
       const res = def.takeHit({ dmg, kb: s.kb ?? 8, kbScale: s.kbScale ?? 14, kbAngle: s.kbAngle ?? 75, dir: def.x < s.x ? -1 : 1, from: s.owner, move: s.move || { name: 'strike' } });
-      if (res === 'hit') { s.owner.gainMeter(dmg * 0.8); this.hitFeedback(def, 'super', dmg); }
+      if (res === 'hit') { s.owner.gainMeter(dmg * 0.8); this.hitFeedback(def, slot, dmg); }
       if (res === 'hit' && s.groupHit) s.groupHit.done = true;
       s.dead = true;
     }
@@ -369,13 +372,16 @@ const BEHAVIORS = {
     w.audio.play('bell');
     w.fx.banner('LAST ORDERS!', { dur: 60, sub: 'specials locked — pressure Abi to cancel the heal' });
   },
+  // Marked strikes around the target. Data: offsets (px from the target), delay +
+  // step (frames), kbAngle, color, slot (meter/feedback class) and onTarget (strike
+  // the surface under the target instead of the main slab). Defaults = Richy's super.
   columns(w, f, m) {
     const def = w.other(f);
     const group = { done: false };
-    const slab = w.mainSlab;
-    [-90, 0, 90].forEach((off, i) => {
+    const slab = (m.onTarget && w.surfaceBelow(def.x, def.y)) || w.mainSlab;
+    (m.offsets || [-90, 0, 90]).forEach((off, i) => {
       const x = Math.max(slab.x + 20, Math.min(slab.x + slab.w - 20, def.x + off));
-      w.addStrike({ x, surface: slab, delay: 26 + i * 14, dmg: m.dmg, kb: m.kb, kbScale: m.kbScale, kbAngle: 80, owner: f, group: true, groupHit: group, marker: true, color: '#3f5a40' });
+      w.addStrike({ x, surface: slab, delay: (m.delay ?? 26) + i * (m.step ?? 14), dmg: m.dmg, kb: m.kb, kbScale: m.kbScale, kbAngle: m.kbAngle ?? 80, owner: f, group: true, groupHit: group, marker: true, color: m.color || '#3f5a40', slot: m.slot || 'super', move: m });
     });
     w.audio.play('special');
   },
