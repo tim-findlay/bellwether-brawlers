@@ -4,8 +4,10 @@ import { Input } from './engine/input.js';
 import { Audio } from './engine/audio.js';
 import { FX } from './engine/effects.js';
 import { Renderer } from './render/draw.js';
-import { loadHeadshots } from './engine/assets.js';
+import { loadHeadshots, loadSprites, loadStageArt } from './engine/assets.js';
 import { ROSTER_IDS } from './data/characters.js';
+import { SPRITES } from './data/sprites.js';
+import { STAGE_IDS_V3 } from './data/stages.js';
 import { makeTitle } from './screens/title.js';
 import { makeMenu } from './screens/menu.js';
 import { makeSelect } from './screens/select.js';
@@ -46,10 +48,15 @@ async function boot() {
   } catch (e) { /* system fallbacks are fine */ }
 
   bootMsg.textContent = 'COLLECTING HEADSHOTS…';
-  const heads = await loadHeadshots(ROSTER_IDS, (p) => { bootBar.style.width = `${(p * 100) | 0}%`; });
+  const heads = await loadHeadshots(ROSTER_IDS, (p) => { bootBar.style.width = `${(p * 40) | 0}%`; });
+  bootMsg.textContent = 'INKING THE SPRITES…';
+  const sprites = await loadSprites(SPRITES, (p) => { bootBar.style.width = `${40 + (p * 40) | 0}%`; });
+  bootMsg.textContent = 'HANGING THE BACKDROPS…';
+  const stageArt = await loadStageArt(STAGE_IDS_V3, (p) => { bootBar.style.width = `${80 + (p * 20) | 0}%`; });
+  renderer.sprites = sprites; renderer.stageArt = stageArt; renderer.heads = heads;
 
   const G = {
-    canvas, input, audio, fx, renderer, heads,
+    canvas, input, audio, fx, renderer, heads, sprites, stageArt,
     rng: mulberry32(Date.now() & 0xffffffff),
     settings: loadJSON('bb.settings', { events: true, difficulty: 'normal', sfx: true }),
     scores: loadJSON('bb.scores', {}),
@@ -84,6 +91,12 @@ async function boot() {
     return;
   }
 
+  const art = qp.get('art');                          // ?art=<stageId>: render harness
+  if (art !== null) {
+    const { makeArt } = await import('./dev/art.js');
+    G.screens.art = makeArt(G);
+  }
+
   const gb = qp.get('graybox');                       // null = absent, '' = flat playground
   if (gb !== null && gb !== '') {
     const { makeVersus } = await import('./screens/versus.js');
@@ -93,7 +106,8 @@ async function boot() {
     G.screens.graybox = makeGraybox(G);
   }
 
-  G.go(gb === null ? 'title' : (gb === '' ? 'graybox' : 'versus'), gb ? { stageId: gb } : undefined);
+  if (art !== null) G.go('art', { stageId: art || 'office' });
+  else G.go(gb === null ? 'title' : (gb === '' ? 'graybox' : 'versus'), gb ? { stageId: gb } : undefined);
 
   let last = performance.now();
   let acc = 0;

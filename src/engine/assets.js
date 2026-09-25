@@ -1,9 +1,28 @@
-// Manifest-driven headshot loader with graceful fallback.
-// Dropping assets/headshots/<id>.png into the repo makes it Just Work —
-// the manifest is the roster id list, and missing/failed files fall back
-// to the character's drawn cartoon head.
+// Manifest-driven asset loaders with graceful fallback.
+//  - headshots: assets/headshots/<id>.png -> select-card / in-world variants
+//  - stage art: assets/stages/<id>.png    -> 480x270 pixel backdrop (v3 world)
+//  - sprites:   assets/sprites/<id>/<anim>.png via render/sprites.js
+// Dropping a file into the repo makes it Just Work — the manifest is the
+// id list, and missing/failed files fall back to the drawn versions.
+
+import { loadSprites } from '../render/sprites.js';
+export { loadSprites };
 
 const TIMEOUT_MS = 4000;
+
+// Map stageId -> Image | null. A backdrop is a 480x270 pixel painting drawn
+// x4 with nearest-neighbour behind the slab (see render/stage.js).
+export async function loadStageArt(stageIds, onProgress) {
+  const art = new Map();
+  let done = 0;
+  await Promise.all(stageIds.map(async (id) => {
+    const img = await loadImage(`assets/stages/${id}.png`);
+    art.set(id, img);
+    done++;
+    if (onProgress) onProgress(done / stageIds.length, id);
+  }));
+  return art;
+}
 
 export async function loadHeadshots(ids, onProgress) {
   const heads = new Map();

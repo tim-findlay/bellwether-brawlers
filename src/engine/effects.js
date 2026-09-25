@@ -1,8 +1,10 @@
 // Game feel: hitstop, screenshake, slow-mo, particles, floating text, banners.
-// World-space drawing happens on the 480x270 buffer; banners/floaters on the
-// full-res UI layer.
+// v3: particles and floaters live in WORLD px. drawWorld(ctx) is called
+// inside the camera transform (particles are world objects — no zoom
+// compensation); drawUI(ctx, camera) projects floaters through
+// camera.worldToScreen and draws banners/flash in 960x540 screen space.
 
-import { WORLD_W, WORLD_H } from '../render/draw.js';
+const VIEW_W = 960, VIEW_H = 540;
 
 export class FX {
   constructor(audio) {
@@ -26,47 +28,50 @@ export class FX {
   timeScale() { return this.slowFrames > 0 ? this.slowScale : 1; }
   flash(color = '#fff', frames = 4) { this.flashColor = color; this.flashFrames = frames; }
 
+  // Screenshake offset in SCREEN px (rides camera.apply's shake args). `mag`
+  // keeps its v2 meaning (buffer px), hence the x2.
   camera() {
     if (this.shakeFrames <= 0) return { x: 0, y: 0 };
-    const m = this.shakeMag * (this.shakeFrames > 4 ? 1 : this.shakeFrames / 4);
+    const m = this.shakeMag * 2 * (this.shakeFrames > 4 ? 1 : this.shakeFrames / 4);
     return { x: (Math.random() * 2 - 1) * m, y: (Math.random() * 2 - 1) * m * 0.6 };
   }
 
+  // Particle emitters take WORLD coords; speeds/sizes are world px (v2 x2).
   spark(x, y, color, n = 6, spd = 1.6) {
     for (let i = 0; i < n; i++) {
       const a = Math.random() * Math.PI * 2;
-      const v = spd * (0.4 + Math.random() * 0.8);
-      this.particles.push({ x, y, vx: Math.cos(a) * v, vy: Math.sin(a) * v - 0.6, g: 0.08, life: 14 + (Math.random() * 8 | 0), color, size: Math.random() < 0.4 ? 2 : 1 });
+      const v = spd * 2 * (0.4 + Math.random() * 0.8);
+      this.particles.push({ x, y, vx: Math.cos(a) * v, vy: Math.sin(a) * v - 1.2, g: 0.16, life: 14 + (Math.random() * 8 | 0), color, size: Math.random() < 0.4 ? 4 : 2 });
     }
   }
 
   dust(x, y, color = '#cbbfa6', n = 4) {
     for (let i = 0; i < n; i++) {
-      this.particles.push({ x: x + (Math.random() * 10 - 5), y, vx: (Math.random() - 0.5) * 0.8, vy: -0.3 - Math.random() * 0.4, g: 0.01, life: 18 + (Math.random() * 10 | 0), color, size: 2 });
+      this.particles.push({ x: x + (Math.random() * 20 - 10), y, vx: (Math.random() - 0.5) * 1.6, vy: -0.6 - Math.random() * 0.8, g: 0.02, life: 18 + (Math.random() * 10 | 0), color, size: 4 });
     }
   }
 
   ember(x, y, n = 3) {
     for (let i = 0; i < n; i++) {
-      this.particles.push({ x: x + (Math.random() * 14 - 7), y: y - Math.random() * 4, vx: (Math.random() - 0.5) * 0.3, vy: -0.4 - Math.random() * 0.5, g: -0.005, life: 22 + (Math.random() * 12 | 0), color: Math.random() < 0.5 ? '#d8762e' : '#b3402e', size: Math.random() < 0.3 ? 2 : 1 });
+      this.particles.push({ x: x + (Math.random() * 28 - 14), y: y - Math.random() * 8, vx: (Math.random() - 0.5) * 0.6, vy: -0.8 - Math.random(), g: -0.01, life: 22 + (Math.random() * 12 | 0), color: Math.random() < 0.5 ? '#d8762e' : '#b3402e', size: Math.random() < 0.3 ? 4 : 2 });
     }
   }
 
   confetti(x, y, n = 14) {
     const cols = ['#c4452e', '#c9a227', '#27425f', '#3f5a40', '#f2e9d8'];
     for (let i = 0; i < n; i++) {
-      this.particles.push({ x, y, vx: (Math.random() - 0.5) * 3, vy: -1.5 - Math.random() * 2, g: 0.09, life: 40 + (Math.random() * 30 | 0), color: cols[i % cols.length], size: 2 });
+      this.particles.push({ x, y, vx: (Math.random() - 0.5) * 6, vy: -3 - Math.random() * 4, g: 0.18, life: 40 + (Math.random() * 30 | 0), color: cols[i % cols.length], size: 4 });
     }
   }
 
-  // Floating combat text in world coords (drawn on UI layer at 2x).
+  // Floating combat text at WORLD coords (projected on the UI layer).
   text(x, y, str, color = '#f2e9d8') {
     this.floaters.push({ x, y, str, color, t: 0, dur: 45 });
   }
 
   banner(text, { sub = '', dur = 110, color = '#2b2620', bg = '#f2e9d8', sound = null } = {}) {
     this.banners.push({ text, sub, t: 0, dur, color, bg });
-    if (sound) this.audio.play(sound);
+    if (sound) this.audio?.play?.(sound);
   }
 
   bannerActive() { return this.banners.length > 0; }
@@ -80,32 +85,35 @@ export class FX {
       p.x += p.vx; p.y += p.vy; p.vy += p.g; p.life--;
     }
     this.particles = this.particles.filter(p => p.life > 0);
-    for (const f of this.floaters) { f.t++; f.y -= 0.35; }
+    for (const f of this.floaters) { f.t++; f.y -= 0.7; }
     this.floaters = this.floaters.filter(f => f.t < f.dur);
     for (const b of this.banners) b.t++;
     this.banners = this.banners.filter(b => b.t < b.dur);
   }
 
+  // Inside the camera transform: world objects, world px.
   drawWorld(ctx) {
     for (const p of this.particles) {
       ctx.globalAlpha = Math.min(1, p.life / 10);
       ctx.fillStyle = p.color;
-      ctx.fillRect(p.x | 0, p.y | 0, p.size, p.size);
+      ctx.fillRect(Math.round(p.x), Math.round(p.y), p.size, p.size);
     }
     ctx.globalAlpha = 1;
   }
 
-  drawUI(ctx) {
-    // floating text (world coords -> 2x screen)
+  // Screen space (identity transform). `camera` projects the floaters; with
+  // no camera they are treated as already-screen coords.
+  drawUI(ctx, camera = null) {
     for (const f of this.floaters) {
       const a = f.t < 8 ? f.t / 8 : f.t > f.dur - 12 ? (f.dur - f.t) / 12 : 1;
+      const s = camera?.worldToScreen ? camera.worldToScreen(f.x, f.y) : { x: f.x, y: f.y };
       ctx.globalAlpha = Math.max(0, a);
       ctx.font = "12px 'Silkscreen'";
       ctx.textAlign = 'center';
       ctx.fillStyle = '#2b2620';
-      ctx.fillText(f.str, f.x * 2 + 1, f.y * 2 + 1);
+      ctx.fillText(f.str, Math.round(s.x) + 1, Math.round(s.y) + 1);
       ctx.fillStyle = f.color;
-      ctx.fillText(f.str, f.x * 2, f.y * 2);
+      ctx.fillText(f.str, Math.round(s.x), Math.round(s.y));
     }
     ctx.globalAlpha = 1;
     // banners — paper slab with ink text, slides in/out
@@ -118,7 +126,7 @@ export class FX {
       const w = Math.max(360, b.text.length * 26 + 80);
       ctx.save();
       ctx.globalAlpha = Math.min(1, k * 1.2);
-      const x = 480 - w / 2;
+      const x = VIEW_W / 2 - w / 2;
       ctx.fillStyle = '#2b2620';
       ctx.fillRect(x + 5, y - 37 + 5, w, b.sub ? 86 : 64);
       ctx.fillStyle = b.bg;
@@ -129,11 +137,11 @@ export class FX {
       ctx.fillStyle = b.color;
       ctx.font = "700 30px 'Pixelify Sans'";
       ctx.textAlign = 'center';
-      ctx.fillText(b.text, 480, y);
+      ctx.fillText(b.text, VIEW_W / 2, y);
       if (b.sub) {
         ctx.font = "600 17px 'Barlow Condensed'";
         ctx.fillStyle = '#5a5246';
-        ctx.fillText(b.sub, 480, y + 26);
+        ctx.fillText(b.sub, VIEW_W / 2, y + 26);
       }
       ctx.restore();
     }
@@ -141,7 +149,7 @@ export class FX {
     if (this.flashFrames > 0) {
       ctx.globalAlpha = this.flashFrames / 10;
       ctx.fillStyle = this.flashColor;
-      ctx.fillRect(0, 0, 960, 540);
+      ctx.fillRect(0, 0, VIEW_W, VIEW_H);
       ctx.globalAlpha = 1;
     }
   }

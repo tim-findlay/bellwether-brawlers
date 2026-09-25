@@ -3,9 +3,14 @@
 // Adding a stage = adding an object here and (if selectable) it appears in
 // the stage select automatically.
 
-import { GROUND_Y } from '../engine/fighter.js';
-
 const W = 480;
+const GROUND_Y = 232;   // v2 art-space ground line of the 480x270 backdrop buffer
+
+// `art` (v3 world renderer, src/render/stage.js) — how the world-scale stage
+// dresses its geometry: `platforms` gives one style per geometry.platforms
+// entry (shelf | tray | rail | awning | sign | bench | roof), `far` is the
+// distant-floor band under the backdrop, `parallax` how much the backdrop
+// lags the camera (0 = pinned to screen, 1 = same plane as the slab).
 
 // ---- tiny pixel helpers ----------------------------------------------------
 
@@ -83,6 +88,7 @@ export const STAGES = [
         }
       }},
     ],
+    art: { platforms: ['shelf', 'shelf', 'tray'], far: '#b9c6cf', parallax: 0.3 },
     // THE OFFICE — symmetric tri-plat (the tournament stage)
     geometry: {
       slabs: [{ x: 920, y: 760, w: 560, h: 70 }],
@@ -139,6 +145,7 @@ export const STAGES = [
         }
       }},
     ],
+    art: { platforms: ['rail', 'rail'], far: '#aaa393', parallax: 0.3 },
     // PALACE FORECOURT — widest, flattest (the zoner's stage)
     geometry: {
       slabs: [{ x: 820, y: 780, w: 760, h: 70 }],
@@ -195,6 +202,7 @@ export const STAGES = [
         rect(ctx, sx + 14 + swing * 1.6, 146, 12, 8, '#f0d98a'); // little bellwether
       }},
     ],
+    art: { platforms: ['awning', 'sign', 'bench'], far: '#a58a6a', parallax: 0.3 },
     // THE BELLWETHER ARMS — asymmetric (the scrappy local)
     geometry: {
       slabs: [{ x: 940, y: 770, w: 520, h: 70 }],
@@ -242,6 +250,7 @@ export const STAGES = [
         rect(ctx, 70 + ox, 190, 4, 40, '#3a4255');
       }},
     ],
+    art: { platforms: ['roof'], far: '#4d5674', parallax: 0.3 },
     // BERLIN — the gate (event-only)
     geometry: {
       slabs: [{ x: 890, y: 790, w: 620, h: 70 }],
@@ -261,7 +270,13 @@ export const SELECTABLE_STAGES = STAGES.filter(s => s.selectable);
 export const STAGE_IDS_V3 = ['office', 'palace', 'pub', 'berlin'];
 export function geometryOf(id) { return stageById(id)?.geometry ?? null; }
 
-// Shared stage background painter used by the renderer.
+// Layers only (no sky, no ground): the v3 world renderer paints these into a
+// transparent 480x270 buffer and scales it x4 behind the floating slab.
+export function drawStageLayers(ctx, stage, t, parallaxX) {
+  for (const layer of stage.layers) layer.draw(ctx, t, -parallaxX * layer.depth);
+}
+
+// Shared stage background painter used by the v2 renderer + select preview.
 export function drawStage(ctx, stage, t, parallaxX) {
   const g = ctx.createLinearGradient(0, 0, 0, 270);
   g.addColorStop(0, stage.sky[0]);
