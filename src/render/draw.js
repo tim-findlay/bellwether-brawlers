@@ -127,7 +127,7 @@ export class Renderer {
     }
     if (!hasAnim(sheet, anim)) { if (!hasAnim(sheet, 'idle')) return false; anim = 'idle'; frame = 0; }
     const x = f.x ?? f.body?.x ?? 0, y = f.y ?? f.body?.y ?? 0;
-    const scale = f.body?.h ? f.body.h / (A[anim].cell || 64) : SPRITE_SCALE;   // 96 / 64 = SPRITE_SCALE
+    const scale = (f.body?.h ? f.body.h / (A[anim].cell || 64) : SPRITE_SCALE) * (sheet.scale ?? 1);   // 96 / 64 = SPRITE_SCALE; art height per fighter
     if (an.name === 'chair' && f.chair) drawChair(c, f.chair.x ?? x, f.chair.y ?? y, f.cfg?.body?.suit, f.body?.facing ?? 1);
     else if (f.body?.grounded) { c.fillStyle = 'rgba(43,38,32,0.22)'; c.fillRect(Math.round(x - 20), Math.round(y - 2), 40, 4); }
     drawSprite(c, sheet, anim, frame, x, y, f.body?.facing ?? f.facing ?? 1, scale, opts);

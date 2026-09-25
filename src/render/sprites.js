@@ -12,7 +12,7 @@ export async function loadSprites(manifest, onProgress) {
   const out = new Map();
   const jobs = [];
   for (const [id, def] of Object.entries(manifest)) {
-    const sheet = { anims: {} };
+    const sheet = { anims: {}, scale: def.scale ?? 1 };   // per-fighter art height (render only)
     out.set(id, sheet);
     for (const [name, a] of Object.entries(def.anims)) {
       jobs.push({ id, name, sheet, def, a });

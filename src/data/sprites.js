@@ -14,14 +14,18 @@ const KIT = () => ({
   attack: { frames: 6, fps: 16, loop: false },
 });
 
+// `scale` is the fighter's art height relative to the 96 px hurtbox (render
+// only: hitboxes, hurtboxes and physics never read it). The sheets are all
+// normalised to the same cell height, so this is where Abi is drawn a touch
+// shorter than Tim and Mike (broad, plus a hard hat) is brought back in line.
 export const SPRITES = {
   ben:    { cell: 64, anims: KIT() },
   tim:    { cell: 64, anims: KIT() },
   adrian: { cell: 64, anims: KIT() },
   richy:  { cell: 64, anims: KIT() },
   nick:   { cell: 64, anims: KIT() },
-  abi:    { cell: 64, anims: KIT() },
-  mike:   { cell: 64, anims: KIT() },
+  abi:    { cell: 64, scale: 0.93, anims: KIT() },
+  mike:   { cell: 64, scale: 0.96, anims: KIT() },
   seelye: { cell: 64, anims: KIT() },
 };
 

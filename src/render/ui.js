@@ -226,7 +226,7 @@ export function fighter(c, G, cfg, x, y, scale, { anim = 'idle', t = 0, facing =
   const sheet = G.sprites?.get?.(cfg.id);
   const name = hasAnim(sheet, anim) ? anim : 'idle';
   if (hasAnim(sheet, name)) {
-    drawSprite(c, sheet, name, frameFor(sheet.anims[name], t), x, y, facing, scale, { tint, tintAlpha: 0.9, alpha });
+    drawSprite(c, sheet, name, frameFor(sheet.anims[name], t), x, y, facing, scale * (sheet.scale ?? 1), { tint, tintAlpha: 0.9, alpha });
     return;
   }
   c.save();

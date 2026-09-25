@@ -5,7 +5,7 @@ export default {
   tagline: 'Runs the office. Declines your meeting.',
   win: 'Right, that’s enough. Wine’s on you.',
   tip: 'Pressure through Last Orders — one hit cancels the regen. Bait the parry: it does nothing to projectiles or grabs.',
-  body: { suit: '#a83a2e', trim: '#f3ead8', skin: '#edd3b6', hair: { color: '#e6c977', style: 'long' }, trousers: '#f1ece2', height: 0.92, extras: [] },   // brick-red blazer, cream blouse, white trousers
+  body: { suit: '#a83a2e', trim: '#f3ead8', skin: '#edd3b6', hair: { color: '#e6c977', style: 'long' }, trousers: '#f1ece2', height: 0.93, extras: [] },   // brick-red blazer, cream blouse, white trousers
   stats: { gauge: 96, runMax: 5.6, jumpImpulse: 15.5, fallMax: 13, weight: 1.0 },
   light: { name: 'Reschedule', dmg: 5, kb: 4.5, kbScale: 5, kbAngle: 40, range: 56, startup: 4, active: 3, recover: 10 },
   heavy: { name: 'Double-Booked', dmg: 10, kb: 7, kbScale: 12.5, kbAngle: 35, range: 62, startup: 10, active: 3, recover: 18 },
