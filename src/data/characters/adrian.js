@@ -13,6 +13,7 @@ export default {
   s1: { name: 'Clumsy Charge', kind: 'lunge', air: true, dmg: 11, kb: 8, kbScale: 11, kbAngle: 35, travel: 170, range: 50, startup: 8, active: 8, recover: 18, cooldown: 380, whiffTrip: true },
   s2: { name: 'Nero Spill', kind: 'zone', startup: 12, recover: 16, cooldown: 380, zone: { type: 'coffee', w: 92, life: 260, ahead: 110, ownerImmune: true } },
   super: { name: 'Full Audit', kind: 'flurry', dmg: 4, totalDmg: 20, maxHits: 5, rehit: 6, kb: 3, kbScale: 4, kbAngle: 50, range: 54, travel: 150, startup: 8, active: 30, recover: 20, endTrip: true, aiRange: [60, 220] },
+  tripHit: { name: 'Happy Accident', dmg: 6, kb: 5, kbScale: 5, kbAngle: 75, range: 70 },   // a whiffed trip can still hit
   kit: { names: { sLight: 'Elbow Room', dLight: 'Trip Hazard', sSig: 'Table Flip', dSig: 'Pivot Up', recovery: 'Overshoot', groundPound: 'Facedown' },
     sigs: { s: { kbScale: 11 } },
     recovery: { travel: 140, lift: 7, whiffStagger: true },                 // Overshoot: furthest sideways, lowest, lands in a heap on a whiff

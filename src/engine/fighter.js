@@ -158,20 +158,36 @@ export class Fighter {
       this.attack = null;
       // Adrian's tax: a whiffed lunge trips — on the ground now, in the air on the
       // botched landing (DESIGN: "self-staggers on a botched landing").
-      if (whiffed && m.whiffTrip) { if (this.grounded) this.stagger(SELF_STAGGER, true); else this.tripOnLand = true; }
+      if (whiffed && m.whiffTrip) { if (this.grounded) this.stagger(SELF_STAGGER, true, true); else this.tripOnLand = true; }
       else if (m.endTrip) this.stagger(SELF_STAGGER, true);
       if (whiffed && this.cfg.hooks?.onWhiff) this.cfg.hooks.onWhiff(this, m);
     }
   }
 
-  stagger(frames, selfInflicted = false) {
+  // accident: the trip came from a whiffed move (not Full Audit's planned end-trip)
+  stagger(frames, selfInflicted = false, accident = false) {
     this.attack = null; this.landLag = 0;
     this.state = 'stagger'; this.stateT = 0; this.staggerT = frames;
     if (selfInflicted) {
       this.world.audio.play('slip');
       this.world.fx.dust(this.x, this.y, '#cbbfa6', 6);
       this.world.fx.text(this.x, this.y - 110, 'OOPS', '#c4452e');
+      if (accident && this.cfg.tripHit) this._tripHit(this.cfg.tripHit);
     } else this.hazardInv = frames + 12;                       // hazard stagger: never comboable
+  }
+
+  // Adrian's Happy Accident: the fall itself is a small hitbox at arm's reach.
+  // The self-stagger still runs in full — the punish window survives.
+  _tripHit(m) {
+    const o = this.opp, w = this.world;
+    if (!o || o.chair || o.state === 'ko' || Math.abs(o.x - this.x) > (m.range || 70) || Math.abs(o.y - this.y) > 50) return;
+    const dmg = this.damageOut(m.dmg, 'special');
+    const res = o.takeHit({ dmg, kb: m.kb, kbScale: m.kbScale, kbAngle: m.kbAngle, dir: Math.sign(o.x - this.x) || this.facing, from: this, move: m });
+    if (res === 'parried') { w.parryCounter(o, this); return; }
+    if (res !== 'hit') return;
+    this.gainMeter(dmg * 0.8);
+    w.hitFeedback(o, 'special', dmg, m);
+    w.fx.text(this.x, this.y - 130, 'HAPPY ACCIDENT!', '#c9a227');
   }
 
   // ---- damage intake -------------------------------------------------------
@@ -282,7 +298,7 @@ export class Fighter {
         this.landLag = m.landLag || 8; this.attack = null;
         if (whiffed && m.whiffStagger) this.tripOnLand = true;     // Faceplant: whiffed dair, botched landing
       }
-      if (this.tripOnLand) { this.tripOnLand = false; this.stagger(SELF_STAGGER, true); }
+      if (this.tripOnLand) { this.tripOnLand = false; this.stagger(SELF_STAGGER, true, true); }
       this.recoveryUsed = false;
       this.world.fx.dust(this.x, this.y, '#cbbfa6', 3);
     }

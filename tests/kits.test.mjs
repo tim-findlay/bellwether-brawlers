@@ -84,3 +84,14 @@ test('Mike: holding back on Scaffold Slam throws over the shoulder', () => {
   assert.ok(throwVx(false) > 0, 'forward throw sends them forward');
   assert.ok(throwVx(true) < 0, 'back throw sends them behind Mike');
 });
+
+test('Adrian: a whiffed-lunge trip can hit (Happy Accident) and still self-staggers', () => {
+  const { w, c, a, b } = mk('adrian', 'mike');
+  b.body.x = a.x - 60;                        // behind him: the lunge whiffs forward, the fall reaches back
+  a.body.facing = 1;
+  c[0].q.add('s1'); run(w, 1);
+  const g0 = b.gauge;
+  for (let i = 0; i < 120 && a.state !== 'stagger'; i++) { b.body.x = a.x - 60; run(w, 1); }
+  assert.equal(a.state, 'stagger', 'the whiff trips him');
+  assert.ok(b.gauge < g0, 'the fall hits the fighter in reach');
+});
