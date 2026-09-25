@@ -4,7 +4,7 @@ import { Input } from './engine/input.js';
 import { Audio } from './engine/audio.js';
 import { FX } from './engine/effects.js';
 import { Renderer } from './render/draw.js';
-import { loadHeadshots, loadSprites, loadStageArt } from './engine/assets.js';
+import { loadHeadshots, loadSprites, loadStageArt, loadUIArt } from './engine/assets.js';
 import { ROSTER_IDS } from './data/characters.js';
 import { SPRITES } from './data/sprites.js';
 import { STAGE_IDS_V3 } from './data/stages.js';
@@ -13,6 +13,8 @@ import { makeMenu } from './screens/menu.js';
 import { makeSelect } from './screens/select.js';
 import { makeFight } from './screens/fight.js';
 import { makeResults } from './screens/results.js';
+import { makeSplash } from './screens/splash.js';
+import { Wipe } from './render/ui.js';
 
 const DT = 1000 / 60;
 
@@ -37,6 +39,7 @@ async function boot() {
   const audio = new Audio();
   const fx = new FX(audio);
   const renderer = new Renderer(canvas);
+  const wipe = new Wipe();
 
   bootMsg.textContent = 'WARMING UP THE PRINTERS…';
   try {
@@ -53,12 +56,13 @@ async function boot() {
   const sprites = await loadSprites(SPRITES, (p) => { bootBar.style.width = `${40 + (p * 40) | 0}%`; });
   bootMsg.textContent = 'HANGING THE BACKDROPS…';
   const stageArt = await loadStageArt(STAGE_IDS_V3, (p) => { bootBar.style.width = `${80 + (p * 20) | 0}%`; });
+  const uiArt = await loadUIArt();
   renderer.sprites = sprites; renderer.stageArt = stageArt; renderer.heads = heads;
 
   const G = {
-    canvas, input, audio, fx, renderer, heads, sprites, stageArt,
+    canvas, input, audio, fx, renderer, heads, sprites, stageArt, uiArt,
     rng: mulberry32(Date.now() & 0xffffffff),
-    settings: loadJSON('bb.settings.v3', { events: true, difficulty: 'easy', sfx: true }),
+    settings: loadJSON('bb.settings.v3', { events: true, difficulty: 'easy', sfx: true, shake: true }),
     scores: loadJSON('bb.scores', {}),
     saveSettings() { saveJSON('bb.settings.v3', G.settings); },
     saveScores() { saveJSON('bb.scores', G.scores); },
@@ -66,11 +70,14 @@ async function boot() {
     screen: null,
     go(name, p) {
       input.lockout(20);                    // transition rule: no buffered press leaks through
+      if (G.screen && name !== 'art') wipe.start();
+      G.screenName = name;
       G.screen = G.screens[name];
       G.screen.enter(p);
     },
   };
   audio.setEnabled(G.settings.sfx);
+  fx.shakeScale = G.settings.shake === false ? 0 : 1;
 
   window.__G = G;                         // dev: inspectable from the drive harness
   G.screens.title = makeTitle(G);
@@ -78,6 +85,7 @@ async function boot() {
   G.screens.select = makeSelect(G);
   G.screens.fight = makeFight(G);
   G.screens.results = makeResults(G);
+  G.screens.splash = makeSplash(G);
 
   bootEl.classList.add('done');
 
@@ -120,10 +128,13 @@ async function boot() {
       input.beginFrame();
       G.screen.update();
       fx.update();
+      wipe.update();
       acc -= DT;
       steps++;
     }
     G.screen.draw();
+    renderer.ctx.setTransform(1, 0, 0, 1, 0, 0);
+    wipe.draw(renderer.ctx);
     requestAnimationFrame(loop);
   }
   requestAnimationFrame(loop);

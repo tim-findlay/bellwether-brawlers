@@ -2,6 +2,7 @@
 //  - headshots: assets/headshots/<id>.png -> win-screen / in-world variants
 //  - stage art: assets/stages/<id>.png    -> 480x270 pixel backdrop (v3 world)
 //  - sprites:   assets/sprites/<id>/<anim>.png via render/sprites.js
+//  - ui art:    assets/ui/<name>.png (logo, vs, trophy) -> front-end screens
 // Dropping a file into the repo makes it Just Work — the manifest is the
 // id list, and missing/failed files fall back to the drawn versions.
 
@@ -24,6 +25,16 @@ export async function loadStageArt(stageIds, onProgress) {
     done++;
     if (onProgress) onProgress(done / stageIds.length, id);
   }));
+  return art;
+}
+
+// Map name -> Image | null for front-end art (assets/ui/<name>.png): the
+// Higgsfield title logo, VS emblem and trophy. Missing files -> null and the
+// UI kit (render/ui.js) draws its own version instead — same drop-in rule.
+export const UI_ART = ['logo', 'vs', 'trophy'];
+export async function loadUIArt(names = UI_ART) {
+  const art = new Map();
+  await Promise.all(names.map(async (n) => art.set(n, await loadImage(`assets/ui/${n}.png`))));
   return art;
 }
 
