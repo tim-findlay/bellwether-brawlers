@@ -46,7 +46,7 @@
 | DASH_COOLDOWN | 16f after dash ends | DASH_JUMP_CARRY | 1.0 (full) |
 | COYOTE_FRAMES | 5 | INPUT_BUFFER | 6f |
 | HITSTUN_PER_KB | 2.4 | LAUNCH_DRAG | 0.98 (vx × this per frame while stunned in the air) |
-| STUN_LANDING_CLEARS | true (landing ends hitstun — no tech) | DODGE_COOLDOWN | 60f |
+| STUN_LANDING_CLEARS | false (hitstun is time-based; a landing keeps the remaining frames as ground flinch) | DODGE_COOLDOWN | 60f |
 | STEP_DODGE_IMPULSE | 6 | SPOT_DODGE_DURATION | 18f (i-frames 2–13) |
 | AIR_DODGE_DURATION | 22f (i-frames 3–15) | AIR_DODGE_IMPULSE | 7 |
 | DROP_THROUGH_GRACE | 8f | AIR_MOMENTUM_DECAY | 0.985 |

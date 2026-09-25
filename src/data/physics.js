@@ -32,7 +32,7 @@ export const PHYS = {
   DROP_THROUGH_GRACE: 8,    // frames of soft-platform collision ignored after a drop
   HITSTUN_PER_KB: 2.4,      // hitstun frames = round(kb * this)
   LAUNCH_DRAG: 0.98,        // per-frame vx multiplier while stunned in the air
-  STUN_LANDING_CLEARS: true,// landing ends hitstun (tech-less, Brawlhalla-style)
+  STUN_LANDING_CLEARS: false,// hitstun is time-based; a landing keeps the remaining frames as ground flinch
   AIR_MOMENTUM_DECAY: 0.985, // per-frame decay of vx above AIR_MAX (dash-jump arc length)
   GROUND_DEADZONE: 0.05,    // |vx| snap-to-zero threshold under friction
 };

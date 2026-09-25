@@ -341,7 +341,7 @@ test('blast asymmetry: generous going up, strict going down', () => {
   assert.equal(out({ x: 640, y: -250 }, -1), false);       // head (~-346) past top, feet not: alive
 });
 
-test('launch(): stun locks intent, applies launch drag in the air, and landing clears it', () => {
+test('launch(): stun locks intent, applies launch drag in the air, and times out', () => {
   const b = landed();
   b.launch(9, -8, 30);
   assert.equal(b.grounded, false);
@@ -353,9 +353,19 @@ test('launch(): stun locks intent, applies launch drag in the air, and landing c
   assert.equal(b.stun, 29);
   step(b, IDLE, 120);                                      // falls back to the slab
   assert.equal(b.grounded, true);
-  assert.equal(b.stun, 0, 'landing ends hitstun');
+  assert.equal(b.stun, 0, 'hitstun timed out');
   step(b, { jump: true });
   assert.ok(b.vy < 0, 'actionable again');
+});
+
+test('launch(): a soft landing keeps the remaining hitstun as ground flinch', () => {
+  const b = landed();
+  b.launch(2, -2, 40);                                     // a light: tiny pop
+  step(b, IDLE, 12);
+  assert.equal(b.grounded, true);
+  assert.ok(b.stun > 0, 'still flinching on the ground');
+  step(b, { jump: true });
+  assert.equal(b.consumedJump, false);
 });
 
 test('skid-turn accelerates harder than a normal run start', () => {
