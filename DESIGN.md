@@ -55,9 +55,10 @@ Physical key positions (`KeyboardEvent.code`), US labels. All bound keys `preven
 
 ## Art direction
 
-- **Fidelity:** near-HD ink-outline characters (~128 px source height) with flat posterized shading — "Brawlhalla, faintly pixel-flavoured". The 480×270 pixel buffer retires; the world draws at full canvas resolution through the camera. Palette and fonts carry over from v2 (paper `#f2e9d8`, ink `#2b2620`, brick, navy, brass; Pixelify Sans / Silkscreen / Barlow Condensed).
-- **Animation rig:** one shared procedural 2D skeleton (torso, head, two-segment arms and legs) drawn as ink-outlined limbs. Keyframed pose cycles shared by the cast: idle breathing, run cycle (legs pump, arms swing), jump tuck, fall splay, fast-fall dive, dash lean, dodge roll, hitstun flail, launch tumble, KO ink-burst, plus per-move swing poses tagged in character data. Characters are proportions + palette + **outfit layers** riding the rig (coat, satchel, scarf, hardhat…) with secondary motion — coat-tails and bag-sway sell the momentum.
-- **Heads are drawn**, same style and grid as the body. The real photos live on select cards and win screens only (`assets/headshots/<id>.png`, manifest + drawn fallback, drop-in rule unchanged).
+- **Fidelity (Phase 3, shipped):** chunky 16-bit pixel-art fighters on a 64 px cell grid drawn at 1.5× (96 world px tall) with nearest-neighbour scaling, over stages drawn at full canvas resolution through the camera. The 480×270 pixel buffer survives only for the title backdrop and select previews. Palette and fonts carry over from v2 (paper `#f2e9d8`, ink `#2b2620`, brick, navy, brass; Pixelify Sans / Silkscreen / Barlow Condensed). **Not neon:** no glows, bloom or scanlines; daylight stages, diegetic light only.
+- **Sprites (Higgsfield pipeline):** every fighter has four sheets — `assets/sprites/<id>/idle.png` (6 frames @ 6 fps), `run.png` (8 @ 14), `jump.png` (6 @ 12), `attack.png` (6 @ 16) — described by `src/data/sprites.js` and animated by `src/render/sprites.js`. They were generated with Higgsfield (`gpt_image_2_5` sprite strips from one shared style formula and a per-character description; key-colour background), sliced to 64 px cells, quantized to 24 colours and saved as PNG-8. Sprites face right; the renderer mirrors. Anim mapping: `idle→idle`, `run|dash→run` (dash at 1.6×), `jump→jump` frames 0–40 %, `fall→jump` frames 60–100 % held, `attack→attack` scrubbed across startup+active+recover, `land→idle` squashed, `dodge→run` frame 3 at half alpha, `hurt|launched|stagger→idle` tinted (launched rotates with velocity), `ko→` ink-burst, `chair→` idle on the drawn chair.
+- **Drop-in rule:** a missing sheet (or a missing `SPRITES` entry) falls back to the drawn body in `src/render/body.js` (shared skeleton + outfit palette from character data), exactly as a missing headshot falls back to the cartoon head. Adding `assets/sprites/<newId>/…` must Just Work.
+- **Heads:** the real photos live on select cards and win screens only (`assets/headshots/<id>.png`, manifest + drawn fallback, drop-in rule unchanged).
 - **Camera:** follows the fighters' midpoint, zooms continuously to frame both with padding, clamps to per-stage bounds, eased follow; screenshake composes on top. Off-screen fighters get an edge arrow until they recover or KO.
 
 ## Architecture (ES modules, zero build)
@@ -65,6 +66,8 @@ Physical key positions (`KeyboardEvent.code`), US labels. All bound keys `preven
 ```
 index.html                    entry point
 assets/headshots/<id>.png     drop-in portraits (select/win screens)
+assets/sprites/<id>/<anim>.png drop-in sprite sheets (idle/run/jump/attack)
+src/data/sprites.js           sheet descriptions (cell, frames, fps) + SPRITE_SCALE
 src/main.js                   boot, fixed-timestep loop, screen router
 src/data/physics.js           ← universal movement & knockback constants
 src/data/characters/<id>.js   one fighter per file (+ index.js roster);
@@ -78,7 +81,9 @@ src/engine/combat.js          knockback/stocks + ported move-kind dispatch,
                               statuses, hooks (preHit / onProjectileResolved)
 src/engine/ai/                navigation, tactics, recovery, edge-guard
 src/engine/                   input, effects, audio, assets, events (ported)
-src/render/rig.js             skeleton, pose cycles, outfit layers
+src/render/sprites.js         sheet loader + frame picker + mirrored draw
+src/render/body.js            drawn fallback body, KO burst, respawn chair
+src/render/stage.js, objects.js  stage dressing / projectiles, zones, hazards
 src/render/draw.js, hud.js    world compositor, gauge/stock/meter HUD
 src/screens/                  title, menu, select, fight, results (ported)
 src/dev/sim.js                balance harness (?sim=N)
@@ -98,6 +103,8 @@ Five phases, small rollbackable commits throughout; the page must load clean aft
 3. **Characters in pairs** — Ben+Tim, Adrian+Richy, Nick+Abi, Mike+Seelye; aerials, rig outfits, retuned specials. Playable after each pair.
 4. **AI** — navigation, recovery, edge-guarding, Easy/Normal/Hard.
 5. **Content & gates** — hazards rework, music (incl. the Seelye trigger), random card, help text; then the full sim-gate run and BALANCE.md results.
+
+**Status (2026-09-25):** Phases 1–5 landed on `claude/practical-dirac-j8nqlb` in the Phase-3 revamp (plan: `docs/superpowers/plans/2026-09-25-phase3-revamp.md`): momentum core retuned for pace, v3 combat (composure, launches, aerials, stocks, chair), Higgsfield sprite sheets for all eight, camera + world-scale stages, platform-aware CPU, events ported, and balance pass 1 with all five sim gates passing (BALANCE.md). Open: stage backdrops (`assets/stages/<id>.png` is wired but not generated), a human feel playtest of the retune, and a second balance pass after it.
 
 **Port list (carry from v2):** move-kind dispatch, statuses + callouts, hooks, input buffering, FX (hitstop/shake/slow-mo/particles), audio synth bank, EventDirector, screens/router, headshot pipeline, localStorage tallies, sim harness skeleton. **Drop list:** see core rules.
 

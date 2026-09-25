@@ -1,6 +1,6 @@
 # BELLWETHER BATTLERS
 
-A polished, lightly pixelated office fighting game starring your coworkers — eight genuinely different fighters, three British stages, random office events, and a CPU-vs-CPU balance harness. Pure HTML5 canvas + vanilla JavaScript ES modules. **No framework, no bundler, no build step** — the only external resource is web fonts from the Google Fonts CDN (graceful system fallbacks).
+A lightly pixelated office **platform fighter** starring your coworkers — eight fighters with real sprite animation, three British stages (plus Berlin), random office events, and a CPU-vs-CPU balance harness with five ship gates. Pure HTML5 canvas + vanilla JavaScript ES modules. **No framework, no bundler, no build step** — the only external resource is web fonts from the Google Fonts CDN (graceful system fallbacks).
 
 **Play it live:** https://tim-findlay.github.io/bellwether-brawlers/ *(repo is currently private — Pages serves once it's public again)*
 
@@ -8,24 +8,29 @@ A polished, lightly pixelated office fighting game starring your coworkers — e
 
 ## How to play
 
-**1 Player (vs CPU)** or **2 Player (local)**. Pick your fighter, pick your opponent, pick an arena. **First to two round wins**; 60-second rounds; timeout goes to whoever has the higher **percentage** of their health.
+**1 Player (vs CPU)** or **2 Player (local)**. Pick your fighter, pick your opponent, pick an arena.
 
-Every fighter has a light, a heavy, **two distinct specials** (on cooldown — the pips next to your meter), and a **super** that needs a full gold meter. Hold block to guard (attacks from **behind** still connect). Statuses announce themselves in words above your head — `REVERSED!` flips movement only; your buttons still work.
+- **3 stocks each, untimed.** The only KO is a **ring-out**: knock your colleague past the edge of the screen (any side).
+- **Composure** (your bar) never kills. It drains as you take hits and the emptier it is, the farther every hit sends you. It refills only when you lose a stock — waiting heals nothing.
+- **No block.** One **Dodge** button: spot dodge on the ground, dodge-step with a direction, **air dodge** in the air (once per airtime). Dodges share one cooldown.
+- **Movement is the game:** run, double-tap to dash, dash-jump for a long flat arc, double jump, fast-fall, drop through soft platforms, air-drift. Recover from a launch with your drift, your second jump and (last) your air dodge.
+- Every fighter has a light (four **aerials** in the air, aimed with the held direction), a ground-only heavy (the kill commit), **two specials** on cooldown (pips under the bar), and a **super** on a full gold meter. Statuses announce themselves in words above your head.
+- **KO** = ink-burst, then you ride the office chair back down from the top — invulnerable until you act.
 
 ### Controls
 
 Bindings are by **physical key position** (US labels shown), so they work on any layout.
 
-| Action | P1 | P2 |
-|---|---|---|
-| Move | A / D | ← / → |
-| Jump | W | ↑ |
-| Block (hold) | S | ↓ |
-| Light | F | K |
-| Heavy | G | L |
-| Special 1 | H | ; |
-| Special 2 | J | ' |
-| **Super** | Space | Enter |
+| Action | P1 | P2 | Notes |
+|---|---|---|---|
+| Move | A / D | ← / → | double-tap on the ground = dash |
+| Jump | W | ↑ | again in the air = double jump; *held* aims the up-air |
+| Down | S | ↓ | hold = fast-fall · tap on a platform = drop through · aims the down-air |
+| Light / aerials | F | K | + held direction in the air = neutral / side / up / down air |
+| Heavy | G | L | ground only |
+| Special 1 / 2 | H / J | ; / ' | some work in the air |
+| Dodge | V | / | spot · step · air dodge |
+| **Super** | Space | Enter | full meter |
 
 **Menus:** F / K / Enter confirm · Esc back · Esc pauses a fight (with the full controls overlay — also under HOW TO PLAY on the main menu).
 
@@ -33,28 +38,28 @@ Bindings are by **physical key position** (US labels shown), so they work on any
 
 | Fighter | Archetype | Specials | Super |
 |---|---|---|---|
-| **BEN** — The Big Boss | Long-range bully | Hawk Toss (lobbed football) · Off the Lip (chair-surf launcher) | TWELFTH MAN — unblockable stadium roar |
+| **BEN** — The Big Boss | Long-range bully | Hawk Toss (lobbed football) · Off the Lip (chair-surf lunge, works in the air — his recovery) | TWELFTH MAN — unparryable stadium roar (jump it) |
 | **TIM** — The Operator | Tempo all-rounder | Prompt Injection (cursed e-mail, briefly reverses movement) · Zulu Time (rewinds his cooldowns) | AGI MOMENT — dash-through auto-combo |
-| **ADRIAN** — The Walking Hazard | Chaos rushdown | Clumsy Charge (trips if he misses!) · Coffee Spill (slippery puddle trap) | FULL AUDIT — multi-hit flail, trips at the end |
-| **RICHY** — The Market | Dual-projectile zoner | Bull Run (block it) · Bear Raid (jump it) — alternating *landed* candles builds bonus damage | TO THE MOON — telegraphed chart eruptions |
-| **NICK** — The Concierge | Teleport glass cannon | Status Match (teleport behind) · Points Redemption (card fan) | LIFETIME PLATINUM — 4s lounge buff |
+| **ADRIAN** — The Walking Hazard | Chaos rushdown | Clumsy Charge (trips if he misses — in the air, on the landing) · Nero Spill (slippery puddle) | FULL AUDIT — multi-hit flail, trips at the end |
+| **RICHY** — The Market | Dual-candle zoner | Bull Run (rising candle — his kill shot) · Bear Raid (ground roller — jump it); alternating *landed* candles build bonus damage. Short Squeeze (heavy) **pulls you in** | TO THE MOON — telegraphed chart eruptions |
+| **NICK** — The Concierge | Teleport glass cannon | Status Match (teleport behind — also his recovery) · Points Redemption (card fan) | LIFETIME PLATINUM — 4 s lounge buff, builds no meter |
 | **ABI** — The Gatekeeper | Counter-puncher | Calendar Block (melee parry → "DECLINED!") · House Rosé (slowing lob) | PUB O'CLOCK — locks specials, regen until she's hit |
-| **MIKE** — The Site Manager | Armored grappler | Scaffold Slam (unblockable command grab) · Demolition Day (shockwave that destroys projectiles) | WRECKING BALL — two dodgeable passes |
+| **MIKE** — The Site Manager | Armored grappler tank | Scaffold Slam (unparryable command grab — jump it) · Demolition Day (shockwave that destroys projectiles) | WRECKING BALL — two dodgeable passes. No recovery special: knock him off and guard the edge |
 | **SEELYE** — The Pitmaster | Setplay / debt collector | Brisket Bomb (ember zone) · Dad Reflexes (catches projectiles for meter) | LOW & SLOW — drifting smoke blanket |
 
-Mike's LIEN note: Seelye's heavy marks you; his next special collects +4. And if Mike is in the match, the fight can suddenly relocate to **Berlin** (his home turf) — that's an event, not a stage pick.
+Seelye's LIEN: his heavy marks you and his next special collects +4. If Mike is in the match the fight can suddenly relocate to **Berlin** (his home turf) — that's an event, not a stage pick.
 
 ### Stages
 
-**The Office** · **Buckingham Palace Forecourt** · **The Bellwether Arms** (pub) — each with its own palette and parallax. **Berlin** exists but only Mike's travel schedule can take you there.
+**The Office** · **Buckingham Palace Forecourt** · **The Bellwether Arms** (pub) — one main slab, soft platforms, blast zones on all four sides, a camera that zooms to keep both fighters framed. **Berlin** exists but only Mike's travel schedule can take you there.
 
 ### Office events (Settings → can be toggled; ON by default)
 
-All events are telegraphed with a klaxon + banner, are dodgeable or symmetric, and never decide a match:
+All events are telegraphed with a klaxon + banner, are dodgeable or symmetric, push toward the centre and never decide a match:
 
-- **URGENT UNDERWRITING** — both freeze; mash LIGHT; first to submit gets a small heal + meter.
-- **THE WAVE** — a wave sweeps the floor; jump to ride it.
-- **SPIN CLASS STAMPEDE** — three runaway spin bikes; jump them.
+- **URGENT UNDERWRITING** — both freeze; mash LIGHT; first to submit gets meter.
+- **THE WAVE** — a wave sweeps the slab; jump to ride it.
+- **SPIN CLASS STAMPEDE** — runaway spin bikes; jump them.
 - **FIRE DRILL** — get to the assembly point before roll call.
 - **BERLIN TRIP** — Mike only: the stage crossfades to Berlin and he gets a home-turf buff for a stretch.
 
@@ -75,17 +80,19 @@ Every push to `main` deploys the repo root to **GitHub Pages** via [`.github/wor
 ## Balance harness (dev)
 
 ```
-http://localhost:8000/?sim=10
+http://localhost:8000/?sim=10        # in the browser
+node src/dev/sim.js 30 1337          # headless (N per ordered pairing, seed)
+node --test 'tests/*.test.mjs'       # engine tests
 ```
 
-Runs N CPU-vs-CPU matches per ordered pairing headlessly (seeded RNG, events on), prints a win-rate matrix + per-character aggregates to the console and the canvas, and checks two ship gates: every fighter within **42–58%** aggregate, and a stall-bot profile must not beat honest fighting. `?event=<id>` (e.g. `?event=berlin`) force-fires an event for testing. Results also land in `window.__SIM_RESULTS`. See [BALANCE.md](BALANCE.md) for the doctrine and latest results.
+Runs N CPU-vs-CPU matches per ordered pairing (seeded RNG, events on, 3 stocks) and reports the five ship gates from [BALANCE.md](BALANCE.md): every fighter within **42–58%**, a platform-camping profile must not out-perform honest fighting, a ledge-stalling profile must lose outright, engagement flags under 2%, and CPU recovery honesty. `?event=<id>` (e.g. `?event=berlin`) force-fires an event; `?graybox` opens the movement playground; `?art=<stage>` previews a stage. Results land in `window.__SIM_RESULTS`.
 
 ## Adding content
 
 Everything is data-driven — see [DESIGN.md](DESIGN.md) for the full architecture.
 
-- **A fighter:** add one object to `src/data/characters.js` (stats, four moves, two specials, super, AI hints, drawn-body palette). Drop `assets/headshots/<id>.png` (square photo) next to the others and the game uses it everywhere automatically — **no code change**; without a photo the drawn cartoon head is used.
-- **A stage:** add an object to `src/data/stages.js` (palette + parallax layers built from the pixel helpers). `selectable: false` keeps it event-only, like Berlin.
+- **A fighter:** add `src/data/characters/<id>.js` (stats inside the BALANCE.md bands, light/heavy/aerials, two specials, super, AI hints, drawn-body palette) and list it in `src/data/characters/index.js`. Drop `assets/headshots/<id>.png` (square photo) for the select card, and `assets/sprites/<id>/{idle,run,jump,attack}.png` (64 px cells, described in `src/data/sprites.js`) for animation — **no code change**; without them the drawn cartoon head / body is used.
+- **A stage:** add an object to `src/data/stages.js` (geometry: slab, soft platforms, spawns, respawn, camera bounds, blast zones; plus palette/art metadata). `selectable: false` keeps it event-only, like Berlin.
 - **An event:** add an object to `src/data/events.js` (telegraph, weight, optional `requiresCharacter`, and small start/update/draw hooks).
 
 ## License

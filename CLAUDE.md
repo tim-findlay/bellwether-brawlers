@@ -10,6 +10,7 @@ A lightly pixelated browser fighting game (HTML5 canvas + vanilla JS ES modules)
 - **ES modules + image assets do NOT work from `file://`.** Always test via a local server (`python3 -m http.server`) — never by double-clicking index.html. `index.html` is the entry point.
 - **Everything is data-driven.** Characters live in `src/data/characters.js`, stages in `src/data/stages.js`, events in `src/data/events.js`. Engine code (`src/engine/`, `src/render/`) never hard-codes content. Adding content must not require engine changes.
 - **Headshots are drop-in.** `assets/headshots/<id>.png` keyed by character id, loaded by manifest with cartoon-head fallback. Adding `abi.png` later must Just Work.
+- **Sprites are drop-in too.** `assets/sprites/<id>/{idle,run,jump,attack}.png` (64 px cells, described in `src/data/sprites.js`) with the drawn-body fallback in `src/render/body.js`. A missing sheet must never break a fight. Sheets come from Higgsfield (style formula + per-character prompt, see DESIGN.md Art direction) — keep the `sprites.js` frame counts in step with the PNGs.
 - **Never commit `character photos/`** (the raw originals — gitignored). Only the processed `assets/headshots/*.png` are committed; the user explicitly approved publishing those.
 - **Display names are first names only.**
 - **Not neon.** Warm paper/ink palette, daylight stages, no glows/bloom/scanlines. Diegetic light is fine.
@@ -20,7 +21,7 @@ A lightly pixelated browser fighting game (HTML5 canvas + vanilla JS ES modules)
 ## Workflow
 
 - **Small, focused commits.** One logical change per commit.
-- **Always verify after changes:** serve locally, open the page, confirm no console errors and the title screen renders. For gameplay changes, also run the balance sim (`?sim=10`) and re-check the 42–58% band + the anti-camp/ledge-stall gates (BALANCE.md) before shipping.
+- **Always verify after changes:** serve locally, open the page, confirm no console errors and the title screen renders. For gameplay changes, also run the tests (`node --test 'tests/*.test.mjs'`) and the balance sim (`node src/dev/sim.js 30 1337` and `… 2024`, or `?sim=10` in the browser as a smoke check) and re-check all five BALANCE.md gates before shipping.
 - Dev flags: `?sim=N` (balance harness, dynamically imported), `?graybox` (movement playground), `?event=<id>` (force a hazard next roll). Keep them out of normal play paths.
 
 ## Deployment
