@@ -261,13 +261,51 @@ export const STAGES = [
       blast: { left: 310, right: 2090, top: 130, bottom: 1300 },
     },
   },
+  {
+    id: 'rooftop',
+    name: 'THE ROOFTOP',
+    blurb: 'Best view in the building. Worst place to fall.',
+    selectable: true,
+    sky: ['#8fb0d6', '#e3ebf1'],
+    groundFill: '#9a948a', groundLine: '#7c766c', groundTile: '#8d877d',
+    layers: [],                                              // backdrop is the drop-in assets/stages/rooftop.png
+    art: { platforms: ['tray', 'tray', 'roof'], far: '#b7c3cf', parallax: 0.25 },
+    // THE ROOFTOP — long slab, two low AC-unit platforms and the water tank up top
+    geometry: {
+      slabs: [{ x: 780, y: 770, w: 840, h: 70 }],
+      platforms: [{ x: 920, y: 660, w: 190 }, { x: 1290, y: 660, w: 190 }, { x: 1090, y: 545, w: 220 }],
+      spawns: [{ x: 980, y: 770 }, { x: 1420, y: 770 }],
+      respawn: { x: 1200, y: 700 },
+      cameraBounds: { x: 150, y: 40, w: 2100, h: 1390 },
+      blast: { left: 300, right: 2100, top: 110, bottom: 1290 },
+    },
+  },
+  {
+    id: 'tube',
+    name: 'THE PLATFORM',
+    blurb: 'Mind the gap. Then mind the fists.',
+    selectable: true,
+    sky: ['#d9d2c2', '#c9c0ad'],
+    groundFill: '#8a8377', groundLine: '#6f695e', groundTile: '#7d766a',
+    layers: [],                                              // backdrop is the drop-in assets/stages/tube.png
+    art: { platforms: ['bench', 'sign', 'bench'], far: '#a89f8f', parallax: 0.3 },
+    // THE PLATFORM — a long low stage: two benches and one hanging sign; play stays close to the floor
+    geometry: {
+      slabs: [{ x: 730, y: 790, w: 940, h: 70 }],
+      platforms: [{ x: 860, y: 700, w: 170 }, { x: 1110, y: 610, w: 180 }, { x: 1370, y: 700, w: 170 }],
+      spawns: [{ x: 950, y: 790 }, { x: 1450, y: 790 }],
+      respawn: { x: 1200, y: 720 },
+      cameraBounds: { x: 120, y: 60, w: 2160, h: 1380 },
+      blast: { left: 270, right: 2130, top: 130, bottom: 1300 },
+    },
+  },
 ];
 
 export const stageById = (id) => STAGES.find(s => s.id === id);
 export const SELECTABLE_STAGES = STAGES.filter(s => s.selectable);
 
 // v3 platform-fighter geometry (Phase 2+). v2 visuals above are untouched.
-export const STAGE_IDS_V3 = ['office', 'palace', 'pub', 'berlin'];
+export const STAGE_IDS_V3 = ['office', 'palace', 'pub', 'berlin', 'rooftop', 'tube'];
 export function geometryOf(id) { return stageById(id)?.geometry ?? null; }
 
 // Layers only (no sky, no ground): the v3 world renderer paints these into a

@@ -4,8 +4,8 @@ import { STAGES, STAGE_IDS_V3, geometryOf } from '../src/data/stages.js';
 
 const G = STAGE_IDS_V3.map(id => [id, geometryOf(id)]);
 
-test('all four v3 stages expose geometry', () => {
-  assert.deepEqual(STAGE_IDS_V3, ['office', 'palace', 'pub', 'berlin']);
+test('all six v3 stages expose geometry', () => {
+  assert.deepEqual(STAGE_IDS_V3, ['office', 'palace', 'pub', 'berlin', 'rooftop', 'tube']);
   for (const [id, g] of G) {
     assert.ok(g, `${id} has geometry`);
     for (const k of ['slabs', 'platforms', 'spawns', 'respawn', 'cameraBounds', 'blast'])
@@ -25,7 +25,7 @@ test('spawns stand on a slab top, inside the blast rect', () => {
 });
 
 test('platform counts match the approved layouts', () => {
-  const counts = { office: 3, palace: 2, pub: 3, berlin: 1 };
+  const counts = { office: 3, palace: 2, pub: 3, berlin: 1, rooftop: 3, tube: 3 };
   for (const [id, g] of G) assert.equal(g.platforms.length, counts[id], id);
 });
 
@@ -61,7 +61,7 @@ test('respawn point hovers over a slab, above its top', () => {
 test('berlin stays event-only; the other three are selectable', () => {
   for (const st of STAGES) {
     if (st.id === 'berlin') assert.equal(st.selectable, false);
-    if (['office', 'palace', 'pub'].includes(st.id)) assert.equal(st.selectable, true);
+    if (['office', 'palace', 'pub', 'rooftop', 'tube'].includes(st.id)) assert.equal(st.selectable, true);
   }
 });
 
