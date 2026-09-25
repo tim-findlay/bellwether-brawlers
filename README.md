@@ -8,7 +8,7 @@ A lightly pixelated office **platform fighter** starring your coworkers — eigh
 
 ## How to play
 
-**1 Player (vs CPU)** or **2 Player (local)**. Pick your fighter, pick your opponent, pick an arena.
+**Versus CPU** or **Local Versus** (two players on one keyboard, or two pads). Pick your fighter, pick your opponent, pick an arena, then the VS splash drops you into the fight. In Local Versus both players pick at the same time on their own keys. The main menu also has **How to Play**, **Records** (wins per fighter, kept in this browser) and **Settings** (office events, CPU difficulty, sound, screen shake, reset records). **Esc** (or a pad's Back button) pauses: resume, how to play, restart the match or quit to the menu.
 
 - **3 stocks each, untimed.** The only KO is a **ring-out**: knock your colleague past the edge of the screen (any side).
 - **Composure** (your bar) never kills. It drains as you take hits and the emptier it is, the farther every hit sends you. It refills only when you lose a stock — waiting heals nothing.
@@ -95,6 +95,7 @@ Everything is data-driven — see [DESIGN.md](DESIGN.md) for the full architectu
 
 - **A fighter:** add `src/data/characters/<id>.js` (stats inside the BALANCE.md bands, light/heavy/aerials — the side/down lights, signatures, recovery and ground pound are derived for you, override any of them under `kit` — two specials, super, AI hints, drawn-body palette) and list it in `src/data/characters/index.js`. Drop `assets/headshots/<id>.png` (square photo) for the win screen, and `assets/sprites/<id>/{idle,run,jump,attack}.png` (64 px cells, described in `src/data/sprites.js`) for animation and the select card — **no code change**; without them the drawn cartoon head / body is used.
 - **A stage:** add an object to `src/data/stages.js` (geometry: slab, soft platforms, spawns, respawn, camera bounds, blast zones; plus palette/art metadata) and optionally drop a 480×270 `assets/stages/<id>.png` far backdrop and a 512 px wide `assets/stages/<id>-slab.png` arena piece (top edge = walkable top). Without them the procedural layers and slab draw. `selectable: false` keeps it event-only, like Berlin.
+- **Front-end art:** replace `assets/ui/logo.png`, `vs.png` or `trophy.png` (keyed PNG, any size; drawn to fit). Delete one and the code-drawn version returns.
 - **An event:** add an object to `src/data/events.js` (telegraph, weight, optional `requiresCharacter`, and small start/update/draw hooks).
 
 ## License
