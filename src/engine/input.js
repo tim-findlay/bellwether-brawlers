@@ -26,6 +26,7 @@ export class Input {
   }
 
   attach(target = window) {
+    this.pads = new GamepadInput(this);
     target.addEventListener('keydown', (e) => {
       if (PREVENT.has(e.code)) e.preventDefault();
       if (!this.held[e.code]) this.pending.add(e.code);
@@ -38,6 +39,7 @@ export class Input {
   // Call exactly once per logic tick before reading input.
   beginFrame() {
     this.frame++;
+    this.pads?.poll();
     if (this.lock > 0) {
       this.lock--;
       this.pending.clear();
@@ -120,4 +122,54 @@ export function buildIntent(ctl, input, map) {
     dashLeft: input.doubleTapped(map.left, PHYS.DASH_TAP_WINDOW),
     dashRight: input.doubleTapped(map.right, PHYS.DASH_TAP_WINDOW),
   };
+}
+
+// ---- gamepads ---------------------------------------------------------------------
+// Standard-mapping pads (Xbox / PlayStation / most USB pads) drive the SAME key
+// codes as the keyboard: pad 0 presses P1's keys, pad 1 presses P2's keys, so
+// menus, the fight and the dev harnesses need no other changes. Polled once
+// per logic tick (Gamepad API is state-based, not event-based).
+//   stick / d-pad -> left right up down · A/Cross jump · X/Square light ·
+//   B/Circle heavy · RB special 1 · LB special 2 · Y/Triangle super ·
+//   RT/LT dodge · Start = Enter (confirm / pause) · Back/Select = Escape
+export const PAD_BUTTONS = { jump: 0, heavy: 1, light: 2, super: 3, s2: 4, s1: 5, dodgeL: 6, dodgeR: 7, back: 8, start: 9, up: 12, down: 13, left: 14, right: 15 };
+const PAD_MAPS = [P1MAP, P2MAP];
+const DEAD = 0.5;
+
+export class GamepadInput {
+  constructor(input) { this.input = input; this.prev = [new Set(), new Set()]; }
+  // Which virtual key codes a pad holds right now (its player's map).
+  static codesFor(pad, map) {
+    const on = new Set();
+    const B = pad.buttons || [], A = pad.axes || [];
+    const pressed = (i) => !!B[i] && (B[i].pressed || B[i].value > DEAD);
+    const ax = A[0] ?? 0, ay = A[1] ?? 0;
+    if (pressed(PAD_BUTTONS.left) || ax < -DEAD) on.add(map.left);
+    if (pressed(PAD_BUTTONS.right) || ax > DEAD) on.add(map.right);
+    if (pressed(PAD_BUTTONS.down) || ay > DEAD) on.add(map.down);
+    if (pressed(PAD_BUTTONS.up) || ay < -DEAD || pressed(PAD_BUTTONS.jump)) on.add(map.up);
+    if (pressed(PAD_BUTTONS.light)) on.add(map.light);
+    if (pressed(PAD_BUTTONS.heavy)) on.add(map.heavy);
+    if (pressed(PAD_BUTTONS.s1)) on.add(map.s1);
+    if (pressed(PAD_BUTTONS.s2)) on.add(map.s2);
+    if (pressed(PAD_BUTTONS.super)) on.add(map.super);
+    if (pressed(PAD_BUTTONS.dodgeL) || pressed(PAD_BUTTONS.dodgeR)) on.add(map.dodge);
+    if (pressed(PAD_BUTTONS.start)) on.add('Enter');
+    if (pressed(PAD_BUTTONS.back)) on.add('Escape');
+    return on;
+  }
+  poll() {
+    const pads = typeof navigator !== 'undefined' && navigator.getGamepads ? navigator.getGamepads() : null;
+    if (!pads) return;
+    let seat = 0;
+    for (const pad of pads) {
+      if (!pad || !pad.connected || seat > 1) continue;
+      const now = GamepadInput.codesFor(pad, PAD_MAPS[seat]), was = this.prev[seat];
+      for (const code of now) if (!was.has(code)) this.input.pending.add(code);   // key-down edge
+      for (const code of now) this.input.held[code] = true;
+      for (const code of was) if (!now.has(code)) this.input.held[code] = false;  // key-up
+      this.prev[seat] = now;
+      seat++;
+    }
+  }
 }
