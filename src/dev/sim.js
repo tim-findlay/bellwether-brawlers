@@ -1,6 +1,6 @@
 // CPU-vs-CPU balance harness (v3). Dev-only: dynamically imported via ?sim=N,
 // or run under node: `node src/dev/sim.js 10`. BALANCE.md "Sim methodology":
-// Normal AI, hazards ON, all 56 ordered pairings x N across the three
+// Normal AI, hazards ON, all 56 ordered pairings x N across the five
 // selectable stages, seeded RNG, 3 stocks, frame cap 10,800 with the
 // tie-break rule (stocks, then gauge; a dead heat is half a win each and the
 // match is flagged). Prints the win matrix, aggregates and the FIVE ship

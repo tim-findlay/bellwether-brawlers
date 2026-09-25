@@ -32,7 +32,8 @@ export const PHYS = {
   AIR_DODGE_DURATION: 22,   // i-frames 3-15
   AIR_DODGE_IMPULSE: 7,
   DROP_THROUGH_GRACE: 8,    // frames of soft-platform collision ignored after a drop
-  KNOCKBACK_MULT: 0.85,     // global launch-speed multiplier applied after the kb formula
+  KB_BASE_MULT: 0.8,        // launch = (kb * this + kbScale * KB_SCALE_MULT * emptiness) / weight
+  KB_SCALE_MULT: 2.0,       // steeper scaling: early hits flinch, late hits kill (Phase 3b)
   HITSTUN_PER_KB: 1.6,      // hitstun frames = round(kb * this)
   LEDGE_HANG_MAX: 90,       // frames a ledge hang lasts before the auto-climb
   LEDGE_INVULN: 20,         // i-frames from the grab

@@ -28,7 +28,8 @@ test('PHYS matches the BALANCE.md Phase-3 table', () => {
   assert.equal(PHYS.AIR_DODGE_DURATION, 22);
   assert.equal(PHYS.AIR_DODGE_IMPULSE, 7);
   assert.equal(PHYS.DROP_THROUGH_GRACE, 8);
-  assert.equal(PHYS.KNOCKBACK_MULT, 0.85);
+  assert.equal(PHYS.KB_BASE_MULT, 0.8);
+  assert.equal(PHYS.KB_SCALE_MULT, 2.0);
   assert.equal(PHYS.HITSTUN_PER_KB, 1.6);
   assert.equal(PHYS.LEDGE_HANG_MAX, 90);
   assert.equal(PHYS.LEDGE_INVULN, 20);
