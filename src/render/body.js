@@ -8,6 +8,10 @@
 import { INK, PAPER, BRASS, shade } from './palette.js';
 
 const DOLL_H = 64;                 // v2 doll height in its own units
+// Chibi proportions (Phase 3c, to match the big-head sprite sheets): short
+// legs and torso under an oversized head, ~40% of the doll's height.
+const LEG_H = 18, TORSO_H = 18, HEAD = 26;
+const HEAD_K = HEAD / 22;          // head art (22 px circle / cartoon head) scale
 
 // Pose numbers per anim — what the v2 states used to imply, now explicit.
 export function poseFor(f) {
@@ -108,35 +112,38 @@ export function drawFallbackBody(g, f, head) {
   g.globalAlpha = pose.alpha;
 
   const bob = pose.bob, legSwing = pose.legSwing, tuck = pose.legTuck;
-  const torsoH = 22 * hScale, torsoTop = -22 - torsoH + bob;
+  const torsoH = TORSO_H * hScale, torsoTop = -LEG_H - torsoH + bob;
+  const sw = b.build === 'broad' ? 12 : 9;                // half shoulder width (Mike: fit, broad, no belly)
 
   // legs (tuck shortens them; sitting folds them forward); b.trousers overrides the suit shade
   g.fillStyle = b.trousers || shade(suit, -24);
   if (pose.sit) {
-    g.fillRect(-6, -22, 12, 8);                            // thighs forward
-    g.fillRect(facing > 0 ? 2 : -8, -18, 6, 18);           // shins down
+    g.fillRect(-6, -LEG_H, 12, 7);                         // thighs forward
+    g.fillRect(facing > 0 ? 2 : -8, -LEG_H + 4, 6, LEG_H - 4);   // shins down
   } else {
-    g.fillRect(-6 + legSwing / 2, -22 + tuck, 4, 22 - tuck);
-    g.fillRect(2 - legSwing / 2, -22 + tuck, 4, 22 - tuck);
+    const lt = Math.min(tuck, LEG_H - 6);
+    g.fillRect(-6 + legSwing / 2, -LEG_H + lt, 5, LEG_H - lt);
+    g.fillRect(1 - legSwing / 2, -LEG_H + lt, 5, LEG_H - lt);
   }
   // feet (Nick's white sneakers)
   g.fillStyle = b.extras?.includes('sneakers') ? '#f0ede4' : shade(suit, -40);
   if (!pose.sit) {
-    g.fillRect(-7 + legSwing / 2, -3 - tuck, 6, 3);
-    g.fillRect(1 - legSwing / 2, -3 - tuck, 6, 3);
+    g.fillRect(-7 + legSwing / 2, -3, 7, 3);
+    g.fillRect(0 - legSwing / 2, -3, 7, 3);
   } else g.fillRect(facing > 0 ? 2 : -10, -3, 8, 3);
 
   // torso
   g.fillStyle = suit;
   g.fillRect(-9, torsoTop, 18, torsoH);
+  g.fillRect(-sw, torsoTop, sw * 2, Math.round(torsoH * 0.55));   // shoulders
   if (b.extras?.includes('hivis')) {
     g.fillStyle = flash ? '#fff' : '#e8a33d';
-    g.fillRect(-9, torsoTop + 3, 18, 5);
-    g.fillRect(-9, torsoTop + 12, 18, 3);
+    g.fillRect(-sw, torsoTop + 3, sw * 2, 4);
+    g.fillRect(-9, torsoTop + 11, 18, 3);
   }
   if (b.extras?.includes('sweater')) {
     g.fillStyle = flash ? '#fff' : shade(b.suit || suit, 36);
-    g.fillRect(-9, torsoTop, 18, 7);
+    g.fillRect(-sw, torsoTop, sw * 2, 6);
     g.fillStyle = flash ? '#fff' : PAPER;
     g.fillRect(-3, torsoTop, 6, 4);                          // collar
   }
@@ -159,9 +166,9 @@ export function drawFallbackBody(g, f, head) {
     const tt = fr < su ? fr / Math.max(1, su) : fr < su + ac ? 1 : Math.max(0, 1 - (fr - su - ac) / re);
     armExt = tt * Math.min(40, ((m.range || 60) / S) * 0.62);   // range is world px
   }
-  const armY = torsoTop + 6 + pose.armLift;
+  const armY = torsoTop + 5 + pose.armLift;
   g.fillStyle = shade(suit, 14);
-  g.fillRect(facing > 0 ? -11 : 7, armY, 4, 12);            // back arm
+  g.fillRect(facing > 0 ? -sw - 2 : sw - 2, armY, 4, 10);   // back arm
   const fx2 = facing * (6 + armExt);
   g.fillRect(Math.min(0, fx2) - (facing > 0 ? -4 : 4), armY - 1, Math.abs(fx2) + 4, 4); // front arm
   g.fillStyle = skin;
@@ -181,23 +188,27 @@ export function drawFallbackBody(g, f, head) {
     g.fillRect(facing * 10 - 1, armY - 1, 3, 1);
   }
 
-  // head
-  const headY = torsoTop - 9;
-  if (head) g.drawImage(head, -11, headY - 11, 22, 22);
-  else cartoonHead(g, f, b, facing, skin, headY, flash);
+  // head: drawn in its 22-unit art space, scaled up to the chibi HEAD size
+  const headY = torsoTop - HEAD / 2 + 3;                  // no neck: the head sits on the shoulders
+  g.save();
+  g.translate(0, headY); g.scale(HEAD_K, HEAD_K);
+  if (head) g.drawImage(head, -11, -11, 22, 22);
+  else cartoonHead(g, f, b, facing, skin, 0, flash);
   if (b.extras?.includes('hardhat')) {
     g.fillStyle = flash ? '#fff' : '#e8c83d';
-    g.fillRect(-9, headY - 12, 18, 5);
-    g.fillRect(-11, headY - 8, 22, 2);
+    g.fillRect(-9, -12, 18, 5);
+    g.fillRect(-11, -8, 22, 2);
   }
+  g.restore();
   if (pose.name === 'ko' && head) {
-    g.fillStyle = INK; g.font = '8px monospace'; g.fillText('✕', 4, headY - 4);
+    g.fillStyle = INK; g.font = '8px monospace'; g.fillText('✕', 5, headY - 4);
   }
 
   // Nick's Lifetime Platinum: brass card frame, no glow
   if (f.statuses?.has?.('noMeter')) {
     g.strokeStyle = BRASS; g.lineWidth = 2;
-    g.strokeRect(-14, headY - 15, 28, -torsoTop + 15 + 22);
+    const top = headY - HEAD / 2 - 3;
+    g.strokeRect(-HEAD / 2 - 3, top, HEAD + 6, -top);
   }
   g.restore();
 }
