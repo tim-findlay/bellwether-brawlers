@@ -9,10 +9,10 @@ export default {
   stats: { gauge: 104, runMax: 5.4, jumpImpulse: 15, fallMax: 14, weight: 1.05 },
   light: { name: 'Bid', dmg: 5, kb: 5, kbScale: 5, kbAngle: 40, range: 60, startup: 4, active: 3, recover: 8 },
   heavy: { name: 'Short Squeeze', dmg: 10, kb: 6.5, kbScale: 10.5, kbAngle: 150, range: 68, startup: 12, active: 4, recover: 17 },   // drags closer (angle past 90 = toward Richy)
-  aerials: aerials({ n: 'Portfolio Spin', s: 'Meme Slap', u: 'Pump', d: 'Crash Out' }, { s: { kb: 7, kbScale: 12 } }),
+  aerials: aerials({ n: 'Portfolio Spin', s: 'Macro Slap', u: 'Uptick', d: 'Crash Out' }, { s: { kb: 7, kbScale: 12 } }),
   s1: { name: 'Bull Run', kind: 'projectile', air: true, dmg: 8, kb: 7, kbScale: 6, kbAngle: 40, speed: 5, vy: -1.2, w: 18, h: 52, height: 60, shape: 'candle', color: '#3f5a40', cooldown: 90, sharedLock: 40, tag: 'bull', startup: 11, active: 2, recover: 14 },
   s2: { name: 'Bear Raid', kind: 'groundProjectile', dmg: 8, kb: 6, kbScale: 6, kbAngle: 45, speed: 4.2, w: 18, h: 28, shape: 'candle', color: '#c4452e', cooldown: 100, sharedLock: 40, tag: 'bear', startup: 12, active: 2, recover: 15 },
-  super: { name: 'To The Moon', kind: 'columns', dmg: 9, kb: 8, kbScale: 15, startup: 18, recover: 30, aiRange: [160, 480] },
+  super: { name: 'Rate Hikes', kind: 'columns', dmg: 9, kb: 8, kbScale: 15, startup: 18, recover: 30, aiRange: [160, 480] },
   kit: { names: { sLight: 'Ask', dLight: 'Floor Price', sSig: 'Margin Call', dSig: 'Breakout', recovery: 'Rally', groundPound: 'Crash' } },
   ai: { style: 'zoner', pref: 260, stopAt: 88 },
   hooks: {

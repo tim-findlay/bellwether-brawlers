@@ -35,6 +35,13 @@ export function drawProjectiles(g, world, t) {
       case 'bomb':
         r(g, -8, -8, 18, 18); g.fillStyle = BRICK; r(g, 4, -12, 4, 4);
         break;
+      case 'memo':                                              // Ben's "My Office. Now." — a folded memo
+        r(g, -13, -9, 26, 18); g.fillStyle = INK; r(g, -9, -4, 18, 2); r(g, -9, 1, 12, 2);
+        g.fillStyle = BRICK; r(g, 7, -9, 6, 6);
+        break;
+      case 'binder':                                            // Seelye's Drawdown — a loan binder
+        r(g, -9, -10, 18, 20); g.fillStyle = PAPER; r(g, -5, -8, 12, 16); g.fillStyle = INK; r(g, -9, -6, 3, 3); r(g, -9, 3, 3, 3);
+        break;
       case 'diaper':                                            // Seelye's Fresh One
         r(g, -9, -6, 18, 12); g.fillStyle = PAPER; r(g, -7, -4, 14, 8); g.fillStyle = '#b3c7d6'; r(g, -3, -2, 6, 4);
         break;
@@ -55,6 +62,13 @@ export function drawZones(g, world, t) {
       g.fillStyle = 'rgba(90,58,38,0.85)'; r(g, x0, top - 2, w, 8);
       g.fillStyle = 'rgba(122,80,52,0.85)'; r(g, x0 + 8, top - 6, w - 16, 6);
       g.fillStyle = 'rgba(242,233,216,0.5)'; r(g, x0 + 14, top - 5, 10, 2);
+    } else if (z.type === 'ember' && z.look === 'paper') {   // Seelye's paperwork: scattered sheets
+      g.fillStyle = 'rgba(39,66,95,0.28)'; r(g, x0, top - 4, w, 6);
+      for (let i = 0; i < Math.max(3, w / 20 | 0); i++) {
+        const lift = ((t >> 3) + i) % 3 === 0 ? 2 : 0;
+        g.fillStyle = PAPER; r(g, x0 + 6 + i * 20, top - 8 - lift, 12, 6);
+        g.fillStyle = INK; r(g, x0 + 8 + i * 20, top - 6 - lift, 8, 1);
+      }
     } else if (z.type === 'ember') {
       g.fillStyle = 'rgba(180,90,40,0.5)'; r(g, x0, top - 6, w, 12);
       g.fillStyle = 'rgba(120,50,20,0.6)'; r(g, x0 + 4, top - 2, w - 8, 6);

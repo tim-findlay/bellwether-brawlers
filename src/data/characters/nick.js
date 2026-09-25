@@ -13,6 +13,7 @@ export default {
   s1: { name: 'Status Match', kind: 'teleport', air: true, behind: 56, startup: 12, recover: 14, iframes: 18, cooldown: 270 },
   s2: { name: 'Points Redemption', kind: 'fan', dmg: 4, kb: 4, kbScale: 3, kbAngle: 40, speed: 5.4, w: 16, h: 12, shape: 'card', color: '#b9a16b', cooldown: 260, startup: 10, active: 2, recover: 16 },
   super: { name: 'Lifetime Platinum', kind: 'buff', startup: 16, recover: 12, flavor: 'LOUNGE ACCESS', apply: [{ name: 'haste', dur: 240 }, { name: 'dmgUp', dur: 240, data: { amount: 3 } }, { name: 'noMeter', dur: 240 }], aiRange: [0, 960] },
-  kit: { names: { sLight: 'Queue Jump', dLight: 'Room Service', sSig: 'Cash Out', dSig: 'Upgrade Fee', recovery: 'Priority Boarding', groundPound: 'Checkout Slam' } },
+  kit: { names: { sLight: 'Queue Jump', dLight: 'Room Service', sSig: 'Cash Out', dSig: 'Upgrade Fee', recovery: 'Priority Boarding', groundPound: 'Checkout Slam' },
+    recovery: { lift: 12, iframes: 8 } },                                       // Priority Boarding: floaty and high
   ai: { style: 'rush', stopAt: 68 },
 };
