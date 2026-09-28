@@ -15,7 +15,7 @@
 
 ## Numbers doctrine
 
-- **Gauge band:** 94 (Adrian) – 110 (Ben). **Weight band:** 0.97 (Nick/Adrian) – 1.12 (Mike) — narrowed in the Phase-3 pass (the bands were restated from the data in pass 3; the old 85–110 / 0.9–1.08 text had gone stale after pass 2): weight divides the launch speed linearly, so the old 0.85–1.45 spread alone swung kill thresholds by ~70 %. **Run band:** 4.4 (Mike) – 6.2 (Nick) px/frame at base zoom. Fall speed correlates with weight (floaties live longer upward, die earlier sideways). Per-character values live in `src/data/characters/<id>.js`, inside these bands; `physics.js` holds the universal constants and formulas.
+- **Gauge band:** 94 (Adrian) – 110 (Ben). **Weight band:** 0.97 (Nick/Adrian) – 1.10 (Mike) — narrowed in the Phase-3 pass (the bands were restated from the data in pass 3; the old 85–110 / 0.9–1.08 text had gone stale after pass 2): weight divides the launch speed linearly, so the old 0.85–1.45 spread alone swung kill thresholds by ~70 %. **Run band:** 4.4 (Mike) – 6.2 (Nick) px/frame at base zoom. Fall speed correlates with weight (floaties live longer upward, die earlier sideways). Per-character values live in `src/data/characters/<id>.js`, inside these bands; `physics.js` holds the universal constants and formulas.
 - **Knockback (canonical formula):**
   `kb = (move.kb × KB_BASE_MULT + move.kbScale × KB_SCALE_MULT × emptiness) / weight`, where `emptiness = 1 − gauge/maxGauge` (multipliers 0.8 / 2.0 since the Phase-3b feel pass: early hits flinch, late hits kill).
   **kb is the launch speed in px/frame at base zoom, set (not added) along `kbAngle`** (per-move data, degrees; spikes use 270 ± 15) on the frame the hit lands. Hitstun = `round(kb × HITSTUN_PER_KB)` frames.
@@ -54,8 +54,12 @@
 | AIR_DODGE_DURATION | 22f (i-frames 3–15) | AIR_DODGE_IMPULSE | 7 |
 | DROP_THROUGH_GRACE | 8f | AIR_MOMENTUM_DECAY | 0.985 |
 | GROUND_DEADZONE | 0.05 | | |
+| ATTACK_SLIDE | 0.88 (vx × this per frame, ground move startup + active, stick neutral) | ATTACK_SLIDE_HOLD | 0.95 (… holding the facing direction; holding back = RUN_FRICTION) |
+| ATTACK_CARRY_CAP | 1.15 × run (entry speed cap; a dash-attack ends the dash) | | |
 
 Jump arcs under the new table (MID: impulse 15): single-jump rise ≈ 132 px in 18 frames; jump → double-jump ≈ 264 px; the third jump (AIR_JUMPS 2, Phase 3b) adds another 132 px of recovery reach, which the KB multipliers and the wider blast zones were tuned against. **Consequence called out:** the low platforms (≈110 px above the slab) are now single-jump reachable — the Phase-2 "deliberately just short" rule is retired in favour of pace; upper platforms still need the double jump or a platform hop.
+
+**Attacks in motion (2026-09-28, Tim's brief: "hit in motion, not stop-and-hit" — his sign-off for this feel change).** A ground move no longer plants the body on its first frame: the entry speed (capped at `ATTACK_CARRY_CAP × runMax`) slides through the startup and active frames under `ATTACK_SLIDE`, holding forward keeps more (`ATTACK_SLIDE_HOLD`), holding back brakes at `RUN_FRICTION`, and the recovery plants. A move's `carry` (0–1, default 1) scales the slide (`carry: 0` plants: Abi's parry). Every derived ground move also has an eased **`step`** (px) that accelerates into the active frames — lights n/s/d 8/18/6, signatures n/s/d 18/56/12 (Ben's Corner Office 40); the side variants' old linear `travel` became `step`. A step or slide **stops at the edge of the surface you stand on and 34 px short of the opponent's centre** (without the second rule a step carried attackers through a close target and left them facing the wrong way — engagement flags rose to 3.4 %); `travel` lunges are exempt (Off the Lip still leaves the stage, Clumsy Charge still runs through). The forward melee box grew 64 → 76 px tall and its reach × 1.1 (short hops slipped over it); the AI's `meleeHits` mirrors the box, the step and the carried run.
 
 I-frame windows are **0-indexed engine ticks** counted from the dodge's first full tick (the start tick is tick 0) — combat code must read them with that convention.
 
@@ -78,7 +82,26 @@ Two independent samples before shipping a tuning pass: n ≈ 420–560 games per
 
 ## Current results
 
-**v3 balance pass 4 — event rethink (2026-09-25) — all five gates PASS on two independent seeds at N = 30** (same methodology; the director now receives the stage id, so stage-bound events roll only where they belong).
+**v3 balance pass 5 — attacks in motion (2026-09-28) — all five gates PASS on two independent seeds at N = 30** (same methodology).
+
+| Fighter | seed 1337 | seed 2024 |
+|---|---|---|
+| Ben | 48.3 % | 51.9 % |
+| Tim | 51.4 % | 51.4 % |
+| Adrian | 45.0 % | 50.5 % |
+| Richy | 52.4 % | 49.9 % |
+| Nick | 52.7 % | 44.8 % |
+| Abi | 53.6 % | 54.8 % |
+| Mike | 46.9 % | 48.7 % |
+| Seelye | 49.6 % | 48.1 % |
+| **camp (≤ 55)** | 18.7 % | 19.3 % |
+| **stall (≤ 45)** | 1.0 % | 0.8 % |
+| **engagement flags (< 2 %)** | 0.18 % | 0.24 % |
+| **recovery dishonest (< 10 %)** | 0.67 % | 0.59 % |
+
+Spread 44.8–54.8 % (pass 4: 46.2–53.0 %). Avg match 5893 / 5882 f (98 s, down ~17 s); 3 / 3 capped (pass 4: 18 / 29), 0 stuck. Every non-band gate moved a long way the right way: fights stay engaged because both players now close distance while swinging. **What changed:** the attacks-in-motion rules above. The first cut (steps with no opponent stop) failed two gates — Adrian 60–67 %, Mike 31–36 %, engagement 2.2–3.4 % — and an ablation (carry-only / step-only / box-only) put it on the step: a 3-frame poke with a 26 px step on the fastest runner out-ranged everything, and steps ran through close targets. The opponent stop fixed engagement; light steps were cut to 8/18/6. Then, to recentre the band: Ben Wingspan startup 16 → 14 and Corner Office 18 → 17 (the slow long-reach bully suffered most from opponents who now close while swinging); Nick Fund Structure kbScale 11.5 → 12; Richy Short Squeeze startup 12 → 11; Mike weight 1.12 → 1.10; Abi's parry `carry: 0`. **Known soft spots:** Abi sits at the top of the band on both seeds (53.6 / 54.8 %) and Nick swings 8 points between seeds — a human pass on the new motion should come before more numbers.
+
+**v3 balance pass 4 — event rethink (2026-09-25, superseded) — all five gates PASS on two independent seeds at N = 30** (same methodology; the director now receives the stage id, so stage-bound events roll only where they belong).
 
 | Fighter | seed 1337 | seed 2024 |
 |---|---|---|

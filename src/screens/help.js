@@ -7,7 +7,7 @@ export const HELP_TABS = ['CONTROLS', 'RULES'];
 
 const CONTROLS = [
   // [action, detail, P1 keys, P2 keys, pad]
-  ['MOVE', 'double-tap to dash', ['A', 'D'], ['←', '→'], 'STICK'],
+  ['MOVE', 'double-tap: dash · swing on the run: lunge', ['A', 'D'], ['←', '→'], 'STICK'],
   ['JUMP', 'twice more in the air', ['W'], ['↑'], 'A / ✕'],
   ['FAST-FALL / DROP', 'hold / tap on a platform', ['S'], ['↓'], 'DOWN'],
   ['LIGHT', '+ direction: jab · side · down · aerials', ['F'], ['K'], 'X / □'],
