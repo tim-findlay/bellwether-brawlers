@@ -99,6 +99,8 @@ async function boot() {
     return;
   }
 
+  if (qp.has('tune')) (await import('./dev/tune.js')).mountTune();   // ?tune: live feel sliders over PHYS
+
   const art = qp.get('art');                          // ?art=<stageId>: render harness
   if (art !== null) {
     const { makeArt } = await import('./dev/art.js');

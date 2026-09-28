@@ -51,4 +51,8 @@ export const PHYS = {
   ATTACK_SLIDE: 0.88,       // per-frame vx multiplier, startup + active, stick neutral
   ATTACK_SLIDE_HOLD: 0.95,  // ... holding the facing direction
   ATTACK_CARRY_CAP: 1.15,   // entry speed is capped at runMax * this (a dash-attack doesn't fly)
+  STEP_SCALE: 1.0,          // multiplies every move's `step` (the ?tune panel's knob; kits keep their own numbers)
+  BODY_GAP: 34,             // a step / slide stops this far from the opponent's centre
+  MELEE_H: 76,              // forward melee box height (was 64: short hops slipped over it)
+  MELEE_REACH: 1.1,         // forward melee box width = move.range * this
 };

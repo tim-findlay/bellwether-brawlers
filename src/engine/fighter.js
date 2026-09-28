@@ -16,8 +16,6 @@ export const HAZARD_STAGGER = 20;    // hazard losers: brief, invulnerable throu
 const SLOT_PRIORITY = ['super', 's2', 's1', 'heavy', 'light'];
 const NEUTRAL = Object.freeze({ left: false, right: false, down: false, downTapped: false, jump: false, dodge: false, dashLeft: false, dashRight: false });
 const HURT_W = 44;
-const BODY_GAP = 34;                 // a sliding / stepping attack stops this far from the opponent's centre
-export const MELEE_H = 76;          // forward melee box height (was 64: short hops slipped over it)
 
 export class Fighter {
   constructor(cfg, side, controller, world) {
@@ -158,7 +156,7 @@ export class Fighter {
     if (m.step && !a.aerial) {                                           // eased step-in: accelerates into the active frames
       const su = m.startup || 0, s0 = Math.floor(su * 0.35), s1 = su + Math.ceil((m.active || 0) / 2);
       const e = (fr) => { const k = Math.max(0, Math.min(1, (fr - s0) / Math.max(1, s1 - s0))); return k * k * (3 - 2 * k); };
-      this.body.x += this.facing * m.step * (e(a.frame) - e(a.frame - 1));
+      this.body.x += this.facing * m.step * PHYS.STEP_SCALE * (e(a.frame) - e(a.frame - 1));
     }
     if (m.lift && this.airborne) {                                       // recovery: rise through startup + active
       if (a.frame === 1) this.body.vy = -m.lift;
@@ -345,8 +343,8 @@ export class Fighter {
     const b = this.body, sur = this._surface(), o = this.opp;
     let lo = sur ? sur.x + 4 : -Infinity, hi = sur ? sur.x + sur.w - 4 : Infinity;
     if (o && !o.chair && o.state !== 'ko' && Math.abs(o.y - this.y) < 60) {
-      if (this.facing > 0 && o.x > x0) hi = Math.min(hi, Math.max(x0, o.x - BODY_GAP));
-      if (this.facing < 0 && o.x < x0) lo = Math.max(lo, Math.min(x0, o.x + BODY_GAP));
+      if (this.facing > 0 && o.x > x0) hi = Math.min(hi, Math.max(x0, o.x - PHYS.BODY_GAP));
+      if (this.facing < 0 && o.x < x0) lo = Math.max(lo, Math.min(x0, o.x + PHYS.BODY_GAP));
     }
     b.x = Math.max(lo, Math.min(hi, b.x));
     const nx = b.x + b.vx * (b.friction ?? PHYS.RUN_FRICTION);
@@ -440,7 +438,7 @@ export class Fighter {
     if (a.aerial && a.aim === 'u') return { x: b.x, y: b.y - h - 10, w: reach, h: 50, move: m, slot: a.slot };
     if (a.aerial && a.aim === 'd') return { x: b.x, y: b.y + 14, w: reach, h: 46, move: m, slot: a.slot };
     if (m.bothSides || (a.aerial && a.aim === 'n')) return { x: b.x, y: b.y - h * 0.5, w: reach * 1.7, h: 64, move: m, slot: a.slot };
-    return { x: b.x + b.facing * (reach * 0.55), y: b.y - h * 0.5, w: reach * 1.1, h: MELEE_H, move: m, slot: a.slot };
+    return { x: b.x + b.facing * (reach * 0.55), y: b.y - h * 0.5, w: reach * PHYS.MELEE_REACH, h: PHYS.MELEE_H, move: m, slot: a.slot };
   }
   hurtbox() {
     const b = this.body;

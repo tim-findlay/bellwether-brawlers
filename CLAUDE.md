@@ -25,7 +25,7 @@ A lightly pixelated browser fighting game (HTML5 canvas + vanilla JS ES modules)
 
 - **Small, focused commits.** One logical change per commit.
 - **Always verify after changes:** serve locally, open the page, confirm no console errors and the title screen renders. For gameplay changes, also run the tests (`node --test 'tests/*.test.mjs'`) and the balance sim (`node src/dev/sim.js 30 1337` and `… 2024`, or `?sim=10` in the browser as a smoke check) and re-check all five BALANCE.md gates before shipping.
-- Dev flags: `?sim=N` (balance harness, dynamically imported), `?graybox` (movement playground), `?event=<id>` (force a hazard next roll). Keep them out of normal play paths.
+- Dev flags: `?sim=N` (balance harness, dynamically imported), `?graybox` (movement playground), `?event=<id>` (force a hazard next roll), `?tune` (live PHYS sliders; "Copy" gives lines for physics.js — shipped numbers still go through the sim gates). Keep them out of normal play paths.
 
 ## Deployment
 
