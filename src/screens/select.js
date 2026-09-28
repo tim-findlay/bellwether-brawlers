@@ -23,7 +23,8 @@ export function makeSelect(G) {
   let stageIdx = 0, stageT = 0;
   const navAny = makeNav(G), navP1 = makeNav(G, P1_DIRS), navP2 = makeNav(G, P2_DIRS);
 
-  const active = () => (mode === 'cpu' ? (locked[0] ? 1 : 0) : -1);
+  const solo = () => mode === 'cpu' || mode === 'practice';   // one player picks both sides
+  const active = () => (solo() ? (locked[0] ? 1 : 0) : -1);
 
   function move(side, dx) {
     if (!dx || locked[side]) return;
@@ -65,7 +66,7 @@ export function makeSelect(G) {
     },
 
     updateFighters() {
-      if (mode === 'cpu') {
+      if (solo()) {
         const side = active(), { dx } = navAny();
         move(side, dx);
         if (G.input.keyPressed('KeyR')) randomFor(side);
@@ -90,7 +91,7 @@ export function makeSelect(G) {
       if (G.input.keyPressed('KeyR')) { stageIdx = Math.floor(G.rng() * SELECTABLE_STAGES.length); stageT = 0; G.audio.play('pop'); }
       if (G.input.confirmPressed() || G.input.keyPressed('Space')) {
         G.audio.play('menuConfirm');
-        G.go('splash', { mode, p1: CHARACTERS[cursor[0]].id, p2: CHARACTERS[cursor[1]].id, stageId: SELECTABLE_STAGES[stageIdx].id });
+        G.go(mode === 'practice' ? 'practice' : 'splash', { mode, p1: CHARACTERS[cursor[0]].id, p2: CHARACTERS[cursor[1]].id, stageId: SELECTABLE_STAGES[stageIdx].id });
         return;
       }
       if (G.input.backPressed()) { phase = 'fighters'; locked[1] = false; readyT = 0; G.audio.play('menuBack'); }
@@ -107,7 +108,7 @@ export function makeSelect(G) {
 
     drawFighters(c) {
       backdrop(c, G, SELECTABLE_STAGES[0], t, { wash: 0.78 });
-      header(c, 'CHOOSE YOUR FIGHTER', { sub: mode === 'cpu' ? 'VERSUS CPU' : 'LOCAL VERSUS' });
+      header(c, 'CHOOSE YOUR FIGHTER', { sub: mode === 'practice' ? 'PRACTICE ARENA' : solo() ? 'VERSUS CPU' : 'LOCAL VERSUS' });
 
       CHARACTERS.forEach((cfg, i) => {
         const x = TX + i * (TILE + TGAP), y = TY;
@@ -122,7 +123,7 @@ export function makeSelect(G) {
           c.strokeStyle = col; c.lineWidth = 5;
           const inset = s === 1 && on.length === 2 ? 6 : 0;
           c.strokeRect(x - 3 + inset, y - 3 + inset, TILE + 6 - inset * 2, TILE + 6 - inset * 2);
-          chip(c, s === 0 ? 'P1' : mode === 'cpu' ? 'CPU' : 'P2', s === 0 ? x - 3 : x + TILE + 3, y - 20, col, { align: s === 0 ? 'left' : 'right' });
+          chip(c, s === 0 ? 'P1' : mode === 'practice' ? 'DUMMY' : solo() ? 'CPU' : 'P2', s === 0 ? x - 3 : x + TILE + 3, y - 20, col, { align: s === 0 ? 'left' : 'right' });
         }
       });
 
@@ -133,7 +134,7 @@ export function makeSelect(G) {
       const who = CHARACTERS[cursor[lastMover]];
       plaque(c, 30, 488, 900, 26, { fill: INK, shadow: 0, lw: 0 });
       text(c, `HOW TO BEAT ${who.name}: ${who.tip}`, 480, 506, { font: F.body(15), color: PAPER });
-      const keys = mode === 'cpu'
+      const keys = solo()
         ? [[['A', 'D'], 'Choose'], [['ENTER', 'F'], 'Lock in'], ['R', 'Random'], ['ESC', 'Back']]
         : [[['A', 'D'], 'P1'], ['F', 'Lock'], [['←', '→'], 'P2'], ['K', 'Lock'], [['R', '\\'], 'Random'], ['ESC', 'Back']];
       hints(c, keys, 532);
@@ -142,7 +143,7 @@ export function makeSelect(G) {
     panel(c, side, x) {
       const w = 420, y = 214, h = 266;
       const col = SIDE[side];
-      const waiting = mode === 'cpu' && side === 1 && !locked[0];
+      const waiting = solo() && side === 1 && !locked[0];
       const cfg = CHARACTERS[cursor[side]];
       plaque(c, x, y, w, h, { fill: CARD, shadow: 6 });
       c.fillStyle = col; c.fillRect(x + 3, y + 3, w - 6, 8);
@@ -164,11 +165,11 @@ export function makeSelect(G) {
 
       // info column
       const ix = side === 0 ? x + 192 : x + 16, iw = 212;
-      const tag = side === 0 ? 'PLAYER 1' : mode === 'cpu' ? 'CPU OPPONENT' : 'PLAYER 2';
+      const tag = side === 0 ? 'PLAYER 1' : mode === 'practice' ? 'PRACTICE DUMMY' : solo() ? 'CPU OPPONENT' : 'PLAYER 2';
       chip(c, tag, ix, y + 22, col);
       if (waiting) {
         text(c, 'WAITING…', ix, y + 84, { font: F.head(28), align: 'left', color: MUTED });
-        wrap(c, 'Lock in your fighter, then choose who you want to fight.', iw, F.body(17)).forEach((ln, i) =>
+        wrap(c, mode === 'practice' ? 'Lock in your fighter, then choose who to practise on.' : 'Lock in your fighter, then choose who you want to fight.', iw, F.body(17)).forEach((ln, i) =>
           text(c, ln, ix, y + 116 + i * 22, { font: F.body(17), align: 'left', color: MUTED }));
         return;
       }
@@ -225,7 +226,7 @@ export function makeSelect(G) {
       fighter(c, G, a, 96, 478, 2.3, { t, facing: 1 });
       fighter(c, G, b, 864, 478, 2.3, { t: t + 17, facing: -1 });
       chip(c, 'P1', 96, 300, NAVY, { align: 'center' });
-      chip(c, mode === 'cpu' ? 'CPU' : 'P2', 864, 300, BRICK, { align: 'center' });
+      chip(c, mode === 'practice' ? 'DUMMY' : solo() ? 'CPU' : 'P2', 864, 300, BRICK, { align: 'center' });
 
       hints(c, [[['A', 'D'], 'Choose'], [['ENTER', 'F'], 'Fight!'], ['R', 'Random'], ['ESC', 'Back']], 528);
     },

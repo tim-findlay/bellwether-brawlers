@@ -13,6 +13,7 @@ import { drawHelp, HELP_TABS } from './help.js';
 const ITEMS = [
   { label: 'VERSUS CPU', sub: 'You against the office. Pick a fighter, pick a floor, win the bell.', go: ['select', { mode: 'cpu' }] },
   { label: 'LOCAL VERSUS', sub: 'Two players: one keyboard, two keyboards or two pads. Settle it like colleagues.', go: ['select', { mode: '2p' }] },
+  { label: 'PRACTICE ARENA', sub: 'A dummy, infinite meter, hitboxes and a combo counter. Learn a kit in peace.', go: ['select', { mode: 'practice' }] },
   { label: 'OFFICE TOURNAMENT', sub: 'Four or eight entrants, players or CPUs, one bracket, one cup.', go: ['tour', {}] },
   { label: 'HOW TO PLAY', sub: 'Controls, the rules, and the TV setup check for two players.', page: 'help' },
   { label: 'RECORDS', sub: 'Who has taken the bell home, and how often.', page: 'records' },
@@ -105,7 +106,7 @@ export function makeMenu(G) {
 
     drawMain(c) {
       logo(c, 220, 96, 0.52, t, G);
-      menuList(c, ITEMS, idx, 64, 184, { w: 340, h: 40, gap: 7, anim });   // six items clear the footer
+      menuList(c, ITEMS, idx, 64, 178, { w: 340, h: 36, gap: 6, anim });   // seven items clear the blurb bar
 
       // featured fighter card
       const n = CHARACTERS.length, slot = 300;

@@ -100,7 +100,7 @@ export const SONGS = {
 
 // Which song a screen wants. The fight passes its (possibly overridden) stage id.
 export function songFor(screen, params = {}) {
-  if (screen === 'fight') {
+  if (screen === 'fight' || screen === 'practice') {
     if (params.p1 === 'seelye' || params.p2 === 'seelye') return 'boombap';        // DESIGN.md Audio: the whole soundtrack switches
     return SONGS[params.stageId] ? params.stageId : 'office';
   }

@@ -17,6 +17,7 @@ import { makeFight } from './screens/fight.js';
 import { makeResults } from './screens/results.js';
 import { makeSplash } from './screens/splash.js';
 import { makeTournament } from './screens/tournament.js';
+import { makePractice } from './screens/practice.js';
 import { Wipe } from './render/ui.js';
 
 const DT = 1000 / 60;
@@ -102,6 +103,7 @@ async function boot() {
   G.screens.results = makeResults(G);
   G.screens.splash = makeSplash(G);
   G.screens.tour = makeTournament(G);
+  G.screens.practice = makePractice(G);
 
   bootEl.classList.add('done');
 
