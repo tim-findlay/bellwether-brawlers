@@ -335,8 +335,8 @@ export function makeNav(G, dirs = DIRS, { first = 18, every = 6 } = {}) {
   };
 }
 
-export const confirmP1 = (G) => G.input.keyPressed('KeyF') || G.input.keyPressed('Space');
-export const confirmP2 = (G) => G.input.keyPressed('KeyK') || G.input.keyPressed('Enter');
+export const confirmP1 = (G) => G.input.keyPressed('KeyF') || G.input.keyPressed('Space') || G.input.keyPressed('Pad1Start');
+export const confirmP2 = (G) => G.input.keyPressed('KeyK') || G.input.keyPressed('Enter') || G.input.keyPressed('Pad2Start');
 
 // ---- transition --------------------------------------------------------------------
 

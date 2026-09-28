@@ -74,6 +74,11 @@ async function boot() {
     saveSettings() { saveJSON('bb.settings.v3', G.settings); },
     saveScores() { saveJSON('bb.scores', G.scores); },
     saveCups() { saveJSON('bb.cups', G.cups); },
+    toggleFullscreen() {                    // Settings -> Full Screen: the whole TV (the page letterboxes the 16:9 stage)
+      const el = document.getElementById('wrap') || document.documentElement;
+      const p = document.fullscreenElement ? document.exitFullscreen?.() : el.requestFullscreen?.({ navigationUI: 'hide' });
+      p?.catch?.(() => {});                 // refused (no recent key press / iframe policy): F11 still works
+    },
     screens: {},
     screen: null,
     go(name, p) {

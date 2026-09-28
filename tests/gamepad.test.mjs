@@ -9,7 +9,7 @@ const pad = (buttons = {}, axes = [0, 0]) => ({
 
 test('standard mapping: stick, face buttons, bumpers, triggers and start map onto P1 key codes', () => {
   const on = GamepadInput.codesFor(pad({ [PAD_BUTTONS.jump]: 1, [PAD_BUTTONS.light]: 1, [PAD_BUTTONS.s1]: 1, [PAD_BUTTONS.dodgeR]: 1, [PAD_BUTTONS.start]: 1 }, [0.9, 0]), P1MAP);
-  assert.deepEqual([...on].sort(), [P1MAP.right, P1MAP.up, P1MAP.light, P1MAP.s1, P1MAP.dodge, 'Enter'].sort());
+  assert.deepEqual([...on].sort(), [P1MAP.right, P1MAP.up, P1MAP.light, P1MAP.s1, P1MAP.dodge, P1MAP.start].sort());
 });
 
 test('dead zone: a resting stick presses nothing; the d-pad works without the stick', () => {
@@ -27,4 +27,15 @@ test('poll: key-down edges land in pending once, holds persist, releases clear h
   input.pending.clear(); g.poll(); assert.equal(input.pending.size, 0, 'no repeat edge while held');
   pads[0] = pad({}); g.poll(); assert.equal(input.held[P1MAP.light], false);
   Object.defineProperty(globalThis, 'navigator', { value: undefined, configurable: true, writable: true });
+});
+
+test("regression: a pad's Start never presses a fighter key (pad 0 Start used to send Enter = P2's super)", async () => {
+  const { P2MAP, CONFIRM_CODES } = await import('../src/engine/input.js');
+  const fighterKeys = new Set([...Object.entries(P1MAP), ...Object.entries(P2MAP)].filter(([a]) => a !== 'start').map(([, c]) => c));
+  const on0 = GamepadInput.codesFor(pad({ [PAD_BUTTONS.start]: 1 }), P1MAP);
+  const on1 = GamepadInput.codesFor(pad({ [PAD_BUTTONS.start]: 1 }), P2MAP);
+  for (const c of [...on0, ...on1]) assert.ok(!fighterKeys.has(c), `Start sends ${c}, a fighter key`);
+  assert.equal(on0.size, 1); assert.equal(on1.size, 1);
+  assert.notDeepEqual([...on0], [...on1], 'each seat has its own Start');
+  for (const c of [...on0, ...on1]) assert.ok(CONFIRM_CODES.includes(c), 'Start still confirms menus');
 });

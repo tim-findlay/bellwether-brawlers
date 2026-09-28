@@ -8,7 +8,7 @@ A lightly pixelated office **platform fighter** starring your coworkers — eigh
 
 ## How to play
 
-**Versus CPU** or **Local Versus** (two players on one keyboard, or two pads). Pick your fighter, pick your opponent, pick an arena, then the VS splash drops you into the fight. In Local Versus both players pick at the same time on their own keys. The main menu also has an **Office Tournament** (a 4- or 8-fighter bracket, each slot a player or a CPU; the champion takes a cup), **How to Play**, **Records** (wins and cups per fighter, kept in this browser) and **Settings** (office events, CPU difficulty, sound, music, screen shake, reset records). **Esc** (or a pad's Back button) pauses: resume, how to play, restart the match or quit to the menu.
+**Versus CPU** or **Local Versus** (two players on one keyboard, two keyboards, or two pads). Pick your fighter, pick your opponent, pick an arena, then the VS splash drops you into the fight. In Local Versus both players pick at the same time on their own keys. The main menu also has an **Office Tournament** (a 4- or 8-fighter bracket, each slot a player or a CPU; the champion takes a cup), **How to Play**, **Records** (wins and cups per fighter, kept in this browser) and **Settings** (office events, CPU difficulty, sound, music, screen shake, full screen, reset records). **Esc** (or a pad's Back or Start button) pauses: resume, how to play, restart the match or quit to the menu.
 
 - **3 stocks each, untimed.** The only KO is a **ring-out**: knock your colleague past the edge of the screen (any side).
 - **Composure** (your bar) never kills. It drains as you take hits and the emptier it is, the farther every hit sends you. It refills only when you lose a stock — waiting heals nothing.
@@ -34,7 +34,9 @@ Bindings are by **physical key position** (US labels shown), so they work on any
 
 **Menus:** F / K / Enter confirm · Esc back · Esc pauses a fight (with the full controls overlay — also under HOW TO PLAY on the main menu).
 
-**Gamepads:** plug in any standard-mapping pad (Xbox, PlayStation, most USB pads) — the first pad drives P1, the second P2, alongside the keyboard. Stick / d-pad move, **A** jump, **X** light, **B** heavy, **RB / LB** specials, **Y** super, triggers dodge, Start = Enter, Back = Esc. No rebinding UI yet.
+**Gamepads:** plug in any standard-mapping pad (Xbox, PlayStation, most USB pads) — the first pad drives P1, the second P2, alongside the keyboard. Stick / d-pad move, **A** jump, **X** light, **B** heavy, **RB / LB** specials, **Y** super, triggers dodge, Start confirms and pauses (each pad's Start is its own — it never presses the other player's keys), Back = Esc. No rebinding UI yet.
+
+**On the conference-room TV:** plug everything into the one PC and open the game full screen (**Settings → Full Screen**, or F11). Two keyboards work — the browser hears both, so P1 plays on the WASD side of one and P2 on the arrow side of the other (which also avoids the key-ghosting you get with two people on one board). Two pads are better still: the first connected pad is P1, the second P2. **How to Play → TV SETUP** is a live check: hold anything and it lights up under the player it belongs to, with the connected pads named.
 
 ### The roster
 

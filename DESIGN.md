@@ -56,7 +56,7 @@ Physical key positions (`KeyboardEvent.code`), US labels. All bound keys `preven
 
 **Jump-key rule (canonical):** an air jump triggers on the key-down *edge* while airborne; aerial aim reads the *held* directions on the frame Light is pressed — so up-air is "keep W held (e.g. from your jump), press Light", and a fresh mid-air W tap is always an air jump.
 
-**Gamepads (Phase 3b):** any standard-mapping pad (Xbox / PlayStation / most USB pads) drives P1 (first pad) or P2 (second pad) alongside the keyboard through the Gamepad API — left stick or d-pad to move, **A** jump, **X** light, **B** heavy, **RB / LB** specials, **Y** super, either trigger dodge, Start = Enter, Back = Esc. No rebinding UI yet (deliberate; the mapping lives in `src/engine/input.js`).
+**Gamepads (Phase 3b):** any standard-mapping pad (Xbox / PlayStation / most USB pads) drives P1 (first pad) or P2 (second pad) alongside the keyboard through the Gamepad API — left stick or d-pad to move, **A** jump, **X** light, **B** heavy, **RB / LB** specials, **Y** super, either trigger dodge, Start = a per-seat virtual code (confirm / pause; it used to send Enter, which is P2's super), Back = Esc. **TV setup (2026-09-28):** two keyboards on one PC merge into one input stream, so the P1 (WASD) / P2 (arrows) split works across two boards; Settings → Full Screen; How to Play → TV SETUP is a live per-player input check naming the connected pads. No rebinding UI yet (deliberate; the mapping lives in `src/engine/input.js`).
 
 ## The directional kit (Brawlhalla-style, Phase 3b)
 

@@ -12,9 +12,9 @@ import { drawHelp, HELP_TABS } from './help.js';
 
 const ITEMS = [
   { label: 'VERSUS CPU', sub: 'You against the office. Pick a fighter, pick a floor, win the bell.', go: ['select', { mode: 'cpu' }] },
-  { label: 'LOCAL VERSUS', sub: 'Two players, one keyboard or two pads. Settle it like colleagues.', go: ['select', { mode: '2p' }] },
+  { label: 'LOCAL VERSUS', sub: 'Two players: one keyboard, two keyboards or two pads. Settle it like colleagues.', go: ['select', { mode: '2p' }] },
   { label: 'OFFICE TOURNAMENT', sub: 'Four or eight entrants, players or CPUs, one bracket, one cup.', go: ['tour', {}] },
-  { label: 'HOW TO PLAY', sub: 'Controls, stocks, composure and the office rules.', page: 'help' },
+  { label: 'HOW TO PLAY', sub: 'Controls, the rules, and the TV setup check for two players.', page: 'help' },
   { label: 'RECORDS', sub: 'Who has taken the bell home, and how often.', page: 'records' },
   { label: 'SETTINGS', sub: 'Events, CPU difficulty, sound and screen shake.', page: 'settings' },
 ];
@@ -25,6 +25,7 @@ const SETTINGS = [
   { key: 'sfx', label: 'SOUND', desc: 'Hits, swings, footfalls, bells and klaxons.', opts: [[true, 'ON'], [false, 'OFF']] },
   { key: 'music', label: 'MUSIC', desc: 'A tune per stage; more joins in on the last stock.', opts: [[true, 'ON'], [false, 'OFF']] },
   { key: 'shake', label: 'SCREEN SHAKE', desc: 'Camera shake on big hits and ring-outs (cosmetic).', opts: [[true, 'ON'], [false, 'OFF']] },
+  { key: 'fullscreen', label: 'FULL SCREEN', desc: 'Fill the whole TV — for the conference room (F11 works too).', action: true },
   { key: 'reset', label: 'RESET RECORDS', desc: 'Clear every win and cup on the records board.', action: true },
   { key: 'done', label: 'DONE', desc: 'Back to the main menu.', action: true },
 ];
@@ -67,6 +68,7 @@ export function makeMenu(G) {
         if (dx && !row.action) applySetting(row, dx);
         if (ok) {
           if (row.key === 'done') { G.audio.play('menuBack'); page = 'main'; }
+          else if (row.key === 'fullscreen') { G.toggleFullscreen?.(); G.audio.play('menuConfirm'); }
           else if (row.key === 'reset') {
             if (!confirmReset) { confirmReset = true; G.audio.play('klaxon'); }
             else {
@@ -78,8 +80,9 @@ export function makeMenu(G) {
         }
         if (back) { G.audio.play('menuBack'); page = 'main'; }
       } else if (page === 'help') {
-        if (dx) { tab = (tab + dx + HELP_TABS.length) % HELP_TABS.length; G.audio.play('menuMove'); }
-        if (back || ok) { G.audio.play('menuBack'); page = 'main'; }
+        const tv = HELP_TABS[tab] === 'TV SETUP';                   // the live check: every key is a test press, only Esc / Back leaves
+        if (dx && !tv) { tab = (tab + dx + HELP_TABS.length) % HELP_TABS.length; G.audio.play('menuMove'); }
+        if (back || (ok && !tv)) { G.audio.play('menuBack'); page = 'main'; }
       } else if (page === 'records') {
         if (back || ok) { G.audio.play('menuBack'); page = 'main'; }
       }
@@ -95,8 +98,8 @@ export function makeMenu(G) {
       else if (page === 'records') this.drawRecords(c);
       else {
         header(c, 'HOW TO PLAY', { sub: 'BELLWETHER BRAWLERS' });
-        drawHelp(c, tab);
-        hints(c, [[['←', '→'], 'Tab'], ['ESC', 'Back']], 520);
+        drawHelp(c, tab, { G });
+        hints(c, HELP_TABS[tab] === 'TV SETUP' ? [['ESC', 'Back (every other key is a test press)']] : [[['←', '→'], 'Tab'], ['ESC', 'Back']], 520);
       }
     },
 
@@ -134,10 +137,10 @@ export function makeMenu(G) {
     drawSettings(c) {
       header(c, 'SETTINGS', { sub: 'saved automatically' });
       SETTINGS.forEach((row, i) => {
-        const sel = i === sIdx, y = 96 + i * 57;                      // seven rows clear the footer hints
-        plaque(c, 60, y, 840, 50, { fill: sel ? INK : CARD, shadow: sel ? 0 : 4 });
-        text(c, row.label, 84, y + 22, { font: F.head(21), align: 'left', color: sel ? PAPER : INK });
-        text(c, row.desc, 84, y + 39, { font: F.body(14), align: 'left', color: sel ? '#d9ceb4' : MUTED });
+        const sel = i === sIdx, y = 90 + i * 52;                      // eight rows clear the footer hints
+        plaque(c, 60, y, 840, 46, { fill: sel ? INK : CARD, shadow: sel ? 0 : 4 });
+        text(c, row.label, 84, y + 20, { font: F.head(21), align: 'left', color: sel ? PAPER : INK });
+        text(c, row.desc, 84, y + 37, { font: F.body(14), align: 'left', color: sel ? '#d9ceb4' : MUTED });
         if (row.opts) {
           let x = 880;
           [...row.opts].reverse().forEach(([v, label]) => {
@@ -146,12 +149,15 @@ export function makeMenu(G) {
             x -= w + 6;
             const on = G.settings[row.key] === v;
             c.fillStyle = on ? (sel ? BRASS : NAVY) : (sel ? '#4a4239' : '#e6dcc4');
-            c.fillRect(x, y + 12, w, 25);
-            text(c, label, x + w / 2, y + 29, { font: F.mono(12), color: on ? PAPER : (sel ? '#b8ad93' : MUTED) });
+            c.fillRect(x, y + 10, w, 25);
+            text(c, label, x + w / 2, y + 27, { font: F.mono(12), color: on ? PAPER : (sel ? '#b8ad93' : MUTED) });
           });
         } else if (row.key === 'reset') {
           const msg = confirmReset ? 'PRESS AGAIN TO CONFIRM' : 'PRESS ENTER';
-          chip(c, msg, 880, y + 15, confirmReset ? BRICK : (sel ? BRASS : MUTED), { align: 'right' });
+          chip(c, msg, 880, y + 13, confirmReset ? BRICK : (sel ? BRASS : MUTED), { align: 'right' });
+        } else if (row.key === 'fullscreen') {
+          const on = typeof document !== 'undefined' && !!document.fullscreenElement;
+          chip(c, on ? 'ON — PRESS TO EXIT' : 'PRESS ENTER', 880, y + 13, on ? GREEN : (sel ? BRASS : MUTED), { align: 'right' });
         }
       });
       hints(c, [[['W', 'S'], 'Move'], [['A', 'D'], 'Change'], ['ENTER', 'Toggle'], ['ESC', 'Back']], 520);

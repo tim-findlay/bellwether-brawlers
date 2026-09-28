@@ -3,10 +3,11 @@
 
 import { PHYS } from '../data/physics.js';
 
-export const P1MAP = { left: 'KeyA', right: 'KeyD', up: 'KeyW', down: 'KeyS', light: 'KeyF', heavy: 'KeyG', s1: 'KeyH', s2: 'KeyJ', super: 'Space', dodge: 'KeyV' };
-export const P2MAP = { left: 'ArrowLeft', right: 'ArrowRight', up: 'ArrowUp', down: 'ArrowDown', light: 'KeyK', heavy: 'KeyL', s1: 'Semicolon', s2: 'Quote', super: 'Enter', dodge: 'Slash' };
+export const P1MAP = { left: 'KeyA', right: 'KeyD', up: 'KeyW', down: 'KeyS', light: 'KeyF', heavy: 'KeyG', s1: 'KeyH', s2: 'KeyJ', super: 'Space', dodge: 'KeyV', start: 'Pad1Start' };
+export const P2MAP = { left: 'ArrowLeft', right: 'ArrowRight', up: 'ArrowUp', down: 'ArrowDown', light: 'KeyK', heavy: 'KeyL', s1: 'Semicolon', s2: 'Quote', super: 'Enter', dodge: 'Slash', start: 'Pad2Start' };
 
-export const CONFIRM_CODES = ['KeyF', 'KeyK', 'Enter'];
+export const CONFIRM_CODES = ['KeyF', 'KeyK', 'Enter', 'Pad1Start', 'Pad2Start'];
+export const START_CODES = ['Pad1Start', 'Pad2Start'];   // virtual: a pad's Start (confirm / pause) — never a fighter key
 export const BACK_CODE = 'Escape';
 
 const PREVENT = new Set([...Object.values(P1MAP), ...Object.values(P2MAP), 'Escape']);
@@ -66,6 +67,7 @@ export class Input {
   keyPressed(code) { return this.pressedNow.has(code); }
   confirmPressed() { return CONFIRM_CODES.some(c => this.keyPressed(c)); }
   backPressed() { return this.keyPressed(BACK_CODE); }
+  startPressed() { return START_CODES.some(c => this.keyPressed(c)); }
 
   buffered(code, win = BUFFER_FRAMES) {
     const pf = this.pressFrame[code];
@@ -132,7 +134,8 @@ export function buildIntent(ctl, input, map) {
 // per logic tick (Gamepad API is state-based, not event-based).
 //   stick / d-pad -> left right up down · A/Cross jump · X/Square light ·
 //   B/Circle heavy · RB special 1 · LB special 2 · Y/Triangle super ·
-//   RT/LT dodge · Start = Enter (confirm / pause) · Back/Select = Escape
+//   RT/LT dodge · Start = its seat's virtual start code (confirm / pause —
+//   it used to send Enter, which is P2's super) · Back/Select = Escape
 export const PAD_BUTTONS = { jump: 0, heavy: 1, light: 2, super: 3, s2: 4, s1: 5, dodgeL: 6, dodgeR: 7, back: 8, start: 9, up: 12, down: 13, left: 14, right: 15 };
 const PAD_MAPS = [P1MAP, P2MAP];
 const DEAD = 0.5;
@@ -155,7 +158,7 @@ export class GamepadInput {
     if (pressed(PAD_BUTTONS.s2)) on.add(map.s2);
     if (pressed(PAD_BUTTONS.super)) on.add(map.super);
     if (pressed(PAD_BUTTONS.dodgeL) || pressed(PAD_BUTTONS.dodgeR)) on.add(map.dodge);
-    if (pressed(PAD_BUTTONS.start)) on.add('Enter');
+    if (pressed(PAD_BUTTONS.start)) on.add(map.start);
     if (pressed(PAD_BUTTONS.back)) on.add('Escape');
     return on;
   }

@@ -54,7 +54,7 @@ export function makeFight(G) {
     update() {
       t++;
       if (paused) { this.updatePause(); return; }
-      if (G.input.backPressed() && phase !== 'outro') {
+      if ((G.input.backPressed() || G.input.startPressed?.()) && phase !== 'outro') {   // Esc, or a pad's Back / Start
         paused = true; pIdx = 0; pPage = 'list'; G.audio.play('menuBack');
         return;
       }
@@ -116,7 +116,7 @@ export function makeFight(G) {
       const { dx, dy } = nav();
       const ok = G.input.confirmPressed();
       if (pPage === 'help') {
-        if (dx) { pTab = (pTab + dx + HELP_TABS.length) % HELP_TABS.length; G.audio.play('menuMove'); }
+        if (dx) { const n = HELP_TABS.length - 1; pTab = (pTab + dx + n) % n; G.audio.play('menuMove'); }   // TV SETUP (last) is menu-only
         if (ok || G.input.backPressed()) { pPage = 'list'; G.audio.play('menuBack'); }
         return;
       }
