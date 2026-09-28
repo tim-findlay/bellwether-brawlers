@@ -2,6 +2,8 @@
 
 import { Input } from './engine/input.js';
 import { Audio } from './engine/audio.js';
+import { Music } from './engine/music.js';
+import { songFor } from './data/music.js';
 import { FX } from './engine/effects.js';
 import { Renderer } from './render/draw.js';
 import { loadHeadshots, loadSprites, loadStageArt, loadUIArt } from './engine/assets.js';
@@ -37,6 +39,8 @@ async function boot() {
   const input = new Input();
   input.attach(window);
   const audio = new Audio();
+  const music = new Music(audio);
+  for (const ev of ['keydown', 'pointerdown', 'gamepadconnected']) addEventListener(ev, () => audio.unlock(), { passive: true });   // autoplay rule: a gesture starts the context
   const fx = new FX(audio);
   const renderer = new Renderer(canvas);
   const wipe = new Wipe();
@@ -60,9 +64,9 @@ async function boot() {
   renderer.sprites = sprites; renderer.stageArt = stageArt; renderer.heads = heads;
 
   const G = {
-    canvas, input, audio, fx, renderer, heads, sprites, stageArt, uiArt,
+    canvas, input, audio, music, fx, renderer, heads, sprites, stageArt, uiArt,
     rng: mulberry32(Date.now() & 0xffffffff),
-    settings: loadJSON('bb.settings.v3', { events: true, difficulty: 'easy', sfx: true, shake: true }),
+    settings: { music: true, ...loadJSON('bb.settings.v3', { events: true, difficulty: 'easy', sfx: true, shake: true }) },
     scores: loadJSON('bb.scores', {}),
     saveSettings() { saveJSON('bb.settings.v3', G.settings); },
     saveScores() { saveJSON('bb.scores', G.scores); },
@@ -74,9 +78,11 @@ async function boot() {
       G.screenName = name;
       G.screen = G.screens[name];
       G.screen.enter(p);
+      if (name !== 'art') music.play(songFor(name, p || {}));
     },
   };
   audio.setEnabled(G.settings.sfx);
+  audio.setMusic(G.settings.music !== false);
   fx.shakeScale = G.settings.shake === false ? 0 : 1;
 
   window.__G = G;                         // dev: inspectable from the drive harness

@@ -1,11 +1,24 @@
-// All sound is synthesised with WebAudio — no external files.
-// Lazy AudioContext (browsers require a user gesture first).
+// Audio (v3 sound pass). Everything is synthesised with WebAudio — no files
+// (the repo has no licensed sound library to draw on). The engine owns the
+// buses and the voice primitives; what each sound IS lives in
+// src/data/sfx.js as layered recipes, and the music in src/data/music.js
+// (played by engine/music.js). Lazy AudioContext: browsers need a gesture.
+//
+//   master -> compressor -> out;  sfx bus -> master;  music bus -> master
+//   heavy layers can route through a soft-clip "crunch" before the sfx bus.
+
+import { SFX } from '../data/sfx.js';
+
+const NOISE_SECONDS = 2;
+const MUSIC_GAIN = 0.22;   // metered offline: song peaks sit 2–5 dB under a light hit's, song RMS ~24 dB under
 
 export class Audio {
   constructor() {
     this.ctx = null;
-    this.enabled = true;
+    this.enabled = true;          // sound effects
+    this.musicOn = true;
     this.master = null;
+    this.last = new Map();        // name -> ctx time of the last play (anti-stacking)
   }
 
   ensure() {
@@ -13,78 +26,81 @@ export class Audio {
     try {
       const AC = window.AudioContext || window.webkitAudioContext;
       this.ctx = new AC();
-      this.master = this.ctx.createGain();
-      this.master.gain.value = 0.5;
-      this.master.connect(this.ctx.destination);
-    } catch (e) { return false; }
+      const c = this.ctx;
+      const comp = c.createDynamicsCompressor();
+      comp.threshold.value = -14; comp.knee.value = 12; comp.ratio.value = 4; comp.attack.value = 0.003; comp.release.value = 0.18;
+      this.master = c.createGain(); this.master.gain.value = 0.7;
+      this.master.connect(comp); comp.connect(c.destination);
+      this.sfx = c.createGain(); this.sfx.gain.value = 2.2; this.sfx.connect(this.master);
+      this.music = c.createGain(); this.music.gain.value = this.musicOn ? MUSIC_GAIN : 0; this.music.connect(this.master);
+      this.crunch = c.createWaveShaper(); this.crunch.curve = softClip(2.2); this.crunch.connect(this.sfx);
+      const len = c.sampleRate * NOISE_SECONDS;
+      this.noiseBuf = c.createBuffer(1, len, c.sampleRate);
+      const d = this.noiseBuf.getChannelData(0);
+      for (let i = 0; i < len; i++) d[i] = Math.random() * 2 - 1;
+    } catch (e) { this.ctx = null; return false; }
     return true;
   }
 
+  // call from a user gesture: creates / resumes the context so music can start
+  unlock() { if (this.ensure() && this.ctx.state === 'suspended') this.ctx.resume().catch(() => {}); }
+  get running() { return !!this.ctx && this.ctx.state === 'running'; }
+
   setEnabled(on) { this.enabled = on; }
-
-  tone({ f0 = 440, f1 = f0, dur = 0.1, type = 'square', vol = 0.12, delay = 0 }) {
-    if (!this.enabled || !this.ensure()) return;
-    const t = this.ctx.currentTime + delay;
-    const o = this.ctx.createOscillator();
-    const g = this.ctx.createGain();
-    o.type = type;
-    o.frequency.setValueAtTime(f0, t);
-    o.frequency.exponentialRampToValueAtTime(Math.max(20, f1), t + dur);
-    g.gain.setValueAtTime(vol, t);
-    g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
-    o.connect(g); g.connect(this.master);
-    o.start(t); o.stop(t + dur + 0.02);
+  setMusic(on) {
+    this.musicOn = on;
+    if (this.music) this.music.gain.setTargetAtTime(on ? MUSIC_GAIN : 0, this.ctx.currentTime, 0.1);
   }
 
-  noise({ dur = 0.12, vol = 0.1, freq = 1200, delay = 0 }) {
-    if (!this.enabled || !this.ensure()) return;
-    const t = this.ctx.currentTime + delay;
-    const len = Math.max(1, Math.floor(this.ctx.sampleRate * dur));
-    const buf = this.ctx.createBuffer(1, len, this.ctx.sampleRate);
-    const d = buf.getChannelData(0);
-    for (let i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * (1 - i / len);
-    const src = this.ctx.createBufferSource();
-    src.buffer = buf;
-    const f = this.ctx.createBiquadFilter();
-    f.type = 'bandpass'; f.frequency.value = freq; f.Q.value = 0.8;
-    const g = this.ctx.createGain();
-    g.gain.setValueAtTime(vol, t);
-    g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
-    src.connect(f); f.connect(g); g.connect(this.master);
-    src.start(t);
+  // play(name, { gain, pitch }) — gain scales every layer, pitch multiplies every frequency
+  play(name, opts = {}) {
+    const r = SFX[name];
+    if (!r || !this.enabled || !this.ensure()) return;
+    const t = this.ctx.currentTime;
+    if (t - (this.last.get(name) ?? -1) < (r.gap ?? 0.03)) return;   // the same sound twice in 30 ms is one sound
+    this.last.set(name, t);
+    const vary = r.vary ?? 0.05, pitch = (opts.pitch ?? 1) * (1 + (Math.random() * 2 - 1) * vary);
+    for (const L of r.layers) this.voice(L, t, opts.gain ?? 1, pitch, this.sfx);
   }
 
-  play(name) {
-    const fn = SFX[name];
-    if (fn) fn(this);
+  // One layer. osc: { f0, f1, dur, type, vol, attack, delay, lp }
+  // noise: { dur, vol, filter, f0, f1, q, attack, delay }   fm: { f0, ratio, index, dur, vol, delay }
+  voice(L, t0, gain, pitch, bus) {
+    const c = this.ctx, t = t0 + (L.delay || 0), dur = L.dur || 0.1, vol = (L.vol ?? 0.1) * gain;
+    const out = c.createGain();
+    const att = Math.min(L.attack || 0.002, dur * 0.8);
+    out.gain.setValueAtTime(0.0001, t);
+    out.gain.exponentialRampToValueAtTime(Math.max(0.0002, vol), t + att);
+    out.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    out.connect(L.crunch ? this.crunch : bus);
+    let src, tail = out;
+    if (L.lp) { const f = c.createBiquadFilter(); f.type = 'lowpass'; f.frequency.value = L.lp; f.connect(out); tail = f; }
+    if (L.kind === 'noise') {
+      src = c.createBufferSource(); src.buffer = this.noiseBuf;
+      const f = c.createBiquadFilter(); f.type = L.filter || 'bandpass'; f.Q.value = L.q ?? 0.9;
+      f.frequency.setValueAtTime((L.f0 || 1200) * pitch, t);
+      if (L.f1) f.frequency.exponentialRampToValueAtTime(L.f1 * pitch, t + dur);
+      src.connect(f); f.connect(tail);
+      src.start(t, Math.random() * Math.max(0, NOISE_SECONDS - dur - 0.05)); src.stop(t + dur + 0.02);
+    } else if (L.kind === 'fm') {
+      const car = c.createOscillator(), mod = c.createOscillator(), mg = c.createGain();
+      const f = (L.f0 || 440) * pitch;
+      car.frequency.value = f; mod.frequency.value = f * (L.ratio || 1.4);
+      mg.gain.setValueAtTime(f * (L.index || 2), t); mg.gain.exponentialRampToValueAtTime(f * 0.05, t + dur);
+      mod.connect(mg); mg.connect(car.frequency); car.connect(tail);
+      car.start(t); mod.start(t); car.stop(t + dur + 0.02); mod.stop(t + dur + 0.02);
+    } else {
+      src = c.createOscillator(); src.type = L.type || 'sine';
+      src.frequency.setValueAtTime((L.f0 || 440) * pitch, t);
+      if (L.f1) src.frequency.exponentialRampToValueAtTime(Math.max(20, L.f1 * pitch), t + dur);
+      if (L.detune) src.detune.value = L.detune;
+      src.connect(tail); src.start(t); src.stop(t + dur + 0.02);
+    }
   }
 }
 
-const SFX = {
-  menuMove:   (a) => a.tone({ f0: 520, f1: 560, dur: 0.05, type: 'square', vol: 0.07 }),
-  menuConfirm:(a) => { a.tone({ f0: 440, f1: 660, dur: 0.09, vol: 0.09 }); a.tone({ f0: 660, f1: 880, dur: 0.12, vol: 0.08, delay: 0.07 }); },
-  menuBack:   (a) => a.tone({ f0: 420, f1: 260, dur: 0.1, vol: 0.07 }),
-  hitLight:   (a) => { a.noise({ dur: 0.06, vol: 0.12, freq: 1800 }); a.tone({ f0: 240, f1: 160, dur: 0.06, vol: 0.1 }); },
-  hitHeavy:   (a) => { a.noise({ dur: 0.12, vol: 0.16, freq: 900 }); a.tone({ f0: 150, f1: 70, dur: 0.16, type: 'sawtooth', vol: 0.14 }); },
-  block:      (a) => a.tone({ f0: 90, f1: 80, dur: 0.07, type: 'sawtooth', vol: 0.1 }),
-  whiff:      (a) => a.noise({ dur: 0.05, vol: 0.05, freq: 2400 }),
-  special:    (a) => a.tone({ f0: 320, f1: 620, dur: 0.14, type: 'triangle', vol: 0.11 }),
-  superReady: (a) => { a.tone({ f0: 523, dur: 0.08, vol: 0.08 }); a.tone({ f0: 784, dur: 0.14, vol: 0.08, delay: 0.08 }); },
-  superGo:    (a) => { a.tone({ f0: 196, f1: 392, dur: 0.3, type: 'sawtooth', vol: 0.13 }); a.noise({ dur: 0.25, vol: 0.1, freq: 600, delay: 0.05 }); },
-  parry:      (a) => { a.tone({ f0: 880, f1: 1320, dur: 0.09, vol: 0.1 }); a.tone({ f0: 1320, dur: 0.06, vol: 0.07, delay: 0.06 }); },
-  teleport:   (a) => a.tone({ f0: 900, f1: 200, dur: 0.12, type: 'triangle', vol: 0.09 }),
-  grab:       (a) => { a.noise({ dur: 0.08, vol: 0.12, freq: 500 }); a.tone({ f0: 110, f1: 60, dur: 0.2, type: 'sawtooth', vol: 0.13, delay: 0.08 }); },
-  burn:       (a) => a.noise({ dur: 0.18, vol: 0.05, freq: 700 }),
-  heal:       (a) => { a.tone({ f0: 523, f1: 659, dur: 0.1, type: 'triangle', vol: 0.08 }); a.tone({ f0: 784, dur: 0.1, vol: 0.07, delay: 0.09 }); },
-  ko:         (a) => { a.tone({ f0: 200, f1: 50, dur: 0.5, type: 'sawtooth', vol: 0.16 }); a.noise({ dur: 0.4, vol: 0.14, freq: 400, delay: 0.05 }); },
-  roundGo:    (a) => { a.tone({ f0: 392, dur: 0.09, vol: 0.1 }); a.tone({ f0: 392, dur: 0.09, vol: 0.1, delay: 0.12 }); a.tone({ f0: 587, dur: 0.2, vol: 0.12, delay: 0.24 }); },
-  klaxon:     (a) => { a.tone({ f0: 660, f1: 440, dur: 0.18, type: 'square', vol: 0.12 }); a.tone({ f0: 660, f1: 440, dur: 0.18, type: 'square', vol: 0.12, delay: 0.22 }); },
-  mash:       (a) => a.tone({ f0: 700, f1: 740, dur: 0.03, vol: 0.06 }),
-  wave:       (a) => a.noise({ dur: 0.5, vol: 0.1, freq: 300 }),
-  bikeBell:   (a) => { a.tone({ f0: 1568, dur: 0.07, vol: 0.09 }); a.tone({ f0: 1568, dur: 0.07, vol: 0.09, delay: 0.09 }); },
-  alarm:      (a) => { for (let i = 0; i < 3; i++) a.tone({ f0: 880, f1: 880, dur: 0.1, type: 'square', vol: 0.09, delay: i * 0.15 }); },
-  bell:       (a) => { a.tone({ f0: 1175, f1: 1170, dur: 0.4, type: 'triangle', vol: 0.12 }); a.tone({ f0: 587, f1: 585, dur: 0.5, type: 'triangle', vol: 0.08 }); },
-  jet:        (a) => { a.noise({ dur: 0.7, vol: 0.12, freq: 250 }); a.tone({ f0: 180, f1: 600, dur: 0.6, type: 'sawtooth', vol: 0.06 }); },
-  slip:       (a) => { a.tone({ f0: 1000, f1: 300, dur: 0.18, type: 'triangle', vol: 0.1 }); },
-  pop:        (a) => a.tone({ f0: 300, f1: 500, dur: 0.06, type: 'square', vol: 0.08 }),
-};
+function softClip(k) {
+  const n = 1024, curve = new Float32Array(n);
+  for (let i = 0; i < n; i++) { const x = (i / (n - 1)) * 2 - 1; curve[i] = Math.tanh(k * x) / Math.tanh(k); }
+  return curve;
+}

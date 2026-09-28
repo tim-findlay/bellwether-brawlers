@@ -16,6 +16,7 @@ export const HAZARD_STAGGER = 20;    // hazard losers: brief, invulnerable throu
 const SLOT_PRIORITY = ['super', 's2', 's1', 'heavy', 'light'];
 const NEUTRAL = Object.freeze({ left: false, right: false, down: false, downTapped: false, jump: false, dodge: false, dashLeft: false, dashRight: false });
 const HURT_W = 44;
+const MELEE_KINDS = new Set([undefined, 'melee', 'lunge', 'flurry', 'shout', 'dashCombo', 'aerial']);
 
 export class Fighter {
   constructor(cfg, side, controller, world) {
@@ -163,7 +164,10 @@ export class Fighter {
       else if (a.frame <= (m.startup || 0) + (m.active || 0)) this.body.vy = Math.min(this.body.vy, -m.lift * 0.45);
     }
     if (m.dive && this.airborne && a.frame >= (m.startup || 0)) this.body.vy = Math.max(this.body.vy, m.dive);   // ground pound: drop
-    if (!a.fired && a.frame >= (m.startup || 0)) { a.fired = true; this.world.fire(this, a); }
+    if (!a.fired && a.frame >= (m.startup || 0)) {
+      a.fired = true; this.world.fire(this, a);
+      if (MELEE_KINDS.has(m.kind)) this.world.audio.play(m.travel || (m.step || 0) >= 24 ? 'lunge' : a.slot === 'heavy' || a.slot === 'super' ? 'swingHeavy' : 'swingLight');
+    }
     if (a.frame >= total) {
       const whiffed = !a.hasHit && !['buff', 'parry', 'catch', 'bell', 'zoneSuper', 'teleport', 'borrow'].includes(m.kind);
       this.attack = null;
@@ -261,6 +265,7 @@ export class Fighter {
     if (this.stocks <= 0) { this.state = 'ko'; this.stateT = 0; return true; }
     const y0 = this.world.stage.cameraBounds.y + 40;
     this.chair = { t: 0, x: this.world.stage.respawn.x, y: y0, y0 };
+    this.world.audio.play('chair');
     this.state = 'chair'; this.stateT = 0;
     this.gauge = this.maxGauge;
     return false;
@@ -307,7 +312,9 @@ export class Fighter {
         this.grounded && !intent.left && !intent.right && Math.abs(this.body.vx) < 0.5 && !this.body.dodging)
       this.body.facing = this.opp.x >= this.x ? 1 : -1;            // idle: square up to the opponent
     if (guard) this._guardSlide(x0);
+    const b0 = this.body, was = { grounded: b0.grounded, dash: b0.dashT > 0, dodge: b0.dodging, ledge: b0.state === 'ledge', vy: b0.vy };
     this.body.update(mi, this.world.stage);
+    this._moveSounds(was);
     if (this.body.consumedJump) this.controller.consume('up');
     if (this.body.consumedDodge) this.controller.consume('dodge');
     if (this.body.dashT > 0 && this.body.dashT % 3 === 0) this.world.fx.dust(this.x - this.body.dashDir * 12, this.y - (this.body.airDash ? 34 : 0), '#cbbfa6', 2);
@@ -349,6 +356,16 @@ export class Fighter {
     b.x = Math.max(lo, Math.min(hi, b.x));
     const nx = b.x + b.vx * (b.friction ?? PHYS.RUN_FRICTION);
     if (nx < lo || nx > hi) b.vx = 0;
+  }
+
+  // footfalls & motion (audio only): read the body's transitions this tick
+  _moveSounds(was) {
+    const b = this.body, au = this.world.audio;
+    if (b.consumedJump) au.play(was.grounded || was.ledge ? 'jump' : 'airJump');
+    if (b.landed && !was.ledge) au.play('land', { gain: Math.min(1.2, 0.35 + Math.max(0, was.vy) / 16) });
+    if (!was.dash && b.dashT > 0) au.play('dash');
+    if (!was.dodge && b.dodging) au.play('dodge');
+    if (!was.ledge && b.state === 'ledge') au.play('ledge');
   }
 
   _surface() {
@@ -425,8 +442,7 @@ export class Fighter {
     const a = this.attack;
     if (!a) return null;
     const m = a.move;
-    const meleeKinds = [undefined, 'melee', 'lunge', 'flurry', 'shout', 'dashCombo', 'aerial'];
-    if (!meleeKinds.includes(m.kind)) return null;
+    if (!MELEE_KINDS.has(m.kind)) return null;
     if (a.frame < (m.startup || 0) || a.frame > (m.startup || 0) + (m.active || 0)) return null;
     const multi = m.kind === 'flurry';
     if (a.hasHit && !multi) return null;

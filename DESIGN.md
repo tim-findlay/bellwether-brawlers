@@ -219,10 +219,10 @@ Settings toggle (ON default). The EventDirector survives (plus an optional per-e
 
 ## Audio
 
-All WebAudio synthesis — **zero audio files, zero licensing risk** on a public repo.
+All WebAudio synthesis — **zero audio files, zero licensing risk** on a public repo (the sound pass looked for a licensed library and found none reachable; Higgsfield's audio tools are speech-only for this use). The engine (`src/engine/audio.js`) owns the buses — sfx and music into one compressor — and three voice primitives (pitch-swept oscillator, swept filtered noise, FM bell); what each sound *is* lives in data.
 
-- **Music (new in v3):** a procedural arcade-fighter loop (driving bass arpeggio, brass-ish stabs) with per-stage variation. **If Seelye is in the match, the entire soundtrack switches to a 90s boom-bap groove** — swung drums, dusty hats, deep bass.
-- **SFX:** the 26-entry synth bank carries over; new entries: jump, double-jump, land, dodge whoosh, dash, spike thunk, blast-zone KO, stock-lost sting, respawn chair descent.
+- **SFX (`src/data/sfx.js`):** layered recipes — hits are a high noise crack over a sine thump (heavies add a soft-clipped crunch and a low body; loudness scales with damage), swings and lunges are swept band noise, landings scale with the fall. Every play has a little random pitch spread and a 30 ms anti-stacking window. Movement has its own quiet layer: jump, air jump, land, dash, dodge, ledge grab; plus spike thunk, KO boom + stock-lost sting, respawn-chair descent.
+- **Music (`src/data/music.js`, played by `src/engine/music.js` on the audio clock, never the game loop):** a loop per stage in its own idiom — office bossa, pub folk shuffle, rooftop breeze, tube drive, palace harpsichord, Berlin minimal — a menu theme and a victory jingle. Extra layers join on a last stock. **If Seelye is in the match, the entire soundtrack switches to a 90s boom-bap groove** — swung drums, dusty hats, deep bass. Metered offline: song peaks sit a few dB under a light hit, so the hits always cut through. Music and sound each have an on/off in Settings.
 
 ## UI & screens
 

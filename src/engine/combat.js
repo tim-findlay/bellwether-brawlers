@@ -126,7 +126,8 @@ export class FightWorld {
 
   hitFeedback(def, slot, dmg, move) {
     const heavy = slot === 'heavy' || slot === 'super' || dmg >= 10 || (move && move.kbAngle >= 255 && move.kbAngle <= 285);
-    this.audio.play(heavy ? 'hitHeavy' : 'hitLight');
+    this.audio.play(heavy ? 'hitHeavy' : 'hitLight', { gain: Math.min(1.3, 0.7 + dmg / 25) });
+    if (move && move.kbAngle >= 255 && move.kbAngle <= 285) this.audio.play('spike');
     this.fx.hitstop(slot === 'super' ? 12 : heavy ? 6 : 3);
     if (heavy) this.fx.shake(3, 8);
     this.fx.spark(def.x, def.y - 50, '#c4452e', heavy ? 9 : 5, 3);

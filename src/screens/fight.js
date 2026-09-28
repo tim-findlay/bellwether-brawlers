@@ -2,6 +2,7 @@
 // flow (intro, stock banners, game over -> results), pause/help overlay and
 // the juice. The world itself also runs headless in dev/sim.js.
 
+import { songFor } from '../data/music.js';
 import { FightWorld } from '../engine/combat.js';
 import { Camera } from '../engine/camera.js';
 import { EventDirector } from '../engine/events.js';
@@ -72,7 +73,7 @@ export function makeFight(G) {
         for (const ev of world.events.splice(0)) {
           if (ev.type === 'ko') {
             const loser = world.fighters[ev.player];
-            G.audio.play('ko');
+            G.audio.play('ko'); G.audio.play('stockLost');
             G.fx.shake(5, 12); G.fx.flash('#f2e9d8', 6);
             G.fx.banner(ev.stocksLeft === 1 ? 'LAST STOCK!' : 'STOCK LOST!', { dur: 60, sub: `${loser.cfg.name} · ${ev.stocksLeft} left` });
           } else if (ev.type === 'gameover') {
@@ -82,8 +83,10 @@ export function makeFight(G) {
             G.fx.banner(ev.winner < 0 ? 'DRAW!' : 'GAME!', { dur: 120, sub: ev.winner < 0 ? 'double ring-out' : `${world.fighters[ev.winner].cfg.name} takes it` });
           }
         }
+        G.music?.setIntensity(world.fighters.some(f => f.stocks === 1) ? 1 : 0);   // last stock: the extra layers come in
         if (events.stageOverride !== shownOverride) {          // Berlin swap: re-bound the camera to the new geometry
           shownOverride = events.stageOverride;
+          G.music?.play(songFor('fight', { ...params, stageId: events.stageOverride || params.stageId }));
           const old = camera;
           camera = new Camera(960, 540, world.stage.cameraBounds);
           camera.x = old.x; camera.y = old.y; camera.zoom = Math.max(camera.minZoom, Math.min(camera.maxZoom, old.zoom));

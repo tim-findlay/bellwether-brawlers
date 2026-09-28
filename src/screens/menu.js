@@ -21,7 +21,8 @@ const ITEMS = [
 const SETTINGS = [
   { key: 'events', label: 'OFFICE EVENTS', desc: 'Telegraphed stage hazards and surprises mid-match.', opts: [[true, 'ON'], [false, 'OFF']] },
   { key: 'difficulty', label: 'CPU DIFFICULTY', desc: 'How hard the office fights back in Versus CPU.', opts: [['easy', 'EASY'], ['normal', 'NORMAL'], ['hard', 'HARD']] },
-  { key: 'sfx', label: 'SOUND', desc: 'Menu blips, hits, bells and klaxons.', opts: [[true, 'ON'], [false, 'OFF']] },
+  { key: 'sfx', label: 'SOUND', desc: 'Hits, swings, footfalls, bells and klaxons.', opts: [[true, 'ON'], [false, 'OFF']] },
+  { key: 'music', label: 'MUSIC', desc: 'A tune per stage; more joins in on the last stock.', opts: [[true, 'ON'], [false, 'OFF']] },
   { key: 'shake', label: 'SCREEN SHAKE', desc: 'Camera shake on big hits and ring-outs (cosmetic).', opts: [[true, 'ON'], [false, 'OFF']] },
   { key: 'reset', label: 'RESET RECORDS', desc: 'Clear every win on the records board.', action: true },
   { key: 'done', label: 'DONE', desc: 'Back to the main menu.', action: true },
@@ -37,6 +38,7 @@ export function makeMenu(G) {
     const next = row.opts[(Math.max(0, cur) + dir + row.opts.length) % row.opts.length][0];
     G.settings[row.key] = next;
     if (row.key === 'sfx') G.audio.setEnabled(next);
+    if (row.key === 'music') G.audio.setMusic(next);
     if (row.key === 'shake') G.fx.shakeScale = next ? 1 : 0;
     G.saveSettings();
     G.audio.play('menuMove');
@@ -127,10 +129,10 @@ export function makeMenu(G) {
     drawSettings(c) {
       header(c, 'SETTINGS', { sub: 'saved automatically' });
       SETTINGS.forEach((row, i) => {
-        const sel = i === sIdx, y = 100 + i * 64;
-        plaque(c, 60, y, 840, 54, { fill: sel ? INK : CARD, shadow: sel ? 0 : 4 });
-        text(c, row.label, 84, y + 25, { font: F.head(22), align: 'left', color: sel ? PAPER : INK });
-        text(c, row.desc, 84, y + 45, { font: F.body(15), align: 'left', color: sel ? '#d9ceb4' : MUTED });
+        const sel = i === sIdx, y = 96 + i * 57;                      // seven rows clear the footer hints
+        plaque(c, 60, y, 840, 50, { fill: sel ? INK : CARD, shadow: sel ? 0 : 4 });
+        text(c, row.label, 84, y + 22, { font: F.head(21), align: 'left', color: sel ? PAPER : INK });
+        text(c, row.desc, 84, y + 39, { font: F.body(14), align: 'left', color: sel ? '#d9ceb4' : MUTED });
         if (row.opts) {
           let x = 880;
           [...row.opts].reverse().forEach(([v, label]) => {
@@ -139,12 +141,12 @@ export function makeMenu(G) {
             x -= w + 6;
             const on = G.settings[row.key] === v;
             c.fillStyle = on ? (sel ? BRASS : NAVY) : (sel ? '#4a4239' : '#e6dcc4');
-            c.fillRect(x, y + 14, w, 26);
-            text(c, label, x + w / 2, y + 32, { font: F.mono(12), color: on ? PAPER : (sel ? '#b8ad93' : MUTED) });
+            c.fillRect(x, y + 12, w, 25);
+            text(c, label, x + w / 2, y + 29, { font: F.mono(12), color: on ? PAPER : (sel ? '#b8ad93' : MUTED) });
           });
         } else if (row.key === 'reset') {
           const msg = confirmReset ? 'PRESS AGAIN TO CONFIRM' : 'PRESS ENTER';
-          chip(c, msg, 880, y + 18, confirmReset ? BRICK : (sel ? BRASS : MUTED), { align: 'right' });
+          chip(c, msg, 880, y + 15, confirmReset ? BRICK : (sel ? BRASS : MUTED), { align: 'right' });
         }
       });
       hints(c, [[['W', 'S'], 'Move'], [['A', 'D'], 'Change'], ['ENTER', 'Toggle'], ['ESC', 'Back']], 520);
