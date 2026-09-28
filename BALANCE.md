@@ -47,15 +47,15 @@
 
 | Constant | Value | Constant | Value |
 |----------|-------|----------|-------|
-| GRAV (global) | 0.85 px/f² | RUN_ACCEL | 0.9 |
-| TURN_ACCEL_MULT | 2.2 (accel × this while vx opposes the held direction) | RUN_FRICTION | 0.76 |
+| GRAV (global) | 0.85 px/f² | RUN_ACCEL | 1.3 (pass 11; was 0.9) |
+| TURN_ACCEL_MULT | 2.6 (accel × this while vx opposes the held direction; pass 11, was 2.2) | RUN_FRICTION | 0.7 (pass 11; was 0.76) |
 | RUN_MAX | per-char 4.4–6.2 | JUMP_IMPULSE | per-char 14–16 |
-| DOUBLE_JUMP | 1.0 × jump · **AIR_JUMPS 2** (three jumps per airtime) | AIR_ACCEL | 0.55 |
+| DOUBLE_JUMP | 1.0 × jump · **AIR_JUMPS 2** (three jumps per airtime) | AIR_ACCEL | 0.7 (pass 11; was 0.55) |
 | AIR_MAX | 0.9 × run | FAST_FALL_MULT | 2.2 |
 | FALL_MAX | per-char 12–16 | DASH_SPEED | 2.0 × run |
 | DASH_DURATION | 16f · **AIR_DASH_DURATION 10f** (gravity off, once per airtime) | DASH_TAP_WINDOW | 16f |
 | DASH_COOLDOWN | 12f after dash ends | DASH_JUMP_CARRY | 1.0 (full) |
-| COYOTE_FRAMES | 5 | INPUT_BUFFER | 6f |
+| COYOTE_FRAMES | 5 | INPUT_BUFFER | 8f (pass 10) |
 | HITSTUN_PER_KB | 1.6 | LAUNCH_DRAG | 0.975 (vx × this per frame while stunned in the air) |
 | KB_BASE_MULT | 0.8 (× move.kb) | KB_SCALE_MULT | 2.0 (× move.kbScale × emptiness) |
 | LEDGE_HANG_MAX | 90f (then auto-climb) | LEDGE_INVULN | 20f from the grab |
@@ -68,7 +68,9 @@
 | ATTACK_SLIDE | 0.88 (vx × this per frame, ground move startup + active, stick neutral) | ATTACK_SLIDE_HOLD | 0.95 (… holding the facing direction; holding back = RUN_FRICTION) |
 | ATTACK_CARRY_CAP | 1.15 × run (entry speed cap; a dash-attack ends the dash) | STEP_SCALE | 1.0 (× every move's `step`; the ?tune knob) |
 | BODY_GAP | 34 px | MELEE_H / MELEE_REACH | 76 px / × 1.1 |
-| HIT_CANCEL_FRAC | 0.4 (a light that connects may cancel after this much of its recovery) | | |
+| HIT_CANCEL_FRAC | 0 (pass 10: a light that connects may cancel as soon as its active frames end) | DODGE_DASH | true (pass 11: dodge + a direction on the ground = a dash, Brawlhalla's dodge-dash) |
+| WALL_SLIDE_MAX | 2.4 px/f (× 2.5 holding down) | WALL_JUMP_VX / FACTOR | 6.5 px/f away · 0.95 × jump |
+| WALL_JUMP_MAX | 3 wall jumps per airtime, then wall slip | | |
 
 Jump arcs under the new table (MID: impulse 15): single-jump rise ≈ 132 px in 18 frames; jump → double-jump ≈ 264 px; the third jump (AIR_JUMPS 2, Phase 3b) adds another 132 px of recovery reach, which the KB multipliers and the wider blast zones were tuned against. **Consequence called out:** the low platforms (≈110 px above the slab) are now single-jump reachable — the Phase-2 "deliberately just short" rule is retired in favour of pace; upper platforms still need the double jump or a platform hop.
 
@@ -97,7 +99,26 @@ Two independent samples before shipping a tuning pass: n ≈ 420–560 games per
 
 ## Current results
 
-**v3 balance pass 10 — combo feel (2026-09-28) — all five gates PASS on two independent seeds at N = 30; every route passes, every step ≥ 8 f lenient.**
+**v3 balance pass 11 — Brawlhalla movement (2026-09-28) — all five gates PASS on two independent seeds at N = 30; every route passes, every step ≥ 8 f lenient.**
+
+| Fighter | seed 1337 | seed 2024 |
+|---|---|---|
+| Ben | 55.7 % | 51.9 % |
+| Tim | 49.0 % | 52.4 % |
+| Adrian | 49.0 % | 45.8 % |
+| Richy | 48.1 % | 43.9 % |
+| Nick | 50.5 % | 47.6 % |
+| Abi | 49.5 % | 54.3 % |
+| Mike | 48.8 % | 48.6 % |
+| Seelye | 49.3 % | 55.5 % |
+| **camp (≤ 55)** | 14.6 % | 16.6 % |
+| **stall (≤ 45)** | 0.2 % | 0.2 % |
+| **engagement flags (< 2 %)** | 0.06 % | 0.12 % |
+| **recovery dishonest (< 10 %)** | 1.8 % | 1.5 % |
+
+Spread 43.9–55.7 %. Avg match 5484 / 5539 f (~91 s); 1 / 1 capped, 0 stuck. **Engine changes, called out (Tim's brief — "as close to movement and fighting style to Brawlhalla as possible", "the sliding on walls to recover is a good feature" — is the sign-off):** (1) snappier ground and air control: RUN_ACCEL 0.9 → 1.3, TURN_ACCEL_MULT 2.2 → 2.6, RUN_FRICTION 0.76 → 0.7, AIR_ACCEL 0.55 → 0.7; (2) **dodge-dash** — dodge + a direction on the ground is a dash (the old step dodge); a neutral ground dodge is still the spot dodge; (3) **wall slide** (`src/engine/wall.js`) — an airborne fighter pressed against a slab side below the ledge zone clings and slides at WALL_SLIDE_MAX, air jumps / air dodge / air dash / the recovery refresh, jump kicks off away and up without spending an air jump, holding away or dodging lets go, holding down falls past; after WALL_JUMP_MAX wall jumps without landing the wall won't hold you (wall slip). The CPU clings a beat (its difficulty's recoverDelay) then wall-jumps. (4) Slab collision depth `h` now matches each arena piece's vertical wall (measured from the art, min 70): office 70, palace 80, pub 80, berlin 115, rooftop 120, tube 150 — the only thing that reads `h` is movement; (5) the derived side light's step 18 → 30 px (it lunges). **Defect fixed on the way:** a wall jump also spent an air jump on the same tick (`_jumps` now skips a jump already consumed). **Test changes, called out:** tests/physics.test.mjs pins the four new accel values; tests/movement.test.mjs adds the wall-slide test. No kit numbers changed.
+
+**v3 balance pass 10 — combo feel (2026-09-28, superseded) — all five gates PASS on two independent seeds at N = 30; every route passes, every step ≥ 8 f lenient.**
 
 | Fighter | seed 1337 | seed 2024 |
 |---|---|---|

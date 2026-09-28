@@ -230,6 +230,29 @@ test('ledge: falling past a slab lip catches it, i-frames, climb on hold-toward;
   assert.ok(c.x > 380 && c.y === 700, 'standing on the slab');
 });
 
+test('wall slide (Brawlhalla): cling below the ledge zone, slow slide, wall jump away, slip after WALL_JUMP_MAX', () => {
+  const WALL = { ...STAGE, slabs: [{ x: 380, y: 700, w: 520, h: 260 }] };   // a deep slab: its side is a wall
+  const b = new MovementBody(MID, { x: 0, y: 820 });
+  b.x = 380 - b.w / 2 - 1; b.airJumps = 0;
+  step(b, { right: true }, 6, WALL);
+  assert.equal(b.state, 'wall', 'clings to the side of the slab');
+  assert.equal(b.airJumps, PHYS.AIR_JUMPS, 'air jumps refresh on the cling');
+  assert.equal(b.facing, -1, 'faces away from the wall');
+  step(b, { right: true }, 10, WALL);
+  assert.ok(b.vy <= PHYS.WALL_SLIDE_MAX, `slides slowly (${b.vy})`);
+  step(b, { right: true, jump: true }, 1, WALL);
+  assert.equal(b.state, 'air');
+  assert.ok(b.vx < 0 && b.vy < 0, 'kicks off away and up');
+  assert.equal(b.airJumps, PHYS.AIR_JUMPS, 'a wall jump spends no air jump');
+  b.wallJumps = PHYS.WALL_JUMP_MAX; b.wallCd = 0; b.x = 380 - b.w / 2 - 1; b.vx = 0; b.vy = 1; b.y = 820;
+  step(b, { right: true }, 3, WALL);
+  assert.notEqual(b.state, 'wall', 'wall slip: no cling after the max');
+  const c = new MovementBody(MID, { x: 0, y: 820 });
+  c.x = 380 - c.w / 2 - 1;
+  step(c, { right: true, down: true }, 6, WALL);
+  assert.notEqual(c.state, 'wall', 'holding down falls past the wall');
+});
+
 test('dash-jump carries full dash speed into the air', () => {
   const b = landed();
   step(b, { dashRight: true, right: true }, 3);

@@ -36,7 +36,7 @@ export function expandKit(cfg) {
     n: { step: 8, ...L },                      // every ground move steps into the hit (`step`, eased; see PHYS attacks in motion)
     // side light: a longer step-in poke that sends sideways — the string starter
     s: { ...L, name: N.sLight || `${L.name} (side)`, dmg: L.dmg + 1, kb: r1(L.kb * 1.1), kbScale: L.kbScale + 1, kbAngle: 28,
-         range: Math.round(L.range * 1.2), step: 18, startup: L.startup + 2, recover: L.recover + 3, ...K.lights?.s },
+         range: Math.round(L.range * 1.2), step: 30, startup: L.startup + 2, recover: L.recover + 3, ...K.lights?.s },
     // down light: a low sweep that pops them up — the combo starter into aerials
     // (the Pop-Up starter: a fixed-force pop to head height, whatever their composure)
     d: { ...L, name: N.dLight || `${L.name} (low)`, kbAngle: 88, kb: LAUNCHER_KB, float: true, range: Math.round(L.range * 0.9), low: true, step: 6,

@@ -6,10 +6,10 @@ import { PHYS } from '../src/data/physics.js';
 // If you tune them, change BALANCE.md in the same commit.
 test('PHYS matches the BALANCE.md Phase-3 table', () => {
   assert.equal(PHYS.GRAV, 0.85);
-  assert.equal(PHYS.RUN_ACCEL, 0.9);
-  assert.equal(PHYS.TURN_ACCEL_MULT, 2.2);
-  assert.equal(PHYS.RUN_FRICTION, 0.76);
-  assert.equal(PHYS.AIR_ACCEL, 0.55);
+  assert.equal(PHYS.RUN_ACCEL, 1.3);   // Brawlhalla pass (BALANCE.md pass 11)
+  assert.equal(PHYS.TURN_ACCEL_MULT, 2.6);
+  assert.equal(PHYS.RUN_FRICTION, 0.7);
+  assert.equal(PHYS.AIR_ACCEL, 0.7);
   assert.equal(PHYS.AIR_MAX_FACTOR, 0.9);
   assert.equal(PHYS.FAST_FALL_MULT, 2.2);
   assert.equal(PHYS.DASH_SPEED_FACTOR, 2.0);

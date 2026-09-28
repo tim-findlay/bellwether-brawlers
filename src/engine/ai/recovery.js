@@ -7,6 +7,7 @@
 // Order of resources, per DESIGN.md "CPU": drift → recovery special →
 // double jump → air dodge. A lunge that self-staggers on a whiff (Adrian's
 // Clumsy Charge) is only used when its travel carries him over the slab.
+// On a wall (engine/wall.js) it clings a beat and wall-jumps.
 
 import { PHYS } from '../../data/physics.js';
 import { mainSlab, midOf, safeX, flightSim, EDGE_INSET } from './nav.js';
@@ -30,6 +31,11 @@ export function recover(ai, f, world) {
     const pressured = !!opp.attack && Math.abs(opp.x - b.x) < 140 && Math.abs(opp.y - b.y) < 140;
     if (pressured && b.stateT < PHYS.LEDGE_HANG_MAX - 12 && ai.rng() < 0.6) return;   // let the swing whiff
     if (ai.rng() < 0.45) ai.press('up'); else ai.helds.add(toward > 0 ? 'right' : 'left');
+    return;
+  }
+  if (b.state === 'wall') {                                 // clinging: a beat, then kick off and drift back in
+    ai.helds.add(b.wall.side < 0 ? 'right' : 'left');       // toward the stage = into the wall (holding away lets go)
+    if (b.stateT >= 4 + ai.profile.recoverDelay) ai.press('up');
     return;
   }
   const inset = EDGE_INSET;

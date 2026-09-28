@@ -29,12 +29,14 @@ Bindings are by **physical key position** (US labels shown), so they work on any
 | Light | F | K | + neutral / side / down = the three lights; in the air + direction = the four aerials |
 | Heavy | G | L | + neutral / side / down = the three signatures; in the air = recovery, + down = ground pound |
 | Special 1 / 2 | H / J | ; / ' | some work in the air |
-| Dodge | V | / | spot · step · air dodge |
+| Dodge | V | / | neutral = spot dodge · + direction = dodge-dash · in the air = air dodge |
 | **Super** | Space | Enter | full meter |
 
-**Menus:** F / K / Enter confirm · Esc back · Esc pauses a fight (with the full controls overlay — also under HOW TO PLAY on the main menu).
+**Menus:** F / K / Enter (pad ✕) confirm · Esc (pad ○) back · Esc pauses a fight (with the full controls overlay — also under HOW TO PLAY on the main menu).
 
-**Gamepads:** plug in any standard-mapping pad (Xbox, PlayStation, most USB pads) — the first pad drives P1, the second P2, alongside the keyboard. Stick / d-pad move, **A** jump, **X** light, **B** heavy, **RB / LB** specials, **Y** super, triggers dodge, Start confirms and pauses (each pad's Start is its own — it never presses the other player's keys), Back = Esc. No rebinding UI yet.
+**Gamepads (Brawlhalla layout):** plug in any standard-mapping pad (PlayStation, Xbox, most USB pads) — the first pad drives P1, the second P2, alongside the keyboard. Stick / d-pad move, **✕** jump, **□** light, **○** heavy, **L2 / R2** dodge (+ direction on the ground = dodge-dash), **R1** special 1, **L1** special 2, **△** super, Options pauses (each pad's Options is its own). In menus **✕ selects and ○ goes back**. No rebinding UI yet.
+
+**Walls:** off the side of the stage, drift into the slab's wall to cling and slide; jump to kick off (no air jump spent, up to three in a row), hold down to fall past.
 
 **On the conference-room TV:** plug everything into the one PC and open the game full screen (**Settings → Full Screen**, or F11). Two keyboards work — the browser hears both, so P1 plays on the WASD side of one and P2 on the arrow side of the other (which also avoids the key-ghosting you get with two people on one board). Two pads are better still: the first connected pad is P1, the second P2. **How to Play → TV SETUP** is a live check: hold anything and it lights up under the player it belongs to, with the connected pads named.
 

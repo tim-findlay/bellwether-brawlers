@@ -9,6 +9,7 @@ import { MovementBody } from './movement.js';
 import { PHYS } from '../data/physics.js';
 import { holidayTick, homeTime } from './specials.js';
 import { cancelOpen, wantsCancel, chaseOpen, chase, chaseCuts, tickChase } from './combo.js';
+import { leave as leaveWall } from './wall.js';
 
 export const STOCKS = 3;
 export const CHAIR_DESCENT = 60;     // frames: bounds-top -> respawn hover point
@@ -315,7 +316,7 @@ export class Fighter {
     if (this.state === 'normal') {
       if (chaseOpen(this) && intent.dodge) chase(this, intent);                                      // chase dodge after a landed hit
       else if (cancelOpen(this) && wantsCancel(this, intent)) { this.attack = null; this.cancelFlash = 6; }   // hit-confirm cancel
-      if (this.actionable) this._readButtons(intent);
+      if (this.actionable) { this._readButtons(intent); if (this.attack && b.state === 'wall') leaveWall(b, 12); }   // swing off the wall
       else if (chaseCuts(this)) { b.endChase(); this._readButtons(intent); }                         // the chase cuts into the follow-up
       if (this.attack && this.state === 'normal') this.advanceAttack();
     }
@@ -338,6 +339,7 @@ export class Fighter {
     this.body.update(mi, this.world.stage);
     this._moveSounds(was);
     if (this.body.consumedJump) this.controller.consume('up');
+    if (this.body.wallTouched) this.recoveryUsed = false;          // a wall refreshes the recovery (Brawlhalla)
     if (this.body.consumedDodge) this.controller.consume('dodge');
     if (this.body.dashT > 0 && this.body.dashT % 3 === 0) this.world.fx.dust(this.x - this.body.dashDir * 12, this.y - (this.body.airDash ? 34 : 0), '#cbbfa6', 2);
     if (this.attack && !this.attack.aerial && this.grounded && Math.abs(this.body.vx) > 2.5 && this.animT % 4 === 0)
@@ -450,6 +452,7 @@ export class Fighter {
     else if (this.attack) n = 'attack';
     else if (this.landLag > 0) n = 'land';
     else if (b.state === 'ledge') n = 'ledge';
+    else if (b.state === 'wall') n = 'wall';
     else if (b.state === 'dodge') n = 'dodge';
     else if (b.state === 'airdodge') n = 'airdodge';
     else if (b.state === 'dash') n = 'dash';

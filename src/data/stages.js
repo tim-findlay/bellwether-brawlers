@@ -91,7 +91,7 @@ export const STAGES = [
     art: { platforms: ['shelf', 'shelf', 'tray'], far: '#b9c6cf', parallax: 0.3 },
     // THE OFFICE — symmetric tri-plat (the tournament stage)
     geometry: {
-      slabs: [{ x: 822, y: 760, w: 756, h: 70 }],
+      slabs: [{ x: 822, y: 760, w: 756, h: 70 }],   // h: the wall you can slide down = the vertical part of the arena art (measured from <id>-slab.png; min 70; wall.js)
       platforms: [{ x: 915, y: 650, w: 200 }, { x: 1285, y: 650, w: 200 }, { x: 1106, y: 552, w: 188 }],
       spawns: [{ x: 1011, y: 760 }, { x: 1389, y: 760 }],
       respawn: { x: 1200, y: 700 },
@@ -148,7 +148,7 @@ export const STAGES = [
     art: { platforms: ['rail', 'rail'], far: '#aaa393', parallax: 0.3 },
     // PALACE FORECOURT — widest, flattest (the zoner's stage)
     geometry: {
-      slabs: [{ x: 687, y: 780, w: 1026, h: 70 }],
+      slabs: [{ x: 687, y: 780, w: 1026, h: 80 }],
       platforms: [{ x: 814, y: 668, w: 204 }, { x: 1382, y: 668, w: 204 }],
       spawns: [{ x: 903, y: 780 }, { x: 1497, y: 780 }],
       respawn: { x: 1200, y: 715 },
@@ -205,7 +205,7 @@ export const STAGES = [
     art: { platforms: ['awning', 'sign', 'bench'], far: '#a58a6a', parallax: 0.3 },
     // THE BELLWETHER ARMS — asymmetric (the scrappy local)
     geometry: {
-      slabs: [{ x: 849, y: 770, w: 702, h: 70 }],
+      slabs: [{ x: 849, y: 770, w: 702, h: 80 }],
       platforms: [{ x: 893, y: 658, w: 168 },   // awning (pub side)
                   { x: 938, y: 560, w: 115 },    // hanging sign (static)
                   { x: 1338, y: 700, w: 156 }],  // bench (low, other side)
@@ -253,7 +253,7 @@ export const STAGES = [
     art: { platforms: ['roof'], far: '#4d5674', parallax: 0.3 },
     // BERLIN — the gate (event-only)
     geometry: {
-      slabs: [{ x: 782, y: 790, w: 836, h: 70 }],
+      slabs: [{ x: 782, y: 790, w: 836, h: 115 }],
       platforms: [{ x: 1008, y: 640, w: 384 }],  // gate roof: wide, high (double-jump territory)
       spawns: [{ x: 970, y: 790 }, { x: 1430, y: 790 }],
       respawn: { x: 1200, y: 725 },
@@ -272,7 +272,7 @@ export const STAGES = [
     art: { platforms: ['tray', 'tray', 'roof'], far: '#b7c3cf', parallax: 0.25 },
     // THE ROOFTOP — long slab, two low AC-unit platforms and the water tank up top
     geometry: {
-      slabs: [{ x: 780, y: 770, w: 840, h: 70 }],
+      slabs: [{ x: 780, y: 770, w: 840, h: 120 }],
       platforms: [{ x: 920, y: 660, w: 190 }, { x: 1290, y: 660, w: 190 }, { x: 1090, y: 545, w: 220 }],
       spawns: [{ x: 980, y: 770 }, { x: 1420, y: 770 }],
       respawn: { x: 1200, y: 700 },
@@ -291,7 +291,7 @@ export const STAGES = [
     art: { platforms: ['bench', 'sign', 'bench'], far: '#a89f8f', parallax: 0.3 },
     // THE PLATFORM — a long low stage: two benches and one hanging sign; play stays close to the floor
     geometry: {
-      slabs: [{ x: 730, y: 790, w: 940, h: 70 }],
+      slabs: [{ x: 730, y: 790, w: 940, h: 150 }],
       platforms: [{ x: 860, y: 700, w: 170 }, { x: 1110, y: 610, w: 180 }, { x: 1370, y: 700, w: 170 }],
       spawns: [{ x: 950, y: 790 }, { x: 1450, y: 790 }],
       respawn: { x: 1200, y: 720 },

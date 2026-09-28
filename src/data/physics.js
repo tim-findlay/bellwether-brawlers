@@ -10,11 +10,11 @@
 
 export const PHYS = {
   GRAV: 0.85,               // px/f^2, global (fall speed varies per char, gravity doesn't)
-  RUN_ACCEL: 0.9,           // px/f^2 toward the held direction
-  TURN_ACCEL_MULT: 2.2,     // extra accel while vx opposes the held direction (skid-turn)
-  RUN_FRICTION: 0.76,       // per-frame vx multiplier when no ground input
+  RUN_ACCEL: 1.3,           // px/f^2 toward the held direction (0.9 -> 1.3, Brawlhalla pass: near-instant starts)
+  TURN_ACCEL_MULT: 2.6,     // extra accel while vx opposes the held direction (skid-turn; 2.2 -> 2.6)
+  RUN_FRICTION: 0.7,        // per-frame vx multiplier when no ground input (0.76 -> 0.7: crisper stops)
   SLICK_FRICTION: 0.955,    // …on a slick floor (the 'slick' status: fire-drill foam) — you keep sliding
-  AIR_ACCEL: 0.55,
+  AIR_ACCEL: 0.7,           // 0.55 -> 0.7: Brawlhalla's strong air control
   AIR_MAX_FACTOR: 0.9,      // air drift cap = runMax * this
   FAST_FALL_MULT: 2.2,      // gravity AND fall cap multiplier while fast-falling
   DASH_SPEED_FACTOR: 2.0,   // dash speed = runMax * this
@@ -28,7 +28,12 @@ export const PHYS = {
   COYOTE_FRAMES: 5,
   INPUT_BUFFER: 8,          // shared with engine/input.js BUFFER_FRAMES (6 -> 8 in the combo-feel pass: early presses land)
   DODGE_COOLDOWN: 60,       // shared by spot/step/air dodge
-  STEP_DODGE_IMPULSE: 6,
+  STEP_DODGE_IMPULSE: 6,    // (the step dodge is gone on the ground — Dodge + direction dashes, DODGE_DASH)
+  DODGE_DASH: true,
+  WALL_SLIDE_MAX: 2.4,      // wall cling (engine/wall.js): the slide speed down a slab side (hold down: ×2.5)
+  WALL_JUMP_VX: 6.5,        // wall jump: kick off away from the wall…
+  WALL_JUMP_FACTOR: 0.95,   // …and up (× jumpImpulse); spends no air jump
+  WALL_JUMP_MAX: 3,         // wall jumps per airtime before you slip off (Brawlhalla's wall slip)         // Brawlhalla: Dodge + left/right on the ground is a DASH (no i-frames); neutral Dodge stays the spot dodge
   SPOT_DODGE_DURATION: 18,  // also step-dodge duration; i-frames 2-13
   AIR_DODGE_DURATION: 22,   // i-frames 3-15
   AIR_DODGE_IMPULSE: 7,

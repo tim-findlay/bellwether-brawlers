@@ -5,6 +5,7 @@
 // [x-w/2, y-h] -> [x+w/2, y]. Slabs are solid; platforms are one-way.
 
 import { PHYS } from '../data/physics.js';
+import { tryWall, wallTick } from './wall.js';
 
 export class MovementBody {
   constructor(stats, spawn) {
@@ -35,6 +36,7 @@ export class MovementBody {
     this.stun = 0;               // hitstun frames left: intent ignored, launch drag applies
     this.postStun = 0;           // frames after hitstun with dodge / jump locked (PHYS.POST_STUN_LOCK)
     this.floatT = 0;             // frames of launcher float left (PHYS.LAUNCH_FLOAT gravity while stunned)
+    this.wall = null; this.wallCd = 0; this.wallJumps = 0; this.wallTouched = false;   // wall slide (engine/wall.js)
     this.landed = false;         // true on the tick the body touched down (landing lag hook)
     this.consumedJump = false;   // adapter reads these to consume buffered presses
     this.consumedDodge = false;
@@ -56,6 +58,7 @@ export class MovementBody {
   // `frames`, cancel whatever the body was doing. vy < 0 lifts off the ground.
   launch(vx, vy, frames) {
     if (this.state === 'ledge') { this.ledge = null; this.ledgeCd = PHYS.LEDGE_REGRAB_CD; }
+    if (this.state === 'wall') { this.wall = null; this.wallCd = 20; }
     this.airDash = false;
     this.vx = vx; this.vy = vy;
     this.stun = Math.max(this.stun, frames | 0);
@@ -79,8 +82,9 @@ export class MovementBody {
   endChase() { if (this.state !== 'chase') return; this.dodgeT = 0; this.dodgeVec = null; this._setState(this.grounded ? 'idle' : 'air'); }
 
   update(intent, stage) {
-    this.consumedJump = false; this.consumedDodge = false; this.landed = false;
+    this.consumedJump = false; this.consumedDodge = false; this.landed = false; this.wallTouched = false;
     this.stateT++;
+    if (this.wallCd > 0) this.wallCd--;
     if (this.dashCd > 0) this.dashCd--;
     if (this.dodgeCd > 0) this.dodgeCd--;
     if (this.dropT > 0) this.dropT--;
@@ -104,6 +108,7 @@ export class MovementBody {
       intent = { ...intent, jump: false, dodge: false, dashLeft: false, dashRight: false };
     }
     if (this.state === 'ledge') { this._ledge(intent); this._blast(stage); return; }
+    if (this.state === 'wall') { wallTick(this, intent, stage); if (this.state === 'wall') { this._blast(stage); return; } }
 
     // drop-through: fresh tap, only on one-way platforms (slabs are solid)
     // jump wins a same-tick drop+jump (guard: !intent.jump)
@@ -136,6 +141,7 @@ export class MovementBody {
     this.y += this.vy;
     this._collide(stage, prevBottom);
     if (!this.grounded) this._tryLedge(stage);
+    if (!this.grounded) tryWall(this, stage, intent);
     this._blast(stage);
   }
 
@@ -230,7 +236,7 @@ export class MovementBody {
     }
   }
   _jumps(intent) {
-    if (!intent.jump) return;
+    if (!intent.jump || this.consumedJump) return;   // a wall jump already used this press
     if (this.grounded || this.coyoteT > 0) {
       this.vy = -this.stats.jumpImpulse;
       this.grounded = false; this.coyoteT = 0;
@@ -261,6 +267,13 @@ export class MovementBody {
     if (!intent.dodge || this.dodgeCd > 0 || this.dashT > 0) return;
     const dx = (intent.right ? 1 : 0) - (intent.left ? 1 : 0);
     const dy = (intent.down ? 1 : 0) - (intent.jump ? 0 : 0); // vertical aim: down only (up = jump key)
+    if (this.grounded && dx !== 0 && PHYS.DODGE_DASH) {          // Brawlhalla: Dodge + direction on the ground dashes
+      if (this.dashCd > 0) return;
+      this.facing = dx; this.dashDir = dx; this.airDash = false;
+      this.dashT = PHYS.DASH_DURATION; this._setState('dash');
+      this.consumedDodge = true;
+      return;
+    }
     if (this.grounded) {
       this.dodgeT = PHYS.SPOT_DODGE_DURATION;
       this.dodgeVec = dx !== 0 ? { x: dx * PHYS.STEP_DODGE_IMPULSE, y: 0 } : null;
@@ -312,6 +325,7 @@ export class MovementBody {
   _land(top) {
     this.y = top; this.vy = 0; this.grounded = true; this.landed = true;
     this.airJumps = PHYS.AIR_JUMPS; this.airDodgeOk = true; this.airDashOk = true; this.airDash = false; this.fastFalling = false; this.ledgeCd = 0;
+    this.wallJumps = 0; this.wall = null;
     if (PHYS.STUN_LANDING_CLEARS) this.stun = 0;
     if (this.state === 'air' || this.state === 'airdodge') this._setState('idle');
   }

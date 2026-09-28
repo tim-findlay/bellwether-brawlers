@@ -33,15 +33,17 @@ Universal constants live in **`src/data/physics.js`**; per-character movement nu
 - **Drop-through:** a *fresh down tap* while standing on a soft platform (attack presses take precedence: down+Light on a platform is just a Light). After a drop, soft-platform collision is ignored for a grace window (BALANCE.md).
 - **Air dodge:** i-frames + a directional impulse; once per airtime, refreshed on landing, ledge grab or respawn; doubles as recovery.
 - **Ledge:** see core rules — grab, climb, ledge-jump, drop.
+- **Wall slide (Brawlhalla, 2026-09-28):** the side of every main slab is a wall, as deep as its arena art (`h` in the stage data). Airborne and pressed against it below the ledge zone, you cling and slide slowly (hold down to slide faster); your air jumps, air dodge, air dash and recovery refresh. Jump kicks off away and up without spending an air jump; holding away or dodging lets go; holding down falls past. Three wall jumps without landing and the wall won't hold you (wall slip). `src/engine/wall.js`; numbers in BALANCE.md.
+- **Dodge-dash:** a dodge with a direction on the ground is a dash (Brawlhalla's dodge-dash), so pad players dash with a trigger instead of double-tapping the stick.
 - **Attacks in motion:** a ground move keeps the run — it slides through the wind-up and the hit (hold forward to keep more speed, hold back to brake, the recovery plants), and every ground move steps into its hit (lights a little, the side signature a real lunge). A dash-attack ends the dash at run speed. Steps and slides stop at the ledge and at the opponent's body; true lunges (`travel`) don't. Numbers in BALANCE.md ("Attacks in motion").
 - **Hit-confirm cancels:** a light that connects can cut its recovery short into a jump, a dash or another attack — strings are earned by landing the first hit; a whiffed light is still fully punishable. Numbers in BALANCE.md.
-- Feel floor: 5-frame coyote time, 6-frame input buffer (jump/dodge/attacks), per-aerial landing lag, per-character fall speed (gravity is global).
+- Feel floor: 5-frame coyote time, 8-frame input buffer (jump/dodge/attacks), per-aerial landing lag, per-character fall speed (gravity is global).
 
 Fixed-timestep 60 Hz logic is unchanged. Never tie gameplay to rAF rate.
 
 ## Controls
 
-Physical key positions (`KeyboardEvent.code`), US labels. All bound keys `preventDefault`ed in play. Menus: confirm F/K/Enter, back Esc; 20-frame input lockout on screen transitions.
+Physical key positions (`KeyboardEvent.code`), US labels. All bound keys `preventDefault`ed in play. Menus: confirm F/K/Enter (pad ✕), back Esc (pad ○); 20-frame input lockout on screen transitions.
 
 | Action | P1 | P2 | Notes |
 |--------|----|----|-------|
@@ -51,12 +53,12 @@ Physical key positions (`KeyboardEvent.code`), US labels. All bound keys `preven
 | Light | F | K | + neutral / side / down on the ground = the three lights; + n/s/u/d in the air = the four aerials |
 | Heavy | G | L | + neutral / side / down on the ground = the three **signatures** (kill moves); in the air = **recovery** (up), **ground pound** (down held) |
 | Special 1 / 2 | H / J | ; / ' | per-move `air` flag in data |
-| Dodge | V | / | spot · step · air dodge |
+| Dodge | V | / | neutral = spot dodge · + direction on the ground = **dodge-dash** · in the air = air dodge |
 | Super | Space | Enter | full meter |
 
 **Jump-key rule (canonical):** an air jump triggers on the key-down *edge* while airborne; aerial aim reads the *held* directions on the frame Light is pressed — so up-air is "keep W held (e.g. from your jump), press Light", and a fresh mid-air W tap is always an air jump.
 
-**Gamepads (Phase 3b):** any standard-mapping pad (Xbox / PlayStation / most USB pads) drives P1 (first pad) or P2 (second pad) alongside the keyboard through the Gamepad API — left stick or d-pad to move, **A** jump, **X** light, **B** heavy, **RB / LB** specials, **Y** super, either trigger dodge, Start = a per-seat virtual code (confirm / pause; it used to send Enter, which is P2's super), Back = Esc. **TV setup (2026-09-28):** two keyboards on one PC merge into one input stream, so the P1 (WASD) / P2 (arrows) split works across two boards; Settings → Full Screen; How to Play → TV SETUP is a live per-player input check naming the connected pads. No rebinding UI yet (deliberate; the mapping lives in `src/engine/input.js`).
+**Gamepads (Brawlhalla layout, 2026-09-28):** any standard-mapping pad (PlayStation / Xbox / most USB pads) drives P1 (first pad) or P2 (second pad) alongside the keyboard through the Gamepad API, laid out like Brawlhalla's default: left stick or d-pad to move (stick up also jumps and aims), **✕ (A)** jump, **□ (X)** light, **○ (B)** heavy, **L2 / R2** dodge (+ a direction on the ground = dodge-dash), **R1** special 1, **L1** special 2, **△ (Y)** super, Options/Start = a per-seat virtual code (pause). The pad buttons send their own codes (`map.pad` in `src/engine/input.js`), so a fight reads ○ as heavy while a menu reads **✕ as select and ○ as back** (Tim: "select in the menu screens should be X on PS5"); ○ never pauses a fight. Back/Share = Esc. **TV setup (2026-09-28):** two keyboards on one PC merge into one input stream, so the P1 (WASD) / P2 (arrows) split works across two boards; Settings → Full Screen; How to Play → TV SETUP is a live per-player input check naming the connected pads. No rebinding UI yet (deliberate; the mapping lives in `src/engine/input.js`).
 
 ## The directional kit (Brawlhalla-style, Phase 3b)
 
@@ -217,7 +219,7 @@ Five phases, small rollbackable commits throughout; the page must load clean aft
 
 ## Stages (five player-selectable; Berlin event-only)
 
-All: blast zones on four sides, no walls, ledge grab on every slab lip; soft platforms reachable with jump → air jump. Phase 3b scaled every layout ×1.35 and pushed the blast zones out (+160 px sideways, +90 px down) — Tim's "stage should be larger". All platforms are **static** — any sway is backdrop art, never collision. Each stage has a Higgsfield backdrop (`assets/stages/<id>.png`, drop-in).
+All: blast zones on four sides, ledge grab on every slab lip, a wall to slide down on each side of the main slab (as deep as the art); soft platforms reachable with jump → air jump. Phase 3b scaled every layout ×1.35 and pushed the blast zones out (+160 px sideways, +90 px down) — Tim's "stage should be larger". All platforms are **static** — any sway is backdrop art, never collision. Each stage has a Higgsfield backdrop (`assets/stages/<id>.png`, drop-in).
 
 1. **THE OFFICE** — the tournament stage. Symmetric tri-plat: desk-island main slab, two low shelf platforms, one high cable-tray platform. Cool morning palette.
 2. **PALACE FORECOURT** — the zoner's stage. Widest, flattest main slab; two gate-rail platforms above the edges. Longest survival off the sides.

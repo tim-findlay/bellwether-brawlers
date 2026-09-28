@@ -87,6 +87,7 @@ export class Renderer {
     if (name === 'ko') { drawKoBurst(c, f); return; }
     if (!(sheet && this.drawSpriteFighter(c, f, sheet))) drawFallbackBody(c, f, head?.fight ?? null);
     drawMoveFX(c, f, f.animT ?? 0);                    // swing smear + wind-up tell (render/moves.js)
+    if (name === 'wall') drawWallDust(c, f);
   }
 
   // Anim mapping (plan §Sprite contract). Returns false when the sheet lacks
@@ -124,6 +125,12 @@ export class Renderer {
       case 'ledge': {                                     // hanging: the jump sheet's apex frame, leaning into the lip
         const n = A.jump?.frames ?? 1;
         anim = 'jump'; frame = Math.min(n - 1, Math.floor(n * 0.4)); opts.rot = -(f.body?.facing ?? 1) * 0.12;
+        break;
+      }
+      case 'wall': {                                      // clinging: a falling frame, back to the wall, sliding
+        const n = A.jump?.frames ?? 1;
+        anim = 'jump'; frame = Math.min(n - 1, Math.floor(n * 0.7)); opts.rot = (f.body?.facing ?? 1) * 0.14;
+        opts.squashX = 0.94; opts.squashY = 1.05;
         break;
       }
       case 'dodge': case 'airdodge': {                   // guard, duck, hop, guard over the dodge; i-frames read as a flicker
@@ -182,3 +189,17 @@ export class Renderer {
 }
 
 export { poseFor };
+
+// the slide: chalky flecks scraped off the wall at hand and heel height
+function drawWallDust(c, f) {
+  const b = f.body; if (!b?.wall) return;
+  const wx = b.x - b.facing * (b.w / 2), t = f.anim?.t ?? 0;
+  c.save(); c.fillStyle = '#efe6d2';
+  for (let i = 0; i < 5; i++) {
+    const age = (t + i * 5) % 20, k = 1 - age / 20;
+    c.globalAlpha = 0.7 * k;
+    const s = 3 + Math.round(k * 3);
+    c.fillRect(Math.round(wx + b.facing * age * 0.8 - s / 2), Math.round(b.y - 10 - (i % 2) * 58 - age * 1.4), s, s);
+  }
+  c.restore();
+}
