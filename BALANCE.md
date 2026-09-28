@@ -1,4 +1,4 @@
-# BALANCE.md — Bellwether Battlers
+# BALANCE.md — Bellwether Brawlers
 
 *v3 (platform fighter). Canonical for numbers and rules where DESIGN.md and this file could drift.*
 

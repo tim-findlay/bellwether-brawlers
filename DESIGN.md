@@ -1,4 +1,4 @@
-# BELLWETHER BATTLERS — Design Document
+# BELLWETHER BRAWLERS — Design Document
 
 *v3 — the platform-fighter pivot. Brawlhalla is the movement reference. Supersedes the v2 health-bar fighter design; BALANCE.md stays canonical for numbers where the two could drift.*
 

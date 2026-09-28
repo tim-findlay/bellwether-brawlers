@@ -94,7 +94,7 @@ export function makeMenu(G) {
       else if (page === 'settings') this.drawSettings(c);
       else if (page === 'records') this.drawRecords(c);
       else {
-        header(c, 'HOW TO PLAY', { sub: 'BELLWETHER BATTLERS' });
+        header(c, 'HOW TO PLAY', { sub: 'BELLWETHER BRAWLERS' });
         drawHelp(c, tab);
         hints(c, [[['←', '→'], 'Tab'], ['ESC', 'Back']], 520);
       }

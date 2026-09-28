@@ -1,4 +1,4 @@
-// Boot + fixed-timestep loop + screen router for Bellwether Battlers.
+// Boot + fixed-timestep loop + screen router for Bellwether Brawlers.
 
 import { Input } from './engine/input.js';
 import { Audio } from './engine/audio.js';

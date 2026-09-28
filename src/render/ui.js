@@ -251,7 +251,7 @@ function uiImage(c, img, x, y, w) {
 }
 
 // The title logo: the Higgsfield art (assets/ui/logo.png) when loaded, else
-// BELLWETHER / BATTLERS set in two lines with a stepped ink extrude and a bell.
+// BELLWETHER / BRAWLERS set in two lines with a stepped ink extrude and a bell.
 export function logo(c, x, y, s = 1, t = 0, G = null) {
   const img = G?.uiArt?.get?.('logo');
   if (img) { uiImage(c, img, x, y + Math.round(Math.sin(t * 0.05) * 2), 480 * s); return; }   // centred at (x, y)
@@ -265,7 +265,7 @@ export function logo(c, x, y, s = 1, t = 0, G = null) {
     c.fillStyle = col; c.fillText(str, 0, yy);
   };
   line('BELLWETHER', -30, BRICK);
-  line('BATTLERS', 46, NAVY);
+  line('BRAWLERS', 46, NAVY);
   c.restore();
 }
 

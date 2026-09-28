@@ -1,8 +1,8 @@
-# Bellwether Battlers — Project Conventions
+# Bellwether Brawlers — Project Conventions
 
 ## What this is
 
-A lightly pixelated browser fighting game (HTML5 canvas + vanilla JS ES modules) deployed as a static site to GitHub Pages. The repo is `bellwether-brawlers` (renamed from `desk-warriors` 2026-06-10; local checkouts may still use the old folder name); the game is **Bellwether Battlers**.
+A lightly pixelated browser fighting game (HTML5 canvas + vanilla JS ES modules) deployed as a static site to GitHub Pages. The repo is `bellwether-brawlers` (renamed from `desk-warriors` 2026-06-10; local checkouts may still use the old folder name); the game is **Bellwether Brawlers** (renamed from Bellwether Battlers 2026-09-28, to match the repo).
 
 ## Hard rules
 
