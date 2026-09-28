@@ -6,7 +6,8 @@
 //  chase dodge — ANY landed melee move (not a super), once its active frames are
 //    done, may be cut into a short burst in the held direction (at the victim if
 //    none), once per airtime; from PHYS.CHASE_CANCEL_FROM frames in, pressing an
-//    attack ends the burst and throws it. The follow-up tool: sLight > chase > sAir.
+//    attack ends the burst and throws it. The window stays open PHYS.CHASE_LATE
+//    frames after the move ends. The follow-up tool: sLight > chase > sAir.
 
 import { PHYS } from '../data/physics.js';
 
@@ -27,8 +28,17 @@ export function wantsCancel(f, intent) {
 
 export function chaseOpen(f) {
   const a = f.attack, m = a?.move;
-  if (!a || !a.hasHit || a.slot === 'super' || f.chaseUsed || !MELEE_KINDS.has(m.kind)) return false;
+  if (f.chaseUsed) return false;
+  if (!a) return f.chaseLate > 0 && f.actionable;                 // just after a landed move ended (PHYS.CHASE_LATE)
+  if (!a.hasHit || a.slot === 'super' || !MELEE_KINDS.has(m.kind)) return false;
   return a.frame > endOfActive(m);
+}
+// once per frame (Fighter.update): a landed melee move that just ended keeps the chase open a beat
+export function tickChase(f) {
+  const a = f.attack;
+  if (a) f._chaseArm = a.hasHit && a.slot !== 'super' && MELEE_KINDS.has(a.move.kind);
+  else if (f._chaseArm) { f._chaseArm = false; f.chaseLate = PHYS.CHASE_LATE; }
+  if (f.chaseLate > 0 && !a) f.chaseLate--;
 }
 
 export function chase(f, intent) {
@@ -37,7 +47,7 @@ export function chase(f, intent) {
   const dy = intent.down ? 1 : c.held('up') ? -1 : 0;
   if (!dx && !dy) dx = o ? (Math.sign(o.x - f.x) || f.facing) : f.facing;   // no direction: at them
   if (dx) f.body.facing = dx;
-  f.attack = null; f.chaseUsed = true; f.cancelFlash = 6;
+  f.attack = null; f.chaseUsed = true; f.chaseLate = 0; f.cancelFlash = 6;
   c.consume('dodge');
   f.body.chase(dx, dy);
   f.world.audio.play('dash');

@@ -26,7 +26,7 @@ export const PHYS = {
   DASH_JUMP_CARRY: 1.0,     // fraction of dash vx kept through a dash-jump
   DOUBLE_JUMP_FACTOR: 1.0,  // double-jump impulse = jumpImpulse * this
   COYOTE_FRAMES: 5,
-  INPUT_BUFFER: 6,          // shared with engine/input.js BUFFER_FRAMES
+  INPUT_BUFFER: 8,          // shared with engine/input.js BUFFER_FRAMES (6 -> 8 in the combo-feel pass: early presses land)
   DODGE_COOLDOWN: 60,       // shared by spot/step/air dodge
   STEP_DODGE_IMPULSE: 6,
   SPOT_DODGE_DURATION: 18,  // also step-dodge duration; i-frames 2-13
@@ -59,7 +59,7 @@ export const PHYS = {
   // Hit-confirm cancels (2026-09-28, Tim's sign-off): a light that CONNECTS may
   // cut its recovery short — after this fraction of it — into a jump, a dash,
   // or another light / heavy. A whiffed light keeps its full recovery (the punish).
-  HIT_CANCEL_FRAC: 0.4,
+  HIT_CANCEL_FRAC: 0,       // combo-feel pass (2026-09-28): a landed light cancels the moment its active frames end (was 0.4 of recovery)
   // The combo system (2026-09-28, Tim: "mirror Brawlhalla … a blueprint for new
   // characters"). Brawlhalla's model: every move carries a FIXED stun (frames,
   // not scaled by damage — data: `stun` on the move, defaults in
@@ -74,4 +74,6 @@ export const PHYS = {
   CHASE_DODGE_IMPULSE: 9,   // px/f burst, decays over the duration; no i-frames
   CHASE_DODGE_DURATION: 12,
   CHASE_CANCEL_FROM: 2,     // an attack may cut a chase dodge short from this frame
+  CHASE_LATE: 10,           // the chase stays open this long after the landed move ends (Brawlhalla: 12)
+  LAUNCH_FLOAT: 0.4,        // gravity multiplier on a victim while a `float` move's fixed stun lasts (the Pop-Up hangs them at head height)
 };

@@ -34,6 +34,7 @@ export class MovementBody {
     this.friction = null;        // ground friction override (sliding attacks); null = RUN_FRICTION
     this.stun = 0;               // hitstun frames left: intent ignored, launch drag applies
     this.postStun = 0;           // frames after hitstun with dodge / jump locked (PHYS.POST_STUN_LOCK)
+    this.floatT = 0;             // frames of launcher float left (PHYS.LAUNCH_FLOAT gravity while stunned)
     this.landed = false;         // true on the tick the body touched down (landing lag hook)
     this.consumedJump = false;   // adapter reads these to consume buffered presses
     this.consumedDodge = false;
@@ -90,7 +91,8 @@ export class MovementBody {
       this.stun--;
       if (this.stun === 0) this.postStun = PHYS.POST_STUN_LOCK;
       if (this.grounded) { this.vx *= PHYS.RUN_FRICTION; if (Math.abs(this.vx) < PHYS.GROUND_DEADZONE) this.vx = 0; }
-      else { this.vx *= PHYS.LAUNCH_DRAG; this.vy = Math.min(this.vy + PHYS.GRAV, this.stats.fallMax); }
+      else { this.vx *= PHYS.LAUNCH_DRAG; this.vy = Math.min(this.vy + PHYS.GRAV * (this.floatT > 0 ? PHYS.LAUNCH_FLOAT : 1), this.stats.fallMax); }
+      if (this.floatT > 0) this.floatT--;
       const pb = this.y;
       this.x += this.vx; this.y += this.vy;
       this._collide(stage, pb);

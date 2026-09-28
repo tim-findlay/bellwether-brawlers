@@ -31,7 +31,7 @@ class RouteBot {
   }
 }
 
-const AIR = new Set(['nAir', 'sAir', 'uAir', 'dAir']);
+const AIR = new Set(['nAir', 'sAir', 'uAir', 'dAir', 'air']);
 function aimHolds(bot, step, dir) {
   bot.hold.clear();
   const k = step[0];
@@ -107,6 +107,24 @@ export function bestRun(attId, route, emptiness = 0, dummyId = 'tim') {
   return best;
 }
 
+// Human leniency: for each step, how many consecutive frames of lateness (0..24,
+// from the first frame it's possible, the other steps at the best timing) still land
+// the route. The feel target (BALANCE.md Combo doctrine): every step >= LENIENCY.
+export const LENIENCY = 8;
+export function leniency(attId, route, emptiness = 0, dummyId = 'tim') {
+  const best = bestRun(attId, route, emptiness, dummyId);
+  if (!best?.ok) return { ok: false, windows: [], best };
+  const windows = route.steps.map((_, i) => {
+    let n = 0;
+    for (let dly = 0; dly <= 24; dly++) {
+      const delays = [...best.delays]; delays[i] = (best.delays[i] || 0) + dly;
+      if (runRoute(attId, route, emptiness, dummyId, { delays }).ok) n++; else break;
+    }
+    return n;
+  });
+  return { ok: Math.min(...windows) >= LENIENCY, windows, best };
+}
+
 // Does a fighter pass a route across its whole window? (sampled every 0.1)
 export function routeHolds(attId, route, dummyId = 'tim') {
   const [lo, hi] = route.window, fails = [];
@@ -118,6 +136,10 @@ export function routeHolds(attId, route, dummyId = 'tim') {
 }
 
 if (typeof process !== 'undefined' && process.argv[1] && process.argv[1].endsWith('combos.js')) {
+  if (process.argv[2] === 'lenient') {                  // node src/dev/combos.js lenient — frames of slack per step
+    for (const c of CHARACTERS) console.log(c.id.padEnd(8), ROUTES.map(r => { const l = leniency(c.id, r); return `${r.id}:${l.windows.join('/') || 'x'}`; }).join('  '));
+    process.exit(0);
+  }
   const only = process.argv[2];
   const ids = only ? [only] : CHARACTERS.map(c => c.id);
   console.log('fighter  ' + ROUTES.map(r => r.id.padEnd(9)).join(''));

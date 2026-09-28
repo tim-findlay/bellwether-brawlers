@@ -18,7 +18,7 @@ import { stageById, geometryOf } from '../data/stages.js';
 import { EVENTS } from '../data/events.js';
 import { drawHUD } from '../render/hud.js';
 import { drawMoveList, frames } from './movelist.js';
-import { ROUTES, moveFor, HIT_STEPS } from '../data/combos.js';
+import { ROUTES, HIT_STEPS, stepMatches } from '../data/combos.js';
 import { plaque, text, chip, hints, makeNav, F, INK, PAPER, BRICK, NAVY, BRASS, GREEN, MUTED } from '../render/ui.js';
 
 const OPTS = [
@@ -32,7 +32,7 @@ const OPTS = [
 const ACTIONS = ['RESUME', 'MOVE LIST', 'RESET POSITIONS', 'CHANGE FIGHTERS', 'QUIT TO MENU'];
 const ROWS = [{ act: 'RESUME' }, ...OPTS.map(o => ({ opt: o })), ...ACTIONS.slice(1).map(a => ({ act: a }))];
 const RESET_AFTER = 70;
-const STEP_LABEL = (st) => ({ jump: 'JUMP', chase: 'DODGE' }[st] || `${st.endsWith('Air') ? 'AIR ' : ''}${{ n: '', s: '→', d: '↓', u: '↑' }[st[0]]}${st.endsWith('Heavy') ? 'HEAVY' : 'LIGHT'}`);                          // frames a free, untouched dummy waits before its composure resets
+const STEP_LABEL = (st) => ({ jump: 'JUMP', chase: 'DODGE', air: 'ANY AIR' }[st] || `${st.endsWith('Air') ? 'AIR ' : ''}${{ n: '', s: '→', d: '↓', u: '↑' }[st[0]]}${st.endsWith('Heavy') ? 'HEAVY' : 'LIGHT'}`);                          // frames a free, untouched dummy waits before its composure resets
 
 export function makePractice(G) {
   let world, events, camera, params, stage, combo, t, paused, row, showList, flash, freeT = [0, 0];
@@ -62,8 +62,8 @@ export function makePractice(G) {
     combo.onHit = (moves) => {                   // a trial is landed when its hits end this true combo, in order
       for (const r of ROUTES) {
         if (done.has(r.id)) continue;
-        const need = HIT_STEPS(r).map(st => moveFor(me().cfg, st)), tail = moves.slice(-need.length);
-        if (tail.length === need.length && need.every((m, i) => m === tail[i])) { done.add(r.id); note(`${r.name.toUpperCase()} ✓`); G.audio.play('heal'); }
+        const need = HIT_STEPS(r), tail = moves.slice(-need.length);
+        if (tail.length === need.length && need.every((st, i) => stepMatches(me().cfg, st, tail[i]))) { done.add(r.id); note(`${r.name.toUpperCase()} ✓`); G.audio.play('heal'); }
       }
     };
     camera = new Camera(960, 540, world.stage.cameraBounds);

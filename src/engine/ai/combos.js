@@ -12,7 +12,7 @@ import { isOffStage } from './nav.js';
 
 const GROUND_ROUTES = ROUTES.filter(r => !r.air);
 const CHANCE = { easy: 0.2, normal: 0.5, hard: 0.85, stall: 0.4, camp: 0.4 };
-const AIR = new Set(['nAir', 'sAir', 'uAir', 'dAir']);
+const AIR = new Set(['nAir', 'sAir', 'uAir', 'dAir', 'air']);
 
 // which step name a landed move is (for this fighter's kit)
 function stepOf(cfg, move) {
@@ -46,8 +46,9 @@ export function comboStep(ai, f, opp, world) {
     if (chaseOpen(f)) { ai.helds.add(toward); ai.helds.add('up'); ai.press('dodge'); next(R); }
   } else if (AIR.has(step)) {
     ai.helds.add(toward);                                         // drift in while waiting for the swing
-    if (free && !b.grounded && (meleeHits(f, m, opp, step[0], 6) || b.vy > 2)) {
-      ai.aim = step[0]; ai.aimDir = dir; ai.aimUntil = ai.frame + PHYS.INPUT_BUFFER;
+    const aim = step === 'air' ? (opp.y < f.y - 40 ? 'u' : 'n') : step[0];   // any aerial: up-air if they're above
+    if (free && !b.grounded && (meleeHits(f, moveFor(f.cfg, aim + 'Air'), opp, aim, 6) || b.vy > 2)) {
+      ai.aim = aim; ai.aimDir = dir; ai.aimUntil = ai.frame + PHYS.INPUT_BUFFER;
       ai.press('light'); next(R);
     }
   } else if (free && b.grounded) {

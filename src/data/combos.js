@@ -8,15 +8,16 @@
 // fighter ships when it passes. The practice arena lists them as trials.
 //
 // Steps: nLight sLight dLight · nHeavy sHeavy dHeavy · nAir sAir uAir dAir (hits)
-//        jump · chase (movement, no hit). "s" = toward the opponent.
+//        air (any aerial — whatever direction you happen to hold) · jump · chase
+//        (movement, no hit). "s" = toward the opponent.
 
 export const ROUTES = [
   { id: 'jab', name: 'Jab String', steps: ['nLight', 'sLight'], window: [0, 0.6],
     how: 'Light, then toward + Light the moment it connects.' },
   { id: 'confirm', name: 'Confirm', steps: ['nLight', 'sHeavy'], window: [0, 0.6],
     how: 'Light, then toward + Heavy: a signature off a jab. The kill route late on.' },
-  { id: 'popup', name: 'Pop-Up', steps: ['dLight', 'jump', 'nAir'], window: [0, 0.4],
-    how: 'Down + Light pops them up — jump after it and Light in the air.' },
+  { id: 'popup', name: 'Pop-Up', steps: ['dLight', 'jump', 'air'], window: [0, 0.4],
+    how: 'Down + Light pops them up and they hang there — jump after them and hit any air attack.' },
   { id: 'chase', name: 'Chase', steps: ['sLight', 'chase', 'sAir'], window: [0, 0.4],
     how: 'Toward + Light, Dodge to chase them, toward + Light in the air.' },
   { id: 'jumpin', name: 'Jump-In', steps: ['nAir', 'nLight'], window: [0, 0.6], air: true,
@@ -28,7 +29,12 @@ export function moveFor(cfg, step) {
   const L = cfg.lights || {}, S = cfg.sigs || {}, A = cfg.aerials || {};
   return {
     nLight: L.n, sLight: L.s, dLight: L.d, nHeavy: S.n, sHeavy: S.s, dHeavy: S.d,
-    nAir: A.n, sAir: A.s, uAir: A.u, dAir: A.d,
+    nAir: A.n, sAir: A.s, uAir: A.u, dAir: A.d, air: A.n,
   }[step] || null;
 }
 export const HIT_STEPS = (r) => r.steps.filter(s => s !== 'jump' && s !== 'chase');
+const ANY_AIR = ['nAir', 'uAir', 'sAir', 'dAir'];
+// does a landed move satisfy a step? ('air' takes any aerial)
+export function stepMatches(cfg, step, move) {
+  return step === 'air' ? ANY_AIR.some(s => moveFor(cfg, s) === move) : moveFor(cfg, step) === move;
+}

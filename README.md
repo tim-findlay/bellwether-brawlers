@@ -40,7 +40,7 @@ Bindings are by **physical key position** (US labels shown), so they work on any
 
 ### Combos
 
-Brawlhalla-style. Every fighter has the same five basic combos — **Jab String** (Light › toward+Light), **Confirm** (Light › toward+Heavy), **Pop-Up** (down+Light › Jump › Air Light), **Chase** (toward+Light › Dodge › Air toward+Light) and **Jump-In** (Air Light falling › Light) — so learning one fighter teaches you all of them. After any hit lands, **Dodge chases** them. The same move twice in a combo loses its hold, so mix it up. Practise them in the **Practice Arena**: its Combo Trials tick off as you land each one for real.
+Brawlhalla-style. Every fighter has the same five basic combos — **Jab String** (Light › toward+Light), **Confirm** (Light › toward+Heavy), **Pop-Up** (down+Light › Jump › any Air Light — they hang in the air for you), **Chase** (toward+Light › Dodge › Air toward+Light) and **Jump-In** (Air Light falling › Light) — so learning one fighter teaches you all of them. After any hit lands, **Dodge chases** them. The same move twice in a combo loses its hold, so mix it up. Practise them in the **Practice Arena**: its Combo Trials tick off as you land each one for real.
 
 ### The roster
 

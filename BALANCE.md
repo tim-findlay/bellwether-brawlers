@@ -37,6 +37,8 @@
 - **True combo** = the next hit lands before the victim has had more than `POST_STUN_LOCK` (3) free frames; for those frames they cannot dodge, jump or dash.
 - **Stale rule:** the same move twice in one combo gets `STALE_STUN_MULT` (½) of its stun — no loops; every combo is a route through the kit.
 - **Chase dodge:** after any landed melee hit (not a super), Dodge = a 12-frame burst (`CHASE_DODGE_IMPULSE` 9) in the held direction, no i-frames, once per airtime, cut into any attack from frame 2. It spends no dodge and protects nothing.
+- **Feel pass (Tim: "the pop up mechanic isn't working … combos need to feel more fluid"):** a landed light cancels the moment its active frames end (`HIT_CANCEL_FRAC` 0.4 → 0); the input buffer is 8 frames (was 6); the Pop-Up launcher pops straight up (82° → 88°) and **floats** the victim (`LAUNCH_FLOAT` 0.4 gravity for its fixed stun) so they hang at head height; the Pop-Up takes **any** air attack (players hold up after a jump — the up-air counts); starters' derived stun carries `COMBO_MARGIN` 10 frames of human slack (was 3); the chase dodge stays open `CHASE_LATE` 10 frames after the landed move ends (Brawlhalla: 12).
+- **Leniency gate:** `node src/dev/combos.js lenient` — every step of every route must still land when pressed **≥ 8 frames late** (tests/combos.test.mjs). Frame-perfect is not the bar; a person on a sofa is. Before this pass the Confirm and Jump-In allowed 3 frames and the Pop-Up needed a single exact timing (a keyboard sim of real presses: holding up, jumping early or late all dropped it).
 - **Ship gate (new, alongside the five sim gates):** `tests/combos.test.mjs` — every fighter lands every universal route as a true combo across its window vs the lightest, a mid-weight and the heaviest opponent, and a bare new-fighter file does too.
 
 ## physics.js — Phase-3 retune (2026-09-25)
@@ -95,7 +97,26 @@ Two independent samples before shipping a tuning pass: n ≈ 420–560 games per
 
 ## Current results
 
-**v3 balance pass 9 — the combo system (2026-09-28) — all five gates PASS on two independent seeds at N = 30; every fighter passes every combo route.**
+**v3 balance pass 10 — combo feel (2026-09-28) — all five gates PASS on two independent seeds at N = 30; every route passes, every step ≥ 8 f lenient.**
+
+| Fighter | seed 1337 | seed 2024 |
+|---|---|---|
+| Ben | 54.5 % | 51.8 % |
+| Tim | 47.9 % | 50.0 % |
+| Adrian | 56.2 % | 54.8 % |
+| Richy | 50.5 % | 44.3 % |
+| Nick | 46.4 % | 48.2 % |
+| Abi | 46.2 % | 47.3 % |
+| Mike | 48.3 % | 50.7 % |
+| Seelye | 50.0 % | 53.0 % |
+| **camp (≤ 55)** | 17.5 % | 15.6 % |
+| **stall (≤ 45)** | 1.3 % | 0.7 % |
+| **engagement flags (< 2 %)** | 0.06 % | 0.18 % |
+| **recovery dishonest (< 10 %)** | 0.75 % | 0.82 % |
+
+Spread 44.3–56.2 %. Avg match 5463 / 5520 f (~91 s); 0 / 2 capped, 0 stuck. **Engine change, called out (Tim's brief is the sign-off):** the feel pass in the Combo doctrine (cancel on active end, buffer 8, launcher float, straight-up pop, any-air Pop-Up, margin 10, chase late). Longer, easier combos favoured the fastest starters and the longest reach: Ben 57.6 % and Adrian 58.6–59.6 % over the passes below, Abi 43.6 %. **Tuning:** Ben Pistachio Flick range 74 → 68 and Wingspan kbScale 13 → 12.5; Adrian Toothbrush Jab startup 3 → 4 (the roster's lone 3-frame jab — with shared combos the fastest starter wins) and Clumsy Charge dmg 11 → 10; Abi Double-Booked kbScale 12 → 12.5; Richy Short Squeeze kbScale 11 → 11.5. **Test change, called out:** tests/physics.test.mjs pins INPUT_BUFFER at 8. **Soft spots:** Adrian is top on both seeds again (56.2 / 54.8 %); Richy swings 6 points between seeds.
+
+**v3 balance pass 9 — the combo system (2026-09-28, superseded) — all five gates PASS on two independent seeds at N = 30; every fighter passes every combo route.**
 
 | Fighter | seed 1337 | seed 2024 |
 |---|---|---|

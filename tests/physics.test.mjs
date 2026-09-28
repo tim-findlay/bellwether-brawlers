@@ -21,7 +21,7 @@ test('PHYS matches the BALANCE.md Phase-3 table', () => {
   assert.equal(PHYS.DASH_JUMP_CARRY, 1.0);
   assert.equal(PHYS.DOUBLE_JUMP_FACTOR, 1.0);
   assert.equal(PHYS.COYOTE_FRAMES, 5);
-  assert.equal(PHYS.INPUT_BUFFER, 6);
+  assert.equal(PHYS.INPUT_BUFFER, 8);   // 6 -> 8 in the combo-feel pass (BALANCE.md pass 10)
   assert.equal(PHYS.DODGE_COOLDOWN, 60);
   assert.equal(PHYS.STEP_DODGE_IMPULSE, 6);
   assert.equal(PHYS.SPOT_DODGE_DURATION, 18);

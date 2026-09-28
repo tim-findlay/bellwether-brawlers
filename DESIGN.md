@@ -71,7 +71,7 @@ The variants are *derived* from each fighter's base light / heavy / aerials by `
 
 ## Combos — the blueprint (2026-09-28, Tim: "mirror Brawlhalla … a blueprint for new characters")
 
-Brawlhalla's model, mirrored: **every move carries a fixed stun** (frames, not scaled by damage); **starters are fixed force** (the same shove at any composure — only enders scale); a follow-up is a **true combo** if it lands before the victim has had more than `POST_STUN_LOCK` (3) free frames — for those frames they cannot dodge or jump (Brawlhalla: 3 free frames to escape, dash locked 4); **the same move twice in one combo** gets half its stun on the repeat (Brawlhalla's DI rule, simplified: no jab loops — use the kit); and **a landed hit opens a chase dodge** — Dodge after any landed melee move bursts you in the held direction (at them if none), no i-frames, once per airtime, cut short by any attack (Brawlhalla's chase dodge). Hit-confirm cancels (a landed light into jump / dash / light / heavy) stay.
+Brawlhalla's model, mirrored: **every move carries a fixed stun** (frames, not scaled by damage); **starters are fixed force** (the same shove at any composure — only enders scale); a follow-up is a **true combo** if it lands before the victim has had more than `POST_STUN_LOCK` (3) free frames — for those frames they cannot dodge or jump (Brawlhalla: 3 free frames to escape, dash locked 4); **the same move twice in one combo** gets half its stun on the repeat (Brawlhalla's DI rule, simplified: no jab loops — use the kit); and **a landed hit opens a chase dodge** — Dodge after any landed melee move bursts you in the held direction (at them if none), no i-frames, once per airtime, cut short by any attack (Brawlhalla's chase dodge). Hit-confirm cancels (a landed light into jump / dash / light / heavy) stay, and open the moment the hit's active frames end. Every step of every route forgives ≥ 8 frames of lateness (the leniency gate, BALANCE.md) — combos are for people, not frame-perfect bots.
 
 **The five universal routes** — every fighter has them, the way every Brawlhalla weapon has its bread-and-butter strings (`src/data/combos.js`; practice arena → COMBO TRIALS):
 
@@ -79,7 +79,7 @@ Brawlhalla's model, mirrored: **every move carries a fixed stun** (frames, not s
 |---|---|---|---|
 | **Jab String** | Light › → Light | 0–60 % empty | the basic string; safe damage |
 | **Confirm** | Light › → Heavy | 0–60 % empty | a signature off a jab — the kill route late on |
-| **Pop-Up** | ↓ Light › Jump › Air Light | 0–40 % empty | launcher into the air game |
+| **Pop-Up** | ↓ Light › Jump › any Air Light | 0–40 % empty | launcher into the air game — they float at head height; let go of ↓ (holding it gives the spike) |
 | **Chase** | → Light › Dodge › Air → Light | 0–40 % empty | chase dodge follow-up (Brawlhalla's sLight > chase > sAir) |
 | **Jump-In** | Air Light (falling) › Light | 0–60 % empty | the approach: land into a jab |
 

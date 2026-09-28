@@ -39,7 +39,7 @@ export function expandKit(cfg) {
          range: Math.round(L.range * 1.2), step: 18, startup: L.startup + 2, recover: L.recover + 3, ...K.lights?.s },
     // down light: a low sweep that pops them up — the combo starter into aerials
     // (the Pop-Up starter: a fixed-force pop to head height, whatever their composure)
-    d: { ...L, name: N.dLight || `${L.name} (low)`, kbAngle: 82, kb: LAUNCHER_KB, range: Math.round(L.range * 0.9), low: true, step: 6,
+    d: { ...L, name: N.dLight || `${L.name} (low)`, kbAngle: 88, kb: LAUNCHER_KB, float: true, range: Math.round(L.range * 0.9), low: true, step: 6,
          startup: L.startup + 1, recover: L.recover + 2, ...K.lights?.d },
   };
   const sigs = {
@@ -71,7 +71,7 @@ export function expandKit(cfg) {
 // frames per starter when the lab (node src/dev/combos.js) says a route drops.
 // Enders (sAir, signatures) carry no fixed stun: their launch is their stun.
 const cancelAt = (m) => (m.active || 0) + Math.ceil((m.recover || 0) * PHYS.HIT_CANCEL_FRAC) + 1;   // hit -> first cancel frame
-export const COMBO_MARGIN = 3;
+export const COMBO_MARGIN = 10;          // frames of human slack on every route step (node src/dev/combos.js lenient: >= 8 each)
 export const STARTER_KB_SCALE = 1.5;   // Brawlhalla's split: starters are (almost) fixed force, enders carry the scaling
 export const LAUNCHER_KB = 11;          // dLight's fixed pop (launch ≈ kb × KB_BASE_MULT): to head height; +1 per frame of nAir startup past 6
 function comboStuns(k, add) {

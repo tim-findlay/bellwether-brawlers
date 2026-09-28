@@ -8,7 +8,7 @@
 import { MovementBody } from './movement.js';
 import { PHYS } from '../data/physics.js';
 import { holidayTick, homeTime } from './specials.js';
-import { cancelOpen, wantsCancel, chaseOpen, chase, chaseCuts } from './combo.js';
+import { cancelOpen, wantsCancel, chaseOpen, chase, chaseCuts, tickChase } from './combo.js';
 
 export const STOCKS = 3;
 export const CHAIR_DESCENT = 60;     // frames: bounds-top -> respawn hover point
@@ -39,7 +39,7 @@ export class Fighter {
     this.cd = { s1: 0, s2: 0 };
     this.state = 'normal'; this.stateT = 0;
     this.attack = null; this.landLag = 0; this.chair = null; this.hazardInv = 0; this.tripOnLand = false; this.recoveryUsed = false;
-    this.comboMoves = new Set(); this.chaseUsed = false;   // combo system: moves that hit me this combo · chase dodge spent this airtime
+    this.comboMoves = new Set(); this.chaseUsed = false; this.chaseLate = 0;   // combo system: moves that hit me this combo · chase dodge spent this airtime
     this.statuses = new Map();
     this.controller.reversed = false;
     this.hurtFlash = 0; this.cancelFlash = 0; this.animT = (this.side + 1) * 17;
@@ -243,6 +243,7 @@ export class Fighter {
     const fixed = (opts.stun ?? opts.move?.stun ?? 0) * (stale ? PHYS.STALE_STUN_MULT : 1);
     const stun = Math.max(8, Math.round(fixed), Math.round(speed * PHYS.HITSTUN_PER_KB));
     this.body.launch(vx, vy, stun);
+    this.body.floatT = opts.move?.float ? Math.round(fixed) : 0;   // a launcher hangs them (PHYS.LAUNCH_FLOAT)
     this.state = 'hitstun'; this.stateT = 0;
     if (status) this.applyStatus(status.name, status.dur, status.data || {});
     if (this.hasStatus('reversed')) this.clearStatus('reversed');   // one stolen turn
@@ -310,6 +311,7 @@ export class Fighter {
     const b = this.body;
     if (b.grounded && b.state !== 'chase') this.chaseUsed = false;
     if (this.comboMoves.size && b.stun === 0 && b.postStun === 0) this.comboMoves.clear();   // I got out: the combo is over
+    tickChase(this);
     if (this.state === 'normal') {
       if (chaseOpen(this) && intent.dodge) chase(this, intent);                                      // chase dodge after a landed hit
       else if (cancelOpen(this) && wantsCancel(this, intent)) { this.attack = null; this.cancelFlash = 6; }   // hit-confirm cancel

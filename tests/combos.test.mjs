@@ -4,7 +4,7 @@
 // the lightest, a mid-weight and the heaviest opponent.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { routeHolds, runRoute } from '../src/dev/combos.js';
+import { routeHolds, runRoute, leniency, LENIENCY } from '../src/dev/combos.js';
 import { ROUTES } from '../src/data/combos.js';
 import { CHARACTERS } from '../src/data/characters.js';
 import { expandKit, aerials } from '../src/data/characters/_shared.js';
@@ -24,6 +24,15 @@ test('blueprint: every fighter lands every universal route as a true combo, vs l
     if (!h.ok) fails.push(`${c.id} ${r.id} vs ${o} @ ${h.fails.map(f => `${f.e}%(${f.best}/${f.need})`).join(' ')}`);
   }
   assert.deepEqual(fails, []);
+});
+
+test('feel: every step of every route forgives a human — at least LENIENCY frames late still lands it', () => {
+  const tight = [];
+  for (const c of CHARACTERS) for (const r of ROUTES) {
+    const l = leniency(c.id, r);
+    if (!l.ok) tight.push(`${c.id} ${r.id}: ${l.windows.join('/')}`);
+  }
+  assert.deepEqual(tight, [], `every step needs >= ${LENIENCY} frames of slack`);
 });
 
 test('blueprint: a brand-new fighter built from a bare character file gets working combos for free', () => {
