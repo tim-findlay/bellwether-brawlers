@@ -4,16 +4,16 @@ export default {
   id: 'richy', name: 'RICHY', title: 'THE MARKET', archetype: 'Rolex zoner',
   tagline: 'Kiwi VP. Long the market, short your patience.',
   win: 'Called it. Should’ve bought the dip, mate.',
-  tip: 'DODGE the gold Daytona, JUMP the Submariner skimming the floor — then walk in during the lock. Off stage, the market closes.',
+  tip: 'DODGE the gold Daytona, JUMP the Submariner skimming the floor — then walk in during the lock. When the viewfinder locks on you, dodge or get out of frame.',
   passive: { name: 'Diversified Portfolio', desc: 'Landing the two watches alternately builds +1 damage per switch, up to +3. They share one cooldown.' },   // shown in the move list (render only)
   body: { suit: '#474b52', trim: '#c9a227', skin: '#caa17a', hair: { color: '#1f1a16', style: 'beard' }, height: 1.0, extras: ['sweater', 'watch'] },
-  stats: { gauge: 107, runMax: 5.5, jumpImpulse: 15, fallMax: 14, weight: 1.05 },
+  stats: { gauge: 107, runMax: 5.5, jumpImpulse: 16, fallMax: 12, weight: 1.05 },
   light: { name: 'Bid', dmg: 5, kb: 5, kbScale: 5, kbAngle: 40, range: 60, startup: 4, active: 3, recover: 8 },
   heavy: { name: 'Short Squeeze', dmg: 10, kb: 6.5, kbScale: 11.5, kbAngle: 150, range: 68, startup: 11, active: 4, recover: 17 },   // drags closer (angle past 90 = toward Richy)
   aerials: aerials({ n: 'Portfolio Spin', s: 'Macro Slap', u: 'Uptick', d: 'Crash Out' }, { s: { kb: 7, kbScale: 12 } }),
   s1: { name: 'Daytona', desc: 'A thrown gold watch that flies forward, rising slightly (works in the air). DODGE it.', kind: 'projectile', air: true, dmg: 8, kb: 7, kbScale: 6, kbAngle: 40, speed: 5, vy: -1.2, w: 18, h: 52, height: 60, shape: 'rolex', color: '#c9a227', dial: '#3f5a40', cooldown: 90, sharedLock: 40, tag: 'bull', startup: 11, active: 2, recover: 14 },
   s2: { name: 'Submariner', desc: 'A steel watch that skims along the floor. JUMP it.', kind: 'groundProjectile', dmg: 8, kb: 6, kbScale: 6, kbAngle: 45, speed: 4.2, w: 18, h: 28, shape: 'sub', color: '#9aa4ab', dial: '#c4452e', cooldown: 100, sharedLock: 40, tag: 'bear', startup: 12, active: 2, recover: 15 },
-  super: { name: 'Rate Hikes', desc: 'Three telegraphed columns erupt from the stage like a rising chart (9 dmg each). Step off the marks.', kind: 'columns', dmg: 9, kb: 8, kbScale: 15, startup: 18, recover: 30, aiRange: [160, 480] },
+  super: { name: 'Gone Viral', desc: 'Lines you up on his camera phone: the viewfinder follows you, locks, then SNAP — you\'re the meme (18 dmg). Dodge the snap, or get out of frame once it locks.', kind: 'meme', dmg: 18, kb: 9, kbScale: 15, kbAngle: 80, track: 44, snap: 64, frameW: 150, frameH: 170, startup: 16, recover: 24, aiRange: [0, 900] },   // tracks 44f, locked 20f (readable), one frame of hitbox
   kit: { names: { sLight: 'Ask', dLight: 'Floor Price', sSig: 'Margin Call', dSig: 'Breakout', recovery: 'Rally', groundPound: 'Crash' } },
   ai: { style: 'zoner', pref: 260, stopAt: 88 },
   hooks: {

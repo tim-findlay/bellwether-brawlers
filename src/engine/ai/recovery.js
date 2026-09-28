@@ -65,7 +65,8 @@ export function recover(ai, f, world) {
   if (canSpecial && rs.move.kind === 'teleport') {
     const opp = world.other(f);
     const oppHome = opp.state === 'normal' && !opp.chair && !!world.surfaceBelow(opp.x, opp.y);
-    if (oppHome && (b.airJumps === 0 || gap > 140 || b.y > slab.y + 80)) { ai.press(rs.slot); return; }
+    const inReach = !rs.move.range || Math.hypot(opp.x - b.x, opp.y - b.y) <= rs.move.range + 40;   // a capped teleport only saves you in reach
+    if (oppHome && inReach && (b.airJumps === 0 || gap > 140 || b.y > slab.y + 80)) { ai.press(rs.slot); return; }
   }
 
   // --- the double jump: at slab level, or now if waiting would lose it ------

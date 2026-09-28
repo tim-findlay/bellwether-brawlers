@@ -101,6 +101,7 @@ export function makePractice(G) {
       if (G.input.keyPressed('KeyT')) setDummy(DUMMY_MODES[(DUMMY_MODES.indexOf(o.dummy) + 1) % DUMMY_MODES.length]);
       if (G.input.keyPressed('KeyB')) { o.boxes = !o.boxes; note(o.boxes ? 'HITBOXES ON' : 'HITBOXES OFF'); }
       if (G.input.keyPressed('KeyM')) showList = !showList;
+      if (G.fx.meme) camera.update([{ x: G.fx.meme.x, y: G.fx.meme.y }]);   // Gone Viral: lean in on the meme
       if (G.fx.frozen()) return;                                   // hitstop
 
       const [a, d] = world.fighters;

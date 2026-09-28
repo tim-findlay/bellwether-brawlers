@@ -7,7 +7,7 @@ export default {
   tip: 'Pressure through Last Orders — one hit cancels the regen. Bait the parry: it does nothing to projectiles or grabs. When she goes on her hollibobs, watch the marker and move off it before it locks.',
   passive: { name: 'Counter-puncher', desc: 'Bait the parry with a projectile or a grab — it does nothing to either.' },   // shown in the move list (render only)
   body: { suit: '#a83a2e', trim: '#f3ead8', skin: '#edd3b6', hair: { color: '#e6c977', style: 'long' }, trousers: '#f1ece2', height: 0.93, extras: [] },   // brick-red blazer, cream blouse, white trousers
-  stats: { gauge: 100, runMax: 5.6, jumpImpulse: 15.5, fallMax: 13, weight: 1.0 },
+  stats: { gauge: 104, runMax: 5.6, jumpImpulse: 16, fallMax: 12, weight: 1.0 },
   light: { name: 'Reschedule', dmg: 5, kb: 4.5, kbScale: 5, kbAngle: 40, range: 56, startup: 4, active: 3, recover: 10 },
   heavy: { name: 'Double-Booked', dmg: 10, kb: 7, kbScale: 12.5, kbAngle: 35, range: 62, startup: 10, active: 3, recover: 18 },
   aerials: aerials({ n: 'Wristband Whirl', s: 'Tote Swing', u: 'Confetti Pop', d: 'Baggage Drop' }, { n: { range: 70, dmg: 6 }, s: { kb: 6.5, kbScale: 12 }, d: { dmg: 8, kbScale: 10 } }),

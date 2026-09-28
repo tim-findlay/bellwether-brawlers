@@ -96,18 +96,53 @@ test('Adrian: a whiffed-lunge trip can hit (Happy Accident) and still self-stagg
   assert.ok(b.gauge < g0, 'the fall hits the fighter in reach');
 });
 
-test("Nick: I Know Your Guy turns his s2 into the opponent's s1, then hands it back", () => {
+test('Nick: Membership Rewards rains points on five marks around the target; only one can land', () => {
   const { w, c, a, b } = mk('nick', 'ben');
   b.body.x = a.x + 200; a.meter = 100;
-  c[0].q.add('super'); run(w, 1); run(w, a.cfg.super.startup + a.cfg.super.recover + 2);
-  assert.ok(a.hasStatus('borrowed'));
-  c[0].q.add('s2'); run(w, 1);
-  assert.equal(a.attack?.move.name, byId('ben').s1.name, 's2 fires the borrowed special');
-  assert.equal(a.attack.move.startup, byId('ben').s1.startup + 2, '+2 startup on a borrowed move');
-  run(w, 620);
-  assert.equal(a.hasStatus('borrowed'), false, 'the loan runs out');
-  a.cd.s2 = 0; c[0].q.add('s2'); run(w, 1);
-  assert.equal(a.attack?.move.name, a.cfg.s2.name, 'his own s2 is back');
+  c[0].q.add('super'); run(w, 1); run(w, a.cfg.super.startup + 1);
+  assert.equal(w.strikes.length, 5, 'five marked spots');
+  const g0 = b.gauge;
+  run(w, 120);
+  assert.ok(b.gauge < g0 && g0 - b.gauge <= a.cfg.super.dmg + 1, 'one shower lands, never two');
+});
+
+test('Nick: Status Match only reaches you within its range — from further out it is a blink', () => {
+  const { w, c, a, b } = mk('nick', 'ben');
+  b.body.x = a.x + 150;
+  c[0].q.add('s1'); run(w, a.cfg.s1.startup + 2);
+  assert.ok(Math.abs(a.x - b.x) < 80, 'in range: arrives behind');
+  const far = mk('nick', 'ben');
+  far.b.body.x = far.a.x + 450; const x0 = far.a.x;
+  far.c[0].q.add('s1'); run(far.w, far.a.cfg.s1.startup + 2);
+  assert.ok(Math.abs(far.a.x - x0) <= far.a.cfg.s1.range + 1 && Math.abs(far.b.x - far.a.x) > 200, 'out of range: a capped blink');
+});
+
+test('Seelye: Nappy Drop is a one-shot trap that stinks, slows and liens whoever steps on it', () => {
+  const { w, c, a, b } = mk('seelye', 'tim');
+  b.body.x = a.x + 400; a.body.facing = 1;
+  c[0].q.add('s2'); run(w, a.cfg.s2.startup + 2);
+  assert.equal(w.zones.length, 1, 'the nappy is down');
+  const z = w.zones[0], g0 = b.gauge;
+  b.body.x = z.x; run(w, 2);
+  assert.ok(b.gauge < g0 && b.hasStatus('lien') && b.hasStatus('slow'), 'stunk, slowed, liened');
+  assert.equal(w.zones.length, 0, 'one use');
+});
+
+test('Richy: Gone Viral tracks, locks, snaps — in frame is a hit, a dodge beats it', () => {
+  const { w, c, a, b } = mk('richy', 'tim');
+  b.body.x = a.x + 300; a.meter = 100;
+  c[0].q.add('super'); run(w, a.cfg.super.startup + 2);
+  const h = w.hazards.find(x => x.type === 'meme');
+  assert.ok(h, 'the viewfinder is up');
+  const g0 = b.gauge;
+  run(w, a.cfg.super.snap + 4);
+  assert.ok(b.gauge <= g0 - a.cfg.super.dmg + 1, 'standing still: you are the meme');
+  const d = mk('richy', 'tim');
+  d.b.body.x = d.a.x + 300; d.a.meter = 100;
+  d.c[0].q.add('super'); run(d.w, d.a.cfg.super.startup + 2);
+  const g1 = d.b.gauge;
+  run(d.w, d.a.cfg.super.snap - 6); d.c[1].it = { dodge: true }; run(d.w, 1); d.c[1].it = {}; run(d.w, 12);
+  assert.equal(d.b.gauge, g1, 'dodged the snap');
 });
 
 test('Abi: Hollibobs — out of office (untouchable), the mark tracks then locks, Home Time drops on it', () => {
@@ -148,7 +183,7 @@ test('Tim: Ask Claude summons a helper that fights for him, and one hit sends it
   assert.ok(b.gauge < g0, 'Claude lands hits on its own');
 });
 
-test('Tim: one hit on Claude sends it home', () => {
+test('Tim: Claude takes three separate hits to send home (a jab string\'s one attack costs one hp)', () => {
   const { w, c, a, b } = mk('tim', 'mike');
   a.meter = 100; b.body.x = a.x + 400;
   c[0].q.add('super'); run(w, 1); run(w, a.attack.move.startup + 1);
@@ -156,8 +191,14 @@ test('Tim: one hit on Claude sends it home', () => {
   assert.ok(cl && cl.state === 'in', 'Claude is arriving');
   b.body.x = cl.x + 45; b.body.facing = -1;                        // Mike steps in and jabs it while it lands
   c[1].q.add('light');
-  for (let i = 0; i < 20 && w.assists.length; i++) run(w, 1);
-  assert.equal(w.assists.length, 0, 'booted');
+  for (let i = 0; i < 20; i++) run(w, 1);
+  assert.equal(w.assists.length, 1, 'one hit: still thinking');
+  assert.equal(cl.hp, a.cfg.super.hp - 1);
+  for (let k = 0; k < 6 && w.assists.length; k++) {               // keep jabbing it until it logs off
+    b.body.x = cl.x + 45 * (cl.x < b.body.x ? 1 : -1); b.body.facing = Math.sign(cl.x - b.body.x) || -1;
+    c[1].q.add('light'); for (let i = 0; i < 24; i++) run(w, 1);
+  }
+  assert.equal(w.assists.length, 0, 'booted after its hp runs out');
 });
 
 test('Tim: Claude clocks off on its own after its time', () => {
@@ -178,4 +219,23 @@ test('a grabber hit mid-grab lets go (defect: the victim stayed grabbed forever)
   a.takeHit({ dmg: 5, kb: 5, kbScale: 5, kbAngle: 40, dir: -1 });   // a third party (Claude, a stray shot) hits Mike
   run(w, 2);
   assert.notEqual(b.state, 'grabbed', 'Tim is released');
+});
+
+test('Ben: COME ON FULHAM! — the crowd runs the floor and flattens a grounded opponent; jumping clears it', () => {
+  const { w, c, a, b } = mk('ben', 'tim');
+  b.body.x = a.x + 250; a.body.facing = 1; a.meter = 100;
+  c[0].q.add('super'); run(w, a.cfg.super.startup + 2);
+  assert.ok(w.hazards.some(h => h.type === 'crowd'), 'the crowd is on');
+  const g0 = b.gauge;
+  for (let i = 0; i < 200 && b.gauge === g0; i++) run(w, 1);
+  assert.ok(b.gauge <= g0 - a.cfg.super.dmg + 1, 'flattened');
+  const j = mk('ben', 'tim');
+  j.b.body.x = j.a.x + 250; j.a.body.facing = 1; j.a.meter = 100;
+  j.c[0].q.add('super'); run(j.w, j.a.cfg.super.startup + 2);
+  const g1 = j.b.gauge, crowd = j.w.hazards.find(h => h.type === 'crowd');
+  for (let i = 0; i < 200 && crowd && !crowd.dead; i++) {
+    if (Math.abs(crowd.x - j.b.x) - crowd.w / 2 < 110 && j.b.grounded) { j.c[1].it = { jump: true }; } else j.c[1].it = {};
+    run(j.w, 1);
+  }
+  assert.equal(j.b.gauge, g1, 'jumped the crowd');
 });

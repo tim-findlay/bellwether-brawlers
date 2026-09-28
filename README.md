@@ -34,7 +34,7 @@ Bindings are by **physical key position** (US labels shown), so they work on any
 
 **Menus:** F / K / Enter (pad ✕) confirm · Esc (pad ○) back · Esc pauses a fight (with the full controls overlay — also under HOW TO PLAY on the main menu).
 
-**Gamepads (Brawlhalla layout):** plug in any standard-mapping pad (PlayStation, Xbox, most USB pads) — the first pad drives P1, the second P2, alongside the keyboard. Stick / d-pad move, **✕** jump, **□** light, **○** heavy, **L2 / R2** dodge (+ direction on the ground = dodge-dash), **R1** special 1, **L1** special 2, **△** super, Options pauses (each pad's Options is its own). In menus **✕ selects and ○ goes back**. No rebinding UI yet.
+**Gamepads (Brawlhalla layout):** plug in any standard-mapping pad (PlayStation, Xbox, most USB pads) — the first pad drives P1, the second P2, alongside the keyboard. Stick / d-pad move (up aims, it never jumps), **✕** jump, **□** light, **○** heavy, **L2 / R2** dodge (+ direction on the ground = dodge-dash), **R1** special 1, **L1** special 2, **△** super, Options pauses (each pad's Options is its own). In menus **✕ selects and ○ goes back**. No rebinding UI yet.
 
 **Walls:** off the side of the stage, drift into the slab's wall to cling and slide; jump to kick off (no air jump spent, up to three in a row), hold down to fall past.
 
@@ -48,16 +48,16 @@ Brawlhalla-style. Every fighter has the same five basic combos — **Jab String*
 
 | Fighter | Archetype | Specials | Super |
 |---|---|---|---|
-| **BEN** — The Big Boss | Long-range bully | Skip Shot (a water polo ball that drags you toward him — jump it) · Off the Lip (chair-surf lunge, works in the air — his recovery) | TWELFTH MAN — unparryable stadium roar (jump it) |
-| **TIM** — The Operator | Tempo all-rounder | Scheduled Send (marks the floor under you, strikes a beat later — move) · Zulu Time (rewinds Scheduled Send, next hit +2) | ASK CLAUDE — summons Claude as a second fighter for a few seconds (one hit sends it home) |
+| **BEN** — The Big Boss | Long-range bully | Skip Shot (a water polo ball that drags you toward him — jump it) · Off the Lip (chair-surf lunge, works in the air — his recovery) | COME ON FULHAM! — a crowd of Fulham players stampedes across the floor (jump it) |
+| **TIM** — The Operator | Tempo all-rounder | Scheduled Send (marks the floor under you, strikes a beat later — move) · Zulu Time (rewinds Scheduled Send, next hit +2) | ASK CLAUDE — summons Claude as a second fighter for a few seconds (three hits send it home) |
 | **ADRIAN** — The Walking Hazard | Chaos rushdown | Clumsy Charge (trips if he misses — and the fall can still hit you) · Toothbrush Toss (lands in a slippery coffee puddle) | FULL AUDIT — multi-hit flail, trips at the end |
-| **RICHY** — The Market | Rolex zoner | Daytona (a thrown watch — dodge it) · Submariner (skims the floor — jump it); alternating *landed* watches build bonus damage. Short Squeeze (heavy) **pulls you in** | RATE HIKES — telegraphed chart eruptions |
-| **NICK** — The Concierge | Teleport glass cannon | Status Match (teleport behind — also his recovery) · Points Redemption (card fan) | I KNOW YOUR GUY — borrows *your* first special for 10 s |
+| **RICHY** — The Market | Rolex zoner | Daytona (a thrown watch — dodge it) · Submariner (skims the floor — jump it); alternating *landed* watches build bonus damage. Short Squeeze (heavy) **pulls you in** | GONE VIRAL — his camera phone locks on and snaps: you're the meme (dodge the snap) |
+| **NICK** — The Concierge | Teleport glass cannon | Status Match (teleport behind you in range, a short blink from further out) · Points Redemption (card fan) | MEMBERSHIP REWARDS — Amex points rain on marked spots (step off them) |
 | **ABI** — The Gatekeeper | Counter-puncher | Calendar Block (melee parry, works in the air → "DECLINED!" + your specials locked) · Hollibobs (goes on holiday, then lands on you — move off the umbrella) | PUB O'CLOCK — locks specials, regen until she's hit |
 | **MIKE** — The Site Manager | Armored grappler tank | Scaffold Slam (unparryable command grab — jump it; he can throw you either way) · Demolition Day (shockwave that destroys projectiles) | WRECKING BALL — two dodgeable passes. No recovery special: knock him off and guard the edge |
-| **SEELYE** — The Lender | Setplay / debt collector, new dad | Drawdown (binder lob, leaves burning paperwork) · Dad Reflexes (catches projectiles for meter) | ENFORCEMENT — parryable cone that collects a LIEN for +8 |
+| **SEELYE** — The Lender | Setplay / debt collector, new dad | Drawdown (binder lob, leaves burning paperwork) · Nappy Drop (a trap on the floor: stinks, slows and liens — jump it) | ENFORCEMENT — parryable cone that collects a LIEN for +8 |
 
-Seelye's LIEN: his heavy and his recovery mark you; his next special collects +4 and Enforcement collects +8. If Mike is in the match the fight can suddenly relocate to **Berlin** (his home turf) — that's an event, not a stage pick.
+Seelye's LIEN: his heavy, his recovery and the nappy mark you; his next special collects +4 and Enforcement collects +8. If Mike is in the match the fight can suddenly relocate to **Berlin** (his home turf) — that's an event, not a stage pick.
 
 ### Stages
 

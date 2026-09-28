@@ -42,8 +42,10 @@ export function drawAssists(c, world, sheet, t) {
     let anim = 'idle', frame = 0;
     if (a.state === 'chase') { anim = 'run'; frame = frameFor(sheet?.anims?.run, a.st); }
     else if (a.state === 'combo') { anim = 'attack'; frame = Math.min(5, Math.floor(a.st / 8)); }
+    else if (a.state === 'hurt' && sheet && hasAnim(sheet, 'hurt')) { anim = 'hurt'; frame = Math.min(sheet.anims.hurt.frames - 1, a.st >> 2); }
     else frame = frameFor(sheet?.anims?.idle, a.t);
-    if (sheet && hasAnim(sheet, anim)) drawSprite(c, sheet, anim, frame, a.x, a.y, a.facing, 1.5 * (sheet.scale ?? 1), {});
+    const hurtFx = a.state === 'hurt' && a.st < 6 ? { tint: '#ffffff', tintAlpha: 0.8 } : {};
+    if (sheet && hasAnim(sheet, anim)) drawSprite(c, sheet, anim, frame, a.x, a.y, a.facing, 1.5 * (sheet.scale ?? 1), hurtFx);
     else standIn(c, a, t);
     c.globalAlpha = 1;
     // name tag, so the room knows who just joined the fight
@@ -51,6 +53,10 @@ export function drawAssists(c, world, sheet, t) {
     c.fillStyle = ORANGE; c.fillRect(Math.round(a.x - 27), Math.round(a.y - 115), 54, 12);
     c.fillStyle = PAPER; c.font = "700 10px 'Silkscreen', monospace"; c.textAlign = 'center';
     c.fillText(a.name, Math.round(a.x), Math.round(a.y - 105));
+    for (let i = 0; i < (a.m?.hp || 1); i++) {                  // hp pips under the tag
+      c.fillStyle = INK; c.fillRect(Math.round(a.x - 16 + i * 12), Math.round(a.y - 100), 9, 6);
+      c.fillStyle = i < a.hp ? ORANGE : PAPER; c.fillRect(Math.round(a.x - 15 + i * 12), Math.round(a.y - 99), 7, 4);
+    }
   }
 }
 

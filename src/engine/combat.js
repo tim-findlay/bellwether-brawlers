@@ -5,7 +5,7 @@
 // Special-move behavior is dispatched by move.kind, so characters stay data.
 
 import { Fighter } from './fighter.js';
-import { EXTRA_BEHAVIORS, updateAssists, assistBox, dismissAssist } from './specials.js';
+import { EXTRA_BEHAVIORS, updateAssists, assistBox, dismissAssist, hitAssist } from './specials.js';
 
 export class FightWorld {
   constructor({ cfgs, controllers, stage, fx, audio, rng, settings }) {
@@ -89,7 +89,7 @@ export class FightWorld {
     for (const att of this.fighters) {
       const hb = att.hitbox();
       if (!hb) continue;
-      for (const a of this.assists) if (a.owner !== att && overlap(hb, assistBox(a))) dismissAssist(this, a, 'BOOTED!');   // any hit sends a helper home
+      for (const a of this.assists) if (a.owner !== att && overlap(hb, assistBox(a))) hitAssist(this, a, att);   // each attack costs a helper one hp (specials.js)
       const def = this.other(att);
       if (def.state === 'ko' || def.chair) continue;
       if (!overlap(hb, def.hurtbox())) continue;
@@ -231,6 +231,14 @@ export class FightWorld {
           this.audio.play('slip');
           f.takeHit({ dmg: 4, kb: 5, kbScale: 3, kbAngle: 60, dir: f.x < z.x ? -1 : 1, unparryable: false, from: z.owner, move: { name: 'Nero Spill' } });
           this.fx.text(f.x, f.y - 110, 'SLIP!', '#7a4a3a');
+        } else if (z.type === 'nappy') {                       // Seelye's Nappy Drop: a one-shot trap — stunk, slowed, marked
+          z.dead = true;
+          this.audio.play('foam');
+          f.takeHit({ dmg: z.dmg ?? 8, kb: 6, kbScale: 4, kbAngle: 80, dir: f.x < z.x ? -1 : 1, from: z.owner, move: { name: 'Nappy Drop' } });
+          for (const st of z.apply || []) f.applyStatus(st.name, st.dur);
+          this.fx.dust(z.x, z.y, '#9fae6a', 14);
+          this.fx.text(f.x, f.y - 120, 'STINKED!', '#6e7d3a');
+          break;
         } else if (z.type === 'ember' || z.type === 'smoke') {
           if (!f.hasStatus('burn')) f.applyStatus('burn', 90, { amount: z.burn || 1 });
           else f.statuses.get('burn').dur = Math.max(f.statuses.get('burn').dur, 60);
@@ -262,6 +270,7 @@ export class FightWorld {
       const res = def.takeHit({ dmg, kb: s.kb ?? 8, kbScale: s.kbScale ?? 14, kbAngle: s.kbAngle ?? 75, dir: def.x < s.x ? -1 : 1, from: s.owner, move: s.move || { name: 'strike' } });
       if (res === 'hit') { s.owner.gainMeter(dmg * 0.8); this.hitFeedback(def, slot, dmg); }
       if (res === 'hit' && s.groupHit) s.groupHit.done = true;
+      if (res === 'hit' && s.move?.callout) this.fx.text(def.x, def.y - 150, s.move.callout, s.color);
       s.dead = true;
     }
     this.strikes = this.strikes.filter(s => !s.dead);
@@ -273,6 +282,7 @@ export class FightWorld {
   updateHazards() {
     for (const h of this.hazards) {
       if (h.update) h.update(h, this);
+      if (!h.w || !h.h) continue;                              // a zero-size box is inactive (Gone Viral before the snap)
       for (const f of this.fighters) {
         if (h.immune === f || h.hit.has(f) || f.state === 'ko' || f.chair || f.invulnerable) continue;
         if (h.groundedOnly && !f.grounded) continue;
@@ -281,6 +291,7 @@ export class FightWorld {
         const dmg = h.owner ? h.owner.damageOut(h.dmg, 'super') : h.dmg;
         const res = f.takeHit({ dmg, kb: h.kb ?? 5, kbScale: h.kbScale ?? 0, kbAngle: h.kbAngle ?? 55, dir: h.dir ?? (Math.sign(h.vx) || 1), unparryable: !!h.unparryable });
         if (res === 'hit' && h.owner) { h.owner.gainMeter(dmg * 0.8); this.hitFeedback(f, 'super', dmg); }
+        if (res === 'hit' && h.onHit) h.onHit(h, f, this);
         else if (res === 'hit') this.hitFeedback(f, 'heavy', dmg);
       }
     }
@@ -346,8 +357,20 @@ const BEHAVIORS = {
   },
   teleport(w, f, m) {
     const def = w.other(f);
-    f.body.x = def.x - def.facing * (m.behind || 56);
-    f.body.y = def.y; f.body.vx = 0; f.body.vy = Math.min(def.body.vy, 0);
+    let tx = def.x - def.facing * (m.behind || 56), ty = def.y;
+    const d = Math.hypot(tx - f.x, ty - f.y);
+    if (m.range && d > m.range) { tx = f.x + (tx - f.x) * m.range / d; ty = f.y + (ty - f.y) * m.range / d; }   // out of range: a blink toward them, no further
+    const arrived = !m.range || d <= m.range;
+    // never end inside the stage (collision would shove you out to its edge): from above
+    // you land on top; from beside or below you stop at the wall on your side
+    const hw = f.body.w / 2;
+    for (const s of w.stage.slabs) {
+      if (tx <= s.x - hw || tx >= s.x + s.w + hw || ty <= s.y || ty - f.body.h >= s.y + (s.h ?? 70)) continue;
+      if (f.y <= s.y + 2) ty = s.y;
+      else tx = f.x < s.x + s.w / 2 ? s.x - hw - 1 : s.x + s.w + hw + 1;
+    }
+    f.body.x = tx;
+    f.body.y = ty; f.body.vx = 0; f.body.vy = arrived ? Math.min(def.body.vy, 0) : 0;
     f.body.grounded = false;
     f.body.facing = def.x > f.x ? 1 : -1;
     w.audio.play('teleport');
@@ -406,7 +429,7 @@ const BEHAVIORS = {
     const slab = (m.onTarget && w.surfaceBelow(def.x, def.y)) || w.mainSlab;
     (m.offsets || [-90, 0, 90]).forEach((off, i) => {
       const x = Math.max(slab.x + 20, Math.min(slab.x + slab.w - 20, def.x + off));
-      w.addStrike({ x, surface: slab, delay: (m.delay ?? 26) + i * (m.step ?? 14), dmg: m.dmg, kb: m.kb, kbScale: m.kbScale, kbAngle: m.kbAngle ?? 80, owner: f, group: true, groupHit: group, marker: true, color: m.color || '#3f5a40', slot: m.slot || 'super', move: m });
+      w.addStrike({ x, surface: slab, ...(m.h ? { h: m.h } : {}), ...(m.w ? { w: m.w } : {}), delay: (m.delay ?? 26) + i * (m.step ?? 14), dmg: m.dmg, kb: m.kb, kbScale: m.kbScale, kbAngle: m.kbAngle ?? 80, owner: f, group: true, groupHit: group, marker: true, color: m.color || '#3f5a40', slot: m.slot || 'super', move: m });
     });
     w.audio.play('special');
   },

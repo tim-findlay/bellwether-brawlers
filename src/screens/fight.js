@@ -73,6 +73,7 @@ export function makeFight(G) {
       }
 
       if (phase === 'fight') {
+        if (G.fx.meme) camera.update([{ x: G.fx.meme.x, y: G.fx.meme.y }]);   // Gone Viral: lean in on the meme
         if (G.fx.frozen()) return;                    // hitstop
         for (const f of world.fighters) f.controller.update?.(f, world);
         world.update();

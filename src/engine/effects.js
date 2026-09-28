@@ -88,7 +88,11 @@ export class FX {
 
   bannerActive() { return this.banners.length > 0; }
 
+  // Richy's Gone Viral: frame the victim as a meme (cosmetic; the camera leans in while it's up)
+  memeShot(m) { this.meme = { t: 0, dur: 60, ...m }; }
+
   update() {
+    if (this.meme && ++this.meme.t >= this.meme.dur) this.meme = null;   // ticks through the hitstop it caused
     if (this.freeze > 0) { this.freeze--; return; } // particles freeze with the world for punchy hitstop
     if (this.shakeFrames > 0) this.shakeFrames--; else this.shakeMag = 0;
     if (this.slowFrames > 0) this.slowFrames--;
@@ -119,6 +123,7 @@ export class FX {
   // Screen space (identity transform). `camera` projects the floaters; with
   // no camera they are treated as already-screen coords.
   drawUI(ctx, camera = null) {
+    if (this.meme) drawMeme(ctx, this.meme, camera);
     for (const f of this.floaters) {
       const a = f.t < 8 ? f.t / 8 : f.t > f.dur - 12 ? (f.dur - f.t) / 12 : 1;
       const s = camera?.worldToScreen ? camera.worldToScreen(f.x, f.y) : { x: f.x, y: f.y };
@@ -200,6 +205,33 @@ function drawBurst(ctx, b) {
   star(R, 0.5); ctx.fillStyle = '#2b2620'; ctx.fill();
   star(R - 4, 0.48); ctx.fillStyle = '#f2e9d8'; ctx.fill();
   star(R * 0.5, 0.55); ctx.fillStyle = b.color; ctx.fill();
+  ctx.restore();
+}
+
+// the meme: the world dimmed, the victim in a white-bordered photo, top and bottom captions
+function drawMeme(ctx, m, camera) {
+  const s = camera?.worldToScreen ? camera.worldToScreen(m.x, m.y) : { x: m.x, y: m.y };
+  const pop = m.t < 6 ? 0.8 + m.t * 0.035 : 1, fade = m.t > m.dur - 8 ? (m.dur - m.t) / 8 : 1;
+  const W = Math.round(250 * pop), H = Math.round(290 * pop), B = 10;
+  const x = Math.round(Math.max(W / 2 + 8, Math.min(VIEW_W - W / 2 - 8, s.x)) - W / 2), y = Math.round(Math.max(8, Math.min(VIEW_H - H - 40, s.y - H * 0.52)));
+  ctx.save();
+  ctx.globalAlpha = 0.55 * fade; ctx.fillStyle = '#2b2620';          // dim everything outside the photo
+  ctx.fillRect(0, 0, VIEW_W, y); ctx.fillRect(0, y + H, VIEW_W, VIEW_H - y - H);
+  ctx.fillRect(0, y, x, H); ctx.fillRect(x + W, y, VIEW_W - x - W, H);
+  ctx.globalAlpha = fade;
+  ctx.fillStyle = '#fffdf5';                                          // the white border
+  ctx.fillRect(x, y, W, B); ctx.fillRect(x, y + H - B, W, B); ctx.fillRect(x, y, B, H); ctx.fillRect(x + W - B, y, B, H);
+  ctx.strokeStyle = '#2b2620'; ctx.lineWidth = 3; ctx.strokeRect(x - 1.5, y - 1.5, W + 3, H + 3); ctx.strokeRect(x + B - 1.5, y + B - 1.5, W - 2 * B + 3, H - 2 * B + 3);
+  ctx.textAlign = 'center'; ctx.lineJoin = 'round';
+  const cap = (str, cy) => {
+    let size = 30; ctx.font = `900 ${size}px Impact, 'Arial Black', sans-serif`;
+    while (size > 14 && ctx.measureText(str).width > W - 2 * B - 12) { size -= 2; ctx.font = `900 ${size}px Impact, 'Arial Black', sans-serif`; }
+    ctx.lineWidth = 5; ctx.strokeStyle = '#111'; ctx.strokeText(str, x + W / 2, cy); ctx.fillStyle = '#fff'; ctx.fillText(str, x + W / 2, cy);
+  };
+  if (m.top) cap(m.top, y + B + 34);
+  if (m.bottom && m.t >= 10) cap(m.bottom, y + H - B - 14);           // the punchline lands a beat later
+  ctx.font = "700 12px 'Silkscreen', monospace"; ctx.fillStyle = '#f2e9d8';
+  ctx.fillText(`♥ ${(12.4 + m.t * 0.7).toFixed(1)}K · POSTED BY ${m.by}`, x + W / 2, y + H + 22);
   ctx.restore();
 }
 

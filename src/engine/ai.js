@@ -105,6 +105,11 @@ export class AIController {
       const hz = hazardResponse(f, world);
       if (hz) this.plan = hz;
     }
+    // the fast ones (the Fulham crowd, the meme snap) need a same-tick read, at every difficulty
+    if (world.hazards.some(h => (h.type === 'crowd' || h.type === 'meme') && h.immune !== f) && this.rng() > this.profile.mistake) {
+      const hz = hazardResponse(f, world);
+      if (hz && (hz.kind === 'jump' || hz.kind === 'dodge')) this.plan = hz;
+    }
     if (f.state === 'normal') act(this, f, opp, world);
     if (f.state === 'normal') comboStep(this, f, opp, world);   // play out a blueprint route once a starter lands
     if (f.attack?.victim && f.attack.move.aimable) this._aimThrow(f, world);

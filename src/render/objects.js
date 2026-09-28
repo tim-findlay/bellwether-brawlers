@@ -47,10 +47,14 @@ export function drawProjectiles(g, world, t) {
         r(g, -8, -8, 18, 18); g.fillStyle = BRICK; r(g, 4, -12, 4, 4);
         break;
       case 'polo': {                                            // Ben's Skip Shot — a water polo ball: yellow with navy seams
-        g.fillStyle = INK; r(g, -9, -11, 18, 22); r(g, -11, -9, 22, 18);
-        g.fillStyle = p.color; r(g, -8, -9, 16, 18); r(g, -9, -8, 18, 16);
-        g.fillStyle = '#27425f'; r(g, -9, -1, 18, 2); r(g, -1, -9, 2, 18);
-        g.fillStyle = PAPER; r(g, -6, -7, 3, 3);
+        disc(g, 12, INK); disc(g, 10, p.color);                // round, in 2 px rows so it stays pixel art
+        g.fillStyle = '#27425f';
+        r(g, -10, -1, 20, 2);                                     // the equator seam
+        for (let y = -9; y <= 9; y += 2) {                        // two curved meridian seams (it spins, so they roll)
+          const k = Math.round(Math.sqrt(Math.max(0, 81 - y * y)) * 0.45);
+          r(g, -k - 1, y, 2, 2); r(g, k - 1, y, 2, 2);
+        }
+        g.fillStyle = PAPER; r(g, -6, -8, 4, 2); r(g, -8, -6, 2, 2);   // the shine
         break;
       }
       case 'rolex': case 'sub': {                               // Richy's watches: bracelet up and down, face in the middle
@@ -96,6 +100,15 @@ export function drawZones(g, world, t) {
       g.fillStyle = 'rgba(90,58,38,0.85)'; r(g, x0, top - 2, w, 8);
       g.fillStyle = 'rgba(122,80,52,0.85)'; r(g, x0 + 8, top - 6, w - 16, 6);
       g.fillStyle = 'rgba(242,233,216,0.5)'; r(g, x0 + 14, top - 5, 10, 2);
+    } else if (z.type === 'nappy') {                           // a folded white nappy, tabs out, with a green wisp over it (drawn x1.8: it's a trap, it must read)
+      const cx = z.x ?? 0;
+      g.translate(cx, top); g.scale(1.8, 1.8); g.translate(-cx, -top);
+      g.fillStyle = INK; r(g, cx - 14, top - 12, 28, 12);
+      g.fillStyle = '#f4efe2'; r(g, cx - 12, top - 10, 24, 9);
+      g.fillStyle = '#9ec6d8'; r(g, cx - 16, top - 10, 4, 4); r(g, cx + 12, top - 10, 4, 4);   // the tabs
+      g.fillStyle = '#d9cfae'; r(g, cx - 6, top - 6, 12, 3);
+      g.fillStyle = 'rgba(143,166,82,0.75)';
+      for (let i = 0; i < 3; i++) { const k = ((t >> 2) + i * 5) % 15; r(g, cx - 8 + i * 7 + (((t >> 3) + i) % 2) * 2, top - 16 - k * 2, 4, 4); }
     } else if (z.type === 'ember' && z.look === 'paper') {   // Seelye's paperwork: scattered sheets
       g.fillStyle = 'rgba(39,66,95,0.28)'; r(g, x0, top - 4, w, 6);
       for (let i = 0; i < Math.max(3, w / 20 | 0); i++) {
@@ -126,6 +139,7 @@ export function drawZones(g, world, t) {
 export function drawStrikes(g, world, t) {
   for (const s of world.strikes ?? []) {
     const x = s.x ?? 0, top = s.y ?? 0, w = s.w ?? 40, h = s.h ?? 120;
+    if (s.move?.look === 'points') { drawPoints(g, s, x, top, w, h, t); continue; }
     if ((s.delay ?? 0) > 0) {                                   // telegraph marker on the surface
       const pulse = (t % 16) < 8;
       g.fillStyle = pulse ? BRICK : '#8a3522';
@@ -142,6 +156,8 @@ export function drawStrikes(g, world, t) {
 
 export function drawHazards(g, world, t) {
   for (const h of world.hazards ?? []) {
+    if (h.type === 'meme') { drawViewfinder(g, h, t); continue; }
+    if (h.type === 'crowd') { drawCrowd(g, h, t); continue; }
     g.save();
     g.translate(Math.round(h.x ?? 0), Math.round(h.y ?? 0));
     if (h.type === 'bike') {                                    // riderless spin bike, y = centre
@@ -166,4 +182,77 @@ export function drawHazards(g, world, t) {
     }
     g.restore();
   }
+}
+
+// a filled pixel disc of radius R, drawn in 2 px rows
+function disc(g, R, color) {
+  g.fillStyle = color;
+  for (let y = -R; y < R; y += 2) {
+    const yc = y + 1, hw = Math.round(Math.sqrt(Math.max(0, R * R - yc * yc)));
+    g.fillRect(-hw, y, hw * 2, 2);
+  }
+}
+
+// Nick's Membership Rewards: a gold coin marker, then a shower of gold cards and points
+function drawPoints(g, s, x, top, w, h, t) {
+  const GOLD = '#c9a227', PALE = '#efd98a';
+  if ((s.delay ?? 0) > 0) {
+    const pulse = (t % 12) < 6;
+    g.fillStyle = 'rgba(201,162,39,0.16)'; r(g, x - w / 2, top - h, w, h);
+    g.fillStyle = INK; r(g, x - 12, top - 14, 24, 12);
+    g.fillStyle = pulse ? GOLD : PALE; r(g, x - 10, top - 12, 20, 8);
+    g.fillStyle = INK; r(g, x - 2, top - 11, 4, 6);
+    return;
+  }
+  g.fillStyle = 'rgba(239,217,138,0.45)'; r(g, x - w / 2, top - h, w, h);
+  g.fillStyle = 'rgba(201,162,39,0.8)'; r(g, x - w / 2, top - h, 3, h); r(g, x + w / 2 - 3, top - h, 3, h);
+  for (let i = 0; i < 16; i++) {                                   // falling metal cards and gold coins, down the column
+    const y = top - h + ((t * 11 + i * 29) % h), dx = ((i * 17) % (w - 16)) - (w - 16) / 2;
+    if (i % 3 === 0) { g.fillStyle = INK; r(g, x + dx - 13, y - 8, 26, 17); g.fillStyle = '#b9c2c9'; r(g, x + dx - 11, y - 6, 22, 13); g.fillStyle = GOLD; r(g, x + dx - 8, y - 3, 6, 5); g.fillStyle = '#8a949b'; r(g, x + dx - 8, y + 4, 16, 2); }
+    else { g.fillStyle = INK; r(g, x + dx - 8, y - 8, 16, 16); g.fillStyle = i % 2 ? GOLD : PALE; r(g, x + dx - 6, y - 6, 12, 12); g.fillStyle = '#fff6cf'; r(g, x + dx - 4, y - 4, 3, 3); }
+  }
+  g.fillStyle = PALE; r(g, x - w / 2 - 10, top - 8, w + 20, 8);   // the splash where it lands
+  g.fillStyle = GOLD; r(g, x - w / 2 - 4, top - 12, 6, 4); r(g, x + w / 2 - 2, top - 14, 6, 4);
+}
+
+// Richy's Gone Viral: a camera-phone viewfinder on the target — ink while it follows,
+// brick and pulsing once it locks (that's the tell: dodge now or get out of frame)
+function drawViewfinder(g, h, t) {
+  const W = h.fw, H = h.fh, x0 = Math.round(h.x - W / 2), y0 = Math.round(h.y - H / 2), L = 22, T = 4;
+  const col = h.locked ? ((t >> 2) & 1 ? BRICK : '#8a3522') : INK;
+  g.fillStyle = h.locked ? 'rgba(196,69,46,0.10)' : 'rgba(43,38,32,0.06)'; r(g, x0, y0, W, H);
+  g.fillStyle = col;
+  for (const [cx, cy, sx, sy] of [[x0, y0, 1, 1], [x0 + W, y0, -1, 1], [x0, y0 + H, 1, -1], [x0 + W, y0 + H, -1, -1]]) {
+    r(g, sx > 0 ? cx : cx - L, sy > 0 ? cy : cy - T, L, T);
+    r(g, sx > 0 ? cx : cx - T, sy > 0 ? cy : cy - L, T, L);
+  }
+  if (h.locked) { r(g, h.x - 10, h.y - 1, 20, 3); r(g, h.x - 1, h.y - 10, 3, 20); }   // crosshair
+  if ((t >> 4) & 1 || h.locked) { g.fillStyle = BRICK; r(g, x0 + 8, y0 + 8, 6, 6); }
+  g.fillStyle = col; g.font = "700 10px 'Silkscreen', monospace"; g.textAlign = 'left';
+  g.fillText(h.locked ? 'LOCKED' : 'REC', x0 + 18, y0 + 15);
+}
+
+// Ben's COME ON FULHAM!: a pack of footballers in the white shirt and black shorts, sprinting
+function drawCrowd(g, h, t) {
+  const dir = h.dir, feet = Math.round(h.y + h.h / 2), SKIN = ['#e8c39a', '#c99a70', '#8d5b3e', '#f0d2b0'], HAIR = ['#23201c', '#5a4030', '#b08d57', '#23201c'];
+  for (let i = 0; i < h.n; i++) {
+    const k = (h.seed + i * 7) % 4, x = Math.round(h.x - dir * (h.w / 2 - 30 - i * 34) + ((i * 13) % 9) - 4), bob = ((t >> 2) + i) & 1;
+    const y = feet - 2 - bob * 3 - (i % 2) * 6, stride = ((t >> 2) + i) % 2;
+    g.fillStyle = 'rgba(43,38,32,0.25)'; r(g, x - 14, feet - 3, 28, 4);
+    g.fillStyle = INK;                                                    // legs, mid-stride, black socks
+    r(g, x - 7 + (stride ? 6 : -4) * dir, y - 30, 6, 30); r(g, x + 1 - (stride ? 6 : -4) * dir, y - 30, 6, 30);
+    g.fillStyle = SKIN[k]; r(g, x - 6 + (stride ? 6 : -4) * dir, y - 30, 4, 12); r(g, x + 2 - (stride ? 6 : -4) * dir, y - 30, 4, 12);
+    g.fillStyle = '#111'; r(g, x - 10, y - 44, 20, 14);                    // black shorts
+    g.fillStyle = INK; r(g, x - 12, y - 76, 24, 34);                       // white shirt, inked
+    g.fillStyle = '#f7f4ec'; r(g, x - 10, y - 74, 20, 30);
+    g.fillStyle = '#111'; r(g, x - 10, y - 74, 20, 3); r(g, x - 2, y - 66, 4, 4);   // collar trim, crest
+    g.fillStyle = '#f7f4ec'; r(g, x + dir * 10, y - 72, 6, 16); r(g, x - dir * 16, y - 70, 6, 14);   // pumping arms
+    g.fillStyle = SKIN[k]; r(g, x + dir * 10, y - 58, 6, 5); r(g, x - dir * 16, y - 58, 6, 5);
+    g.fillStyle = INK; r(g, x - 9, y - 96, 18, 20);                         // head
+    g.fillStyle = SKIN[k]; r(g, x - 7, y - 94, 14, 16);
+    g.fillStyle = HAIR[k]; r(g, x - 8, y - 96, 16, 5);
+    g.fillStyle = INK; r(g, x + dir * 3, y - 88, 2, 3);                     // eye, looking where he runs
+  }
+  g.fillStyle = 'rgba(203,191,166,0.7)';                                   // dust kicked up behind the pack
+  for (let i = 0; i < 6; i++) { const a = (t + i * 5) % 20; r(g, Math.round(h.x - dir * (h.w / 2 + a * 2)), feet - 6 - ((i * 5) % 12), 6, 6); }
 }

@@ -107,9 +107,19 @@ export function hazardResponse(f, world) {
     return { kind: 'goto', x: Math.abs(x - hol.data.x) < 90 ? hol.data.x - dir * 150 : x, to: here };
   }
   for (const h of world.hazards) {                            // bikes and the wrecking ball's low return
+    if (h.type === 'meme' && h.target === f && h.locked) {   // Gone Viral: dodge the snap
+      const left = (h.m.snap ?? 64) - h.t;
+      if (left >= 2 && left <= 10 && f.body.dodgeCd === 0) return { kind: 'dodge' };
+      continue;
+    }
     const approaching = Math.sign(f.x - h.x) === Math.sign(h.vx);
     if (h.type === 'bike' && onSlab && approaching && Math.abs(h.x - f.x) < 120) return { kind: 'jump' };
     if (h.type === 'ball' && h.phase === 1 && onSlab && approaching && Math.abs(h.x - f.x) < 150) return { kind: 'jump' };
+    if (h.type === 'crowd' && h.immune !== f) {                // jump the Fulham crowd; stay up while it passes under
+      const gap = Math.abs(h.x - f.x) - h.w / 2;
+      if (onSlab && approaching && gap > 20 && gap < 150) return { kind: 'jump' };
+      if (!f.grounded && gap < 30 && f.body.vy > 0 && f.body.airJumps > 0 && f.y > slab.y - 110) return { kind: 'jump' };
+    }
   }
   return null;
 }
@@ -286,6 +296,7 @@ function neutral(ai, f, opp, world, { dist, dy, r, sameLevel, untouchable }) {
   }
   if (style === 'trap') {
     if (dist > 130 && canSpecial(f, 's1') && hasLineOfFire(f, f.cfg.s1, opp) && r < 0.55) return { kind: 'press', slot: 's1' };
+    if (f.cfg.s2?.kind === 'zone' && canSpecial(f, 's2') && f.grounded && sameLevel && dist > 110 && dist < 320 && r < 0.4) return { kind: 'press', slot: 's2' };   // lay the trap in their path
     if (close) return { kind: 'poke', heavyBias: 0.35 };
     return { kind: 'approach', dash: dash && r < 0.4 };
   }

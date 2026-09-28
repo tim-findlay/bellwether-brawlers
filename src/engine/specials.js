@@ -6,8 +6,20 @@
 //    before she returns, then she drops in with the move's `landing` (a diving
 //    aerial). The Fighter owns the status timing (fighter.js _holiday/_homeTime).
 //  assist — Tim's summon: Claude, a temporary helper that runs at the opponent
-//    and throws a jab-jab-push string for `dur` frames. Any hit dismisses it
-//    (the counterplay); a parry declines it. Helpers live in world.assists.
+//    and throws a jab-jab-push string for `dur` frames. It takes `hp` separate
+//    attacks to send home (each one knocks it back a beat); a parry declines it. Helpers live in world.assists.
+
+// captions for Gone Viral; {N} is the victim's (first) name
+export const MEMES = [
+  ['ONE DOES NOT SIMPLY', 'DODGE THE MARKET'],
+  ['NOBODY:', '{N}: *GETS FRAMED*'],
+  ['{N} AFTER', 'THE Q3 NUMBERS'],
+  ['IT\'S NOT MUCH', 'BUT IT\'S {N}\'S BEST'],
+  ['{N}.EXE', 'HAS STOPPED WORKING'],
+  ['WHEN THE MEETING', 'COULD\'VE BEEN AN EMAIL'],
+  ['POV:', 'YOU JUST GOT RICHY\'D'],
+  ['{N} TRYING TO', 'EXPLAIN THE MODEL'],
+];
 
 export const EXTRA_BEHAVIORS = {
   holiday(w, f, m) {
@@ -17,12 +29,41 @@ export const EXTRA_BEHAVIORS = {
     w.audio.play('jet');
     w.fx.text(f.x, f.y - 130, 'OUT OF OFFICE!', f.cfg.body.trim);
   },
+  // Ben's COME ON FULHAM!: a crowd of Fulham players stampedes across the main slab
+  // from behind him at floor height — one hit, jump over it. A hazard.
+  stampede(w, f, m) {
+    const dir = f.facing, slab = w.mainSlab, B = w.stage.cameraBounds || { x: slab.x - 400, w: slab.w + 800 };
+    const x0 = dir > 0 ? Math.min(f.x - 260, slab.x - 120) : Math.max(f.x + 260, slab.x + slab.w + 120);
+    const n = m.crowd || 6, len = 40 + n * 34;
+    w.addHazard({
+      type: 'crowd', owner: f, immune: f, dmg: m.dmg, kb: m.kb, kbScale: m.kbScale, kbAngle: m.kbAngle ?? 45, dir, n, seed: (w.rng() * 1000) | 0,
+      x: x0 - dir * len / 2, y: slab.y - 32, w: len, h: 64, vx: dir * (m.speed || 9), t: 0,   // shoulder-high: heads clear a jump
+      update(h) {
+        h.t++; h.x += h.vx;
+        if ((dir > 0 && h.x - len / 2 > B.x + B.w + 200) || (dir < 0 && h.x + len / 2 < B.x - 200)) h.dead = true;
+      },
+    });
+    w.audio.play('superGo'); w.audio.play('wave');
+    w.fx.shake(3, 60);
+    w.fx.text(f.x, f.y - 150, 'COME ON FULHAM!', '#f2e9d8');
+  },
+  meme(w, f, m) {
+    const def = w.other(f), cap = MEMES[Math.floor(w.rng() * MEMES.length) % MEMES.length];
+    w.addHazard({
+      type: 'meme', owner: f, immune: f, m, target: def, caption: cap, t: 0, locked: false,
+      dmg: m.dmg, kb: m.kb, kbScale: m.kbScale, kbAngle: m.kbAngle ?? 80, unparryable: true,
+      x: def.x, y: def.y - 48, w: 0, h: 0, fw: m.frameW || 130, fh: m.frameH || 160,
+      update: memeTick, onHit: memeHit,
+    });
+    w.audio.play('special');
+    w.fx.text(def.x, def.y - 150, 'SAY CHEESE…', '#c9a227');
+  },
   assist(w, f, m) {
     const surface = w.surfaceBelow(f.x, f.y - 2) || w.mainSlab;
     w.assists.push({
       owner: f, m, name: m.helper || 'CLAUDE',
       x: f.x - f.facing * 44, y: surface.y, vx: 0, vy: 0, grounded: true, facing: f.facing,
-      t: 0, st: 0, state: 'in', life: m.dur || 270, dead: false,
+      t: 0, st: 0, state: 'in', life: m.dur || 270, dead: false, hp: m.hp || 1, lastHit: null,
     });
     w.audio.play('teleport');
     w.fx.dust(f.x - f.facing * 44, surface.y, '#e9a27f', 10);
@@ -68,6 +109,19 @@ export function updateAssists(w) {
   w.assists = w.assists.filter(a => !a.dead);
 }
 
+// an attack connects with a helper: once per attack instance, one hp, a knockback beat
+export function hitAssist(w, a, att) {
+  const key = att.attack || att;
+  if (a.dead || a.lastHit === key) return;
+  a.lastHit = key; a.hp--;
+  if (a.hp <= 0) return dismissAssist(w, a, 'BOOTED!');
+  const dir = Math.sign(a.x - att.x) || att.facing;
+  a.vx = dir * 6; a.vy = -5; a.grounded = false; a.state = 'hurt'; a.st = 0;
+  w.fx.dust(a.x, a.y - 40, '#e9a27f', 6);
+  w.fx.text(a.x, a.y - 110, a.hp === 1 ? 'LAST WARNING' : 'STILL THINKING…', '#c2613f');
+  w.audio.play('hitLight');
+}
+
 export function dismissAssist(w, a, why) {
   if (a.dead) return;
   a.dead = true;
@@ -92,6 +146,7 @@ function step(w, a) {
 
   const away = !tgt || tgt.chair || tgt.state === 'ko';
   const dx = away ? 0 : tgt.x - a.x, dy = away ? 0 : tgt.y - a.y;
+  if (a.state === 'hurt') { a.vx *= 0.85; if (a.st >= 18 && a.grounded) { a.state = 'chase'; a.st = 0; } return; }
   if (a.state === 'in') { a.vx = 0; if (a.st >= 14) { a.state = 'chase'; a.st = 0; } return; }
   if (a.state === 'rest') { a.vx *= 0.7; if (a.st >= (m.rest ?? 22)) { a.state = 'chase'; a.st = 0; } return; }
   if (a.state === 'chase') {
@@ -117,4 +172,20 @@ function strike(w, a, tgt, h) {
   const res = tgt.takeHit({ dmg, kb: h.kb, kbScale: h.kbScale, kbAngle: h.kbAngle, dir: a.facing, from: a.owner, move: { name: a.name } });
   if (res === 'parried') { tgt.attack = null; w.audio.play('parry'); return dismissAssist(w, a, 'DECLINED!'); }
   if (res === 'hit' || res === 'armored') w.hitFeedback(tgt, 'super', dmg, h);
+}
+
+function memeTick(h, w) {
+  const T = h.target, M = h.m;
+  h.t++;
+  if (h.t <= (M.track ?? 44) && T.state !== 'ko') { h.x += (T.x - h.x) * 0.14; h.y += (T.y - 48 - h.y) * 0.14; }
+  h.locked = h.t > (M.track ?? 44);
+  const snap = M.snap ?? 64;
+  if (h.t === snap) { h.w = h.fw; h.h = h.fh; h.dir = Math.sign(h.x - h.owner.x) || h.owner.facing; w.audio.play('superGo'); w.fx.flash('#fffdf5', 3); }
+  else { h.w = 0; h.h = 0; }
+  if (h.t > snap + 1) h.dead = true;
+}
+function memeHit(h, f, w) {
+  const name = f.cfg?.name || 'YOU', fill = (s) => s.replace('{N}', name);
+  w.fx.memeShot?.({ x: f.x, y: f.y - 48, top: fill(h.caption[0]), bottom: fill(h.caption[1]), by: h.owner.cfg?.name || '', dur: 64 });
+  w.fx.hitstop(56);
 }

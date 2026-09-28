@@ -7,7 +7,7 @@ export default {
   tip: 'Whiff-bait everything — when he staggers, make him pay. His own kit fights him.',
   passive: { name: 'Happy Accident', desc: 'When a miss trips him, the fall itself hits anyone at arm\'s reach (6 dmg).' },   // shown in the move list (render only)
   body: { suit: '#3a4a63', trim: '#caa46a', skin: '#e8c39a', hair: { color: '#c2a36b', style: 'beard' }, height: 1.0, extras: [] },
-  stats: { gauge: 97, runMax: 5.7, jumpImpulse: 15.5, fallMax: 13.5, weight: 0.97 },
+  stats: { gauge: 105, runMax: 5.7, jumpImpulse: 16, fallMax: 12, weight: 0.97 },
   light: { name: 'Toothbrush Jab', dmg: 4.5, kb: 4.5, kbScale: 4, kbAngle: 40, range: 56, startup: 4, active: 3, recover: 10 },
   heavy: { name: 'Pivot Table', dmg: 10, kb: 7, kbScale: 11, kbAngle: 40, range: 64, startup: 11, active: 4, recover: 16, bothSides: true },
   aerials: aerials({ n: 'Panic Flail', s: 'Overreach', u: 'Up-and-Over', d: 'Faceplant' }, { n: { range: 72 }, s: { kb: 6.5, kbScale: 11 }, d: { whiffStagger: true } }),

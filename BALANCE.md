@@ -15,7 +15,7 @@
 
 ## Numbers doctrine
 
-- **Gauge band:** 97 (Adrian) – 107 (Ben/Richy) (pass 12). **Weight band:** 0.97 (Nick/Adrian) – 1.06 (Ben) (pass 12; was 1.10, Mike) — narrowed in the Phase-3 pass (the bands were restated from the data in pass 3; the old 85–110 / 0.9–1.08 text had gone stale after pass 2): weight divides the launch speed linearly, so the old 0.85–1.45 spread alone swung kill thresholds by ~70 %. **Run band:** 5.2 (Mike) – 5.85 (Nick) px/frame at base zoom — pass 12 narrowed it from 4.4–6.2 (Tim: "the characters should not differ this much in speed"; Brawlhalla's speed stat moves run speed only a little). Speed is no longer a balancing lever: pay for strengths with gauge, weight and frame data. Fall speed correlates with weight (floaties live longer upward, die earlier sideways). Per-character values live in `src/data/characters/<id>.js`, inside these bands; `physics.js` holds the universal constants and formulas.
+- **Gauge band:** 98 (Mike/Nick) – 108 (Seelye) (pass 13). **Weight band:** 0.97 (Nick/Adrian) – 1.06 (Ben) (pass 12; was 1.10, Mike). **Jump / fall (pass 13):** every fighter jumps 16 and falls at 12 — one generous, floaty air class (Tim: "same jump height (generous) and fall speeds (floaty) for better recovery"); weight is the only thing that separates how fighters fly. — narrowed in the Phase-3 pass (the bands were restated from the data in pass 3; the old 85–110 / 0.9–1.08 text had gone stale after pass 2): weight divides the launch speed linearly, so the old 0.85–1.45 spread alone swung kill thresholds by ~70 %. **Run band:** 5.2 (Mike) – 5.85 (Nick) px/frame at base zoom — pass 12 narrowed it from 4.4–6.2 (Tim: "the characters should not differ this much in speed"; Brawlhalla's speed stat moves run speed only a little). Speed is no longer a balancing lever: pay for strengths with gauge, weight and frame data. Fall speed correlates with weight (floaties live longer upward, die earlier sideways). Per-character values live in `src/data/characters/<id>.js`, inside these bands; `physics.js` holds the universal constants and formulas.
 - **Knockback (canonical formula):**
   `kb = (move.kb × KB_BASE_MULT + move.kbScale × KB_SCALE_MULT × emptiness) / weight`, where `emptiness = 1 − gauge/maxGauge` (multipliers 0.8 / 2.0 since the Phase-3b feel pass: early hits flinch, late hits kill).
   **kb is the launch speed in px/frame at base zoom, set (not added) along `kbAngle`** (per-move data, degrees; spikes use 270 ± 15) on the frame the hit lands. Hitstun = `round(kb × HITSTUN_PER_KB)` frames.
@@ -49,10 +49,10 @@
 |----------|-------|----------|-------|
 | GRAV (global) | 0.85 px/f² | RUN_ACCEL | 1.3 (pass 11; was 0.9) |
 | TURN_ACCEL_MULT | 2.6 (accel × this while vx opposes the held direction; pass 11, was 2.2) | RUN_FRICTION | 0.7 (pass 11; was 0.76) |
-| RUN_MAX | per-char 5.2–5.85 (pass 12) | JUMP_IMPULSE | per-char 14–16 |
+| RUN_MAX | per-char 5.2–5.85 (pass 12) | JUMP_IMPULSE | 16 for everyone (pass 13; was 14–16) |
 | DOUBLE_JUMP | 1.0 × jump · **AIR_JUMPS 2** (three jumps per airtime) | AIR_ACCEL | 0.7 (pass 11; was 0.55) |
 | AIR_MAX | 0.9 × run | FAST_FALL_MULT | 2.2 |
-| FALL_MAX | per-char 12–16 | DASH_SPEED | 2.0 × run |
+| FALL_MAX | 12 for everyone (pass 13; was 12–16) | DASH_SPEED | 2.0 × run |
 | DASH_DURATION | 16f · **AIR_DASH_DURATION 10f** (gravity off, once per airtime) | DASH_TAP_WINDOW | 16f |
 | DASH_COOLDOWN | 12f after dash ends | DASH_JUMP_CARRY | 1.0 (full) |
 | COYOTE_FRAMES | 5 | INPUT_BUFFER | 8f (pass 10) |
@@ -99,7 +99,26 @@ Two independent samples before shipping a tuning pass: n ≈ 420–560 games per
 
 ## Current results
 
-**v3 balance pass 12 — one speed class (2026-09-28) — all five gates PASS on two independent seeds at N = 30; every route passes, every step ≥ 8 f lenient.**
+**v3 balance pass 13 — one air class + Tim's kit notes (2026-09-28) — all five gates PASS on two independent seeds at N = 30; every route passes, every step ≥ 9 f lenient.**
+
+| Fighter | seed 1337 | seed 2024 |
+|---|---|---|
+| Ben | 50.7 % | 52.6 % |
+| Tim | 50.7 % | 50.5 % |
+| Adrian | 45.5 % | 42.9 % |
+| Richy | 43.2 % | 46.5 % |
+| Nick | 57.6 % | 57.6 % |
+| Abi | 47.4 % | 49.3 % |
+| Mike | 52.9 % | 48.7 % |
+| Seelye | 52.0 % | 51.9 % |
+| **camp (≤ 55)** | 13.5 % | 11.8 % |
+| **stall (≤ 45)** | 0.1 % | 0.7 % |
+| **engagement flags (< 2 %)** | 0.42 % | 0.36 % |
+| **recovery dishonest (< 10 %)** | 1.91 % | 1.88 % |
+
+Spread 42.9–57.6 %. Avg match 5735 / 5743 f (~96 s — the floaty class lives a little longer); 4 / 3 capped, 0 stuck. **Data:** jumpImpulse 16 and fallMax 12 for all eight. **Kit changes (Tim's notes; DESIGN.md "Pass 13"):** Ben COME ON FULHAM! (new move kind `stampede`, a floor-level crowd hazard, 14 dmg); Richy GONE VIRAL (new kind `meme`: tracking viewfinder, 20f lock, one-frame snap, 18 dmg + a cosmetic meme freeze via `fx.memeShot`); Nick MEMBERSHIP REWARDS (`columns` with five swept marks, one hit max, 12 dmg; strike `h`/`w`/`callout` moved into data); Seelye NAPPY DROP (new zone type `nappy`: a one-shot trap, 10 dmg + slow + LIEN); Tim's Claude takes 3 separate attacks (`hp`). **Engine changes, called out (Tim's notes are the sign-off):** Status Match takes a `range` (200 px: out of range it is a capped blink, i-frames 18 → 6) and a teleport never ends inside a slab; hazards get an `onHit` hook and a zero-size hazard box is inactive; the AI reads the crowd and the meme snap every tick (before, 67 % of crowds landed; now 38 %). **Defect fixed:** a capped or ledge-aimed teleport that ended inside the slab was shoved out to the slab's edge by collision (a free trip to the ledge). **Tuning:** Ben gauge 104 → 102; Nick gauge 105 → 98; Adrian 97 → 105; Abi 100 → 104; Seelye 104 → 108; Tim 104 → 102. **Test changes:** tests/kits.test.mjs replaces the I Know Your Guy test with Membership Rewards, Status Match range, Nappy Drop, Gone Viral and COME ON FULHAM! tests; the Claude test now needs three hits; tests/gamepad.test.mjs pins "stick up aims, never jumps". **Soft spots:** Nick sits at 57.6 % on both seeds (near the band's top); Adrian at 42.9 % on seed 2024.
+
+**v3 balance pass 12 — one speed class (2026-09-28, superseded) — all five gates PASS on two independent seeds at N = 30; every route passes, every step ≥ 8 f lenient.**
 
 | Fighter | seed 1337 | seed 2024 |
 |---|---|---|

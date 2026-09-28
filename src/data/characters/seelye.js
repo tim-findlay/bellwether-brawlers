@@ -4,15 +4,15 @@ export default {
   id: 'seelye', name: 'SEELYE', title: 'THE LENDER', archetype: 'Setplay collector',
   tagline: 'Debt side. New dad. Always collects.',
   win: 'Closed the deal AND got the baby down. Big day.',
-  tip: 'Dodge the Drawdown, don’t stand in the paperwork, and never eat Enforcement with a LIEN on you — jump it.',
-  passive: { name: 'Lien', desc: 'His heavy and his recovery mark you for 8 s; his next special collects +4, the super +8.' },   // shown in the move list (render only)
+  tip: 'Dodge the Drawdown, don’t stand in the paperwork, jump the nappy, and never eat Enforcement with a LIEN on you — jump it.',
+  passive: { name: 'Lien', desc: 'His heavy, his recovery and the nappy mark you for 8 s; his next special collects +4, the super +8.' },   // shown in the move list (render only)
   body: { suit: '#3f5a3c', trim: '#f3ead8', skin: '#e8c39a', hair: { color: '#4a3b2a', style: 'side' }, trousers: '#3a3d45', height: 1.04, extras: ['sweater'] },   // forest-green quarter-zip over a white button-down, charcoal trousers
-  stats: { gauge: 104, runMax: 5.4, jumpImpulse: 14.5, fallMax: 15, weight: 1.05 },
+  stats: { gauge: 108, runMax: 5.4, jumpImpulse: 16, fallMax: 12, weight: 1.05 },
   light: { name: 'Term Sheet', dmg: 5, kb: 5, kbScale: 5, kbAngle: 40, range: 60, startup: 5, active: 3, recover: 8 },
   heavy: { name: 'Leverage', dmg: 11, kb: 7, kbScale: 11, kbAngle: 35, range: 66, startup: 12, active: 4, recover: 15, applyStatus: { name: 'lien', dur: 480 } },
   aerials: aerials({ n: 'Burp Cloth', s: 'Fresh One', u: 'Night Feed', d: 'Hard Maturity' }, { s: { applyStatus: { name: 'slow', dur: 60 }, callout: 'STINKED!' } }),
   s1: { name: 'Drawdown', desc: 'A lobbed loan binder (works in the air) that leaves burning paperwork where it lands. Don\'t stand in it.', kind: 'lob', air: true, dmg: 8, kb: 5, kbScale: 4, kbAngle: 50, speed: 4.6, vy: -6.8, grav: 0.34, w: 20, h: 16, shape: 'binder', color: '#27425f', cooldown: 280, zoneOnLand: { type: 'ember', look: 'paper', w: 128, life: 260, ownerImmune: true, burn: 2 }, startup: 13, active: 2, recover: 17 },
-  s2: { name: 'Dad Reflexes', desc: 'Catches a projectile out of the air and banks meter.', kind: 'catch', stance: 30, recover: 20, cooldown: 240 },
+  s2: { name: 'Nappy Drop', desc: 'Drops a used nappy on the floor ahead: the first to step on it is stunk (10 dmg), slowed and marked with a LIEN. Jump over it.', kind: 'zone', zone: { type: 'nappy', ahead: 80, w: 44, life: 420, ownerImmune: true, dmg: 10, apply: [{ name: 'slow', dur: 90 }, { name: 'lien', dur: 480 }] }, startup: 10, recover: 14, cooldown: 300 },   // a trap: sets up Enforcement
   super: { name: 'Enforcement', desc: 'A parryable shout in front of him (12 dmg) — +8 if you\'re carrying a LIEN. Jump it or parry it.', kind: 'shout', dmg: 12, kb: 8, kbScale: 14, kbAngle: 40, range: 90, startup: 24, active: 6, recover: 26, aiRange: [40, 150] },   // parryable; collects a LIEN for +8,
   kit: { names: { sLight: 'Redline', dLight: 'Fine Print', sSig: 'Hostile Bid', dSig: 'Uplift', recovery: 'Term Sheet Rise', groundPound: 'Closing Drop' },
     recovery: { applyStatus: { name: 'lien', dur: 480 } } },
