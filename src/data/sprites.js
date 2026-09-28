@@ -12,7 +12,9 @@
 // render/moves.js holds it through the move's active frames, so the picture
 // peaks when the hitbox is live. The attacks-in-motion pass added a 6-frame
 // running lunge (96 px cells: the body goes near-horizontal) and a 4-frame
-// dodge. A missing strip falls back along render/moves.js FALLBACK to attack/idle.
+// dodge; the pose pass a 6-frame intro taunt (VS splash) and win celebration
+// (results). A missing strip falls back along render/moves.js FALLBACK to attack/idle
+// (menus fall back to idle).
 const KIT = (over = {}) => mergeKit({
   idle:    { frames: 6, fps: 6,  loop: true },
   run:     { frames: 8, fps: 14, loop: true },
@@ -23,6 +25,8 @@ const KIT = (over = {}) => mergeKit({
   hurt:    { frames: 4, fps: 14, loop: false },
   lunge:   { frames: 6, fps: 14, loop: false, key: 3, cell: 96 },   // running lunge: attacks in motion, dash push-off
   dodge:   { frames: 4, fps: 14, loop: false, cell: 80 },           // guard, duck, hop, guard
+  taunt:   { frames: 6, fps: 7, loop: false, cell: 80 },            // VS splash: each fighter's own intro taunt
+  win:     { frames: 6, fps: 6, loop: true, cell: 80 },             // results: the victory celebration
 }, over);
 const mergeKit = (base, over) => Object.fromEntries(Object.entries(base).map(([k, v]) => [k, { ...v, ...over[k] }]));
 
@@ -42,4 +46,4 @@ export const SPRITES = {
 };
 
 export const SPRITE_SCALE = 1.5;   // 64 px cell -> 96 world px (= MovementBody.h)
-export const SPRITE_ANIMS = ['idle', 'run', 'jump', 'attack', 'heavy', 'special', 'hurt', 'lunge', 'dodge'];
+export const SPRITE_ANIMS = ['idle', 'run', 'jump', 'attack', 'heavy', 'special', 'hurt', 'lunge', 'dodge', 'taunt', 'win'];

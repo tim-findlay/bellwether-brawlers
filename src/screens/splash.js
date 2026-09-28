@@ -41,8 +41,10 @@ export function makeSplash(G) {
       const k = ease(t / 26);
       const x1 = -200 + 450 * k, x2 = 1160 - 450 * k, fy = 404;
       floorShadow(c, x1, fy, 150); floorShadow(c, x2, fy, 150);
-      fighter(c, G, a, x1, fy, 4.4, { t, facing: 1 });
-      fighter(c, G, b, x2, fy, 4.4, { t: t + 17, facing: -1 });
+      // run in, then each fighter's intro taunt (held on its last beat); the right side answers a beat later
+      const pose = (tt) => (tt < 26 ? { anim: 'run', t: tt } : { anim: 'taunt', t: tt - 28 });
+      fighter(c, G, a, x1, fy, 4.4, { ...pose(t), facing: 1 });
+      fighter(c, G, b, x2, fy, 4.4, { ...pose(t - 10), facing: -1 });
 
       // name plaques
       const pk = ease((t - 10) / 20);

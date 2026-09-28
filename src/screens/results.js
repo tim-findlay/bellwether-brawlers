@@ -55,10 +55,9 @@ export function makeResults(G) {
       const slab = G.stageArt?.get?.(`${stage.id}-slab`), sw = 470, sx = 40, sy = 402;
       if (slab) { c.imageSmoothingEnabled = false; c.drawImage(slab, sx, sy - 6, sw, slab.height * (sw / slab.width)); }
       else plaque(c, sx, sy, sw, 60, { fill: stage.groundFill || '#8a7f6a' });
-      fighter(c, G, loser, 400, sy, 2.4, { t: 0, facing: -1, tint: '#6e6450', alpha: 0.85 });
+      fighter(c, G, loser, 400, sy, 2.4, { anim: 'hurt', t: 9, facing: -1, tint: '#6e6450', alpha: 0.85 });   // hunched, in shadow
       floorShadow(c, 250, sy, 120);
-      const cheer = t < 30 || (t % 240) < 26;
-      fighter(c, G, winner, 250, sy, 4.2, { anim: cheer ? 'attack' : 'idle', t: cheer ? t % 240 : t, facing: 1 });
+      fighter(c, G, winner, 250, sy, 4.2, { anim: 'win', t, facing: 1 });                                     // their own celebration, looped
       trophy(c, G, 108, 318, 92);
 
       for (const b of bits) {                                        // confetti
