@@ -10,7 +10,13 @@ const pad = (buttons = {}, axes = [0, 0]) => ({
 test('Brawlhalla layout: the stick presses the direction keys, the buttons press the seat\'s pad codes', () => {
   const on = GamepadInput.codesFor(pad({ [PAD_BUTTONS.jump]: 1, [PAD_BUTTONS.light]: 1, [PAD_BUTTONS.s1]: 1, [PAD_BUTTONS.dodgeR]: 1, [PAD_BUTTONS.start]: 1 }, [0.9, 0]), P1MAP);
   assert.deepEqual([...on].sort(), [P1MAP.right, P1MAP.pad.up, P1MAP.pad.light, P1MAP.pad.s1, P1MAP.pad.dodge, P1MAP.start].sort());
-  assert.ok(GamepadInput.codesFor(pad({}, [0, -0.9]), P1MAP).has(P1MAP.up), 'stick up still jumps (and navigates up)');
+  const up = GamepadInput.codesFor(pad({}, [0, -0.9]), P1MAP);
+  assert.ok(up.has(P1MAP.pad.aimUp) && !up.has(P1MAP.up) && !up.has(P1MAP.pad.up), 'stick up aims, never jumps');
+  const inp = new Input(), ctl = new PlayerController(inp, P1MAP);
+  inp.pending.add(P1MAP.pad.aimUp); inp.held[P1MAP.pad.aimUp] = true; inp.beginFrame();
+  assert.ok(ctl.held('up') && !ctl.intent().jump, 'holding the stick up aims the up-air without jumping');
+  inp.held = {}; inp.pending.add(P1MAP.pad.up); inp.held[P1MAP.pad.up] = true; inp.beginFrame();
+  assert.ok(ctl.intent().jump && !ctl.held('up'), '✕ jumps and does not aim');
 });
 
 test('menus: ✕ selects (without moving the cursor), ○ backs out; in a fight ○ is heavy and never pauses', () => {

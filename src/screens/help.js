@@ -81,7 +81,7 @@ function drawTV(c, top, G) {
     const pad = pads[s];
     text(c, pad ? `PAD: ${pad.id.replace(/\s*\(.*$/, '').slice(0, 30).toUpperCase()}` : 'KEYBOARD', x + 392, y + 20, { font: F.mono(10), color: PAPER, align: 'right' });
     CHECK.forEach(([label, act], i) => {
-      const bx = x + (i % 5) * 81, by = y + 40 + Math.floor(i / 5) * 44, on = G.input.keyHeld(map[act]) || (!!map.pad?.[act] && G.input.keyHeld(map.pad[act]));
+      const bx = x + (i % 5) * 81, by = y + 40 + Math.floor(i / 5) * 44, on = [map[act], map.pad?.[act], act === 'up' ? map.pad?.aimUp : null].some(k => k && G.input.keyHeld(k));
       c.fillStyle = INK; c.fillRect(bx, by, 76, 38);
       c.fillStyle = on ? col : '#efe7d3'; c.fillRect(bx + 2, by + 2, 72, 34);
       text(c, label, bx + 38, by + 25, { font: F.head(label.length > 2 ? 15 : 20), color: on ? PAPER : MUTED });

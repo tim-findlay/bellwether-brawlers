@@ -332,10 +332,10 @@ export function bell(c, x, y, s = 1) {
 // ---- navigation --------------------------------------------------------------------
 
 const DIRS = {
-  left: ['KeyA', 'ArrowLeft'], right: ['KeyD', 'ArrowRight'], up: ['KeyW', 'ArrowUp'], down: ['KeyS', 'ArrowDown'],
+  left: ['KeyA', 'ArrowLeft'], right: ['KeyD', 'ArrowRight'], up: ['KeyW', 'ArrowUp', 'Pad1Up', 'Pad2Up'], down: ['KeyS', 'ArrowDown'],
 };
-export const P1_DIRS = { left: ['KeyA'], right: ['KeyD'], up: ['KeyW'], down: ['KeyS'] };
-export const P2_DIRS = { left: ['ArrowLeft'], right: ['ArrowRight'], up: ['ArrowUp'], down: ['ArrowDown'] };
+export const P1_DIRS = { left: ['KeyA'], right: ['KeyD'], up: ['KeyW', 'Pad1Up'], down: ['KeyS'] };
+export const P2_DIRS = { left: ['ArrowLeft'], right: ['ArrowRight'], up: ['ArrowUp', 'Pad2Up'], down: ['ArrowDown'] };
 
 // Hold-to-repeat navigator: call nav() once per update; returns { dx, dy }.
 export function makeNav(G, dirs = DIRS, { first = 18, every = 6 } = {}) {
@@ -386,5 +386,5 @@ export function statFrac(chars, key, v, invert = false) {
   const vals = chars.map(ch => ch.stats[key]);
   const lo = Math.min(...vals), hi = Math.max(...vals);
   const f = hi === lo ? 0.5 : (v - lo) / (hi - lo);
-  return 0.2 + 0.8 * (invert ? 1 - f : f);
+  return 0.5 + 0.5 * (invert ? 1 - f : f);                      // half a bar minimum: the bands are narrow, don't exaggerate them
 }

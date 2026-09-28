@@ -183,10 +183,11 @@ export function makeSelect(G) {
       text(c, cfg.title, ix, y + 96, { font: F.mono(10), align: 'left', color: col });
       text(c, cfg.archetype, ix, y + 116, { font: F.body(16), align: 'left', color: MUTED });
       const st = cfg.stats;
-      statBar(c, ix, y + 128, iw, 'COMPOSURE', statFrac(CHARACTERS, 'gauge', st.gauge), GREEN);
-      statBar(c, ix, y + 146, iw, 'SPEED', statFrac(CHARACTERS, 'runMax', st.runMax), NAVY);
-      statBar(c, ix, y + 164, iw, 'AIR', statFrac(CHARACTERS, 'jumpImpulse', st.jumpImpulse), BRASS);
-      statBar(c, ix, y + 182, iw, 'WEIGHT', statFrac(CHARACTERS, 'weight', st.weight), BRICK);
+      // jump height and fall speed are the same for everyone (BALANCE.md pass 13), so no AIR bar;
+      // TOUGHNESS is weight — how hard you are to launch (it never slows you down)
+      statBar(c, ix, y + 130, iw, 'COMPOSURE', statFrac(CHARACTERS, 'gauge', st.gauge), GREEN);
+      statBar(c, ix, y + 152, iw, 'SPEED', statFrac(CHARACTERS, 'runMax', st.runMax), NAVY);
+      statBar(c, ix, y + 174, iw, 'TOUGHNESS', statFrac(CHARACTERS, 'weight', st.weight), BRICK);
       text(c, 'SPECIALS', ix, y + 210, { font: F.mono(9), align: 'left', color: MUTED });
       text(c, `${cfg.s1.name} · ${cfg.s2.name}`, ix, y + 229, { font: F.body(15, 700), align: 'left' });
       text(c, 'SUPER', ix, y + 248, { font: F.mono(9), align: 'left', color: MUTED });

@@ -4,9 +4,9 @@
 import { PHYS } from '../data/physics.js';
 
 export const P1MAP = { left: 'KeyA', right: 'KeyD', up: 'KeyW', down: 'KeyS', light: 'KeyF', heavy: 'KeyG', s1: 'KeyH', s2: 'KeyJ', super: 'Space', dodge: 'KeyV', start: 'Pad1Start',
-  pad: { up: 'Pad1Cross', light: 'Pad1Square', heavy: 'Pad1Circle', s1: 'Pad1R1', s2: 'Pad1L1', super: 'Pad1Triangle', dodge: 'Pad1Dodge' } };
+  pad: { up: 'Pad1Cross', aimUp: 'Pad1Up', light: 'Pad1Square', heavy: 'Pad1Circle', s1: 'Pad1R1', s2: 'Pad1L1', super: 'Pad1Triangle', dodge: 'Pad1Dodge' } };
 export const P2MAP = { left: 'ArrowLeft', right: 'ArrowRight', up: 'ArrowUp', down: 'ArrowDown', light: 'KeyK', heavy: 'KeyL', s1: 'Semicolon', s2: 'Quote', super: 'Enter', dodge: 'Slash', start: 'Pad2Start',
-  pad: { up: 'Pad2Cross', light: 'Pad2Square', heavy: 'Pad2Circle', s1: 'Pad2R1', s2: 'Pad2L1', super: 'Pad2Triangle', dodge: 'Pad2Dodge' } };
+  pad: { up: 'Pad2Cross', aimUp: 'Pad2Up', light: 'Pad2Square', heavy: 'Pad2Circle', s1: 'Pad2R1', s2: 'Pad2L1', super: 'Pad2Triangle', dodge: 'Pad2Dodge' } };
 
 // Menus: Enter / F / K, a pad's ✕ (Cross — Brawlhalla's select) or Start. Back: Esc, a pad's ○ (Circle) or Create.
 export const CONFIRM_CODES = ['KeyF', 'KeyK', 'Enter', 'Pad1Start', 'Pad2Start', 'Pad1Cross', 'Pad2Cross'];
@@ -104,12 +104,14 @@ export class PlayerController {
     this.reversed = false;
     this.isCPU = false;
   }
-  // an action's codes: its key, plus its pad button (map.pad) when it has one
+  // an action's codes: its key, plus its pad button (map.pad) when it has one.
+  // 'up' splits on a pad (Brawlhalla): ✕ jumps (presses), the stick's up aims (holds).
   codes(action) { const p = this.map.pad?.[action]; return p ? [this.map[action], p] : [this.map[action]]; }
   held(action) {
     let a = action;
     if (this.reversed && (a === 'left' || a === 'right')) a = a === 'left' ? 'right' : 'left';
-    return this.codes(a).some(c => this.input.keyHeld(c));
+    const cs = a === 'up' ? [this.map.up, this.map.pad?.aimUp].filter(Boolean) : this.codes(a);
+    return cs.some(c => this.input.keyHeld(c));
   }
   buffered(action, win) { return this.codes(action).some(c => this.input.buffered(c, win)); }
   consume(action) { for (const c of this.codes(action)) this.input.consume(c); }
@@ -160,8 +162,8 @@ export class GamepadInput {
     if (pressed(PAD_BUTTONS.left) || ax < -DEAD) on.add(map.left);
     if (pressed(PAD_BUTTONS.right) || ax > DEAD) on.add(map.right);
     if (pressed(PAD_BUTTONS.down) || ay > DEAD) on.add(map.down);
-    if (pressed(PAD_BUTTONS.up) || ay < -DEAD) on.add(map.up);                 // stick / d-pad up: jump (and menu up)
     const P = map.pad || map;
+    if (pressed(PAD_BUTTONS.up) || ay < -DEAD) on.add(P.aimUp || map.up);      // stick / d-pad up: aims (and menu up) — never jumps; ✕ does
     if (pressed(PAD_BUTTONS.jump)) on.add(P.up);
     if (pressed(PAD_BUTTONS.light)) on.add(P.light);
     if (pressed(PAD_BUTTONS.heavy)) on.add(P.heavy);
