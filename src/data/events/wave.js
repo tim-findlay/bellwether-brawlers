@@ -5,11 +5,13 @@
 // it for meter. Then it drains. Straight-up pops only: never toward a blast zone.
 //
 // Phases (live frames): swell 0-50 · crest 50-150 · high water -330 · drain -390.
+// Drawing lives in wave-art.js.
 
-import { PAPER, INK, NAVY, GREEN, midX, standingOn, art } from './_shared.js';
+import { NAVY, GREEN, standingOn, art } from './_shared.js';
+import { crestBox, drawSea, drawCrest, drawBoards, drawBubbles } from './wave-art.js';
 
 const SWELL = 50, CREST = 150, HIGH = 330, DRAIN = 390;
-const SEA = 'rgba(29,111,138,', FOAM = '#f3ead0';
+const FOAM = '#f3ead0';
 
 // water surface: just under the lowest platform (so the boards float on it), at least 60 deep
 function level(stage, slab) {
@@ -68,33 +70,23 @@ export const WAVE = {
     const best = data.meter[0] === data.meter[1] ? -1 : (data.meter[0] > data.meter[1] ? 0 : 1);
     if (best >= 0 && data.meter[best] >= 6) fx.banner('BEST IN SHOW', { dur: 60, sub: `${world.fighters[best].cfg.name} rode it out`, color: GREEN });
   },
-  drawWorld(ctx, c) {                                            // behind the fighters: boards and the back of the sea
+  drawWorld(ctx, c) {                                            // behind the fighters: the body of the sea, then the boards on it
     const { stage, data, t } = ctx;
     if (!data.dir) return;
-    const lvl = surface(data, t), img = art(ctx, 'ev-surf'), bob = (k) => Math.round(Math.sin(t * 0.11 + k * 1.3) * (t < DRAIN - 50 ? 3 : 0));
-    stage.platforms.forEach((p, k) => {                         // every platform is a surfboard for the duration
-      const y = p.y + bob(k), x = p.x - 12, w = p.w + 24;
-      if (img) { c.imageSmoothingEnabled = false; c.drawImage(img, x, y - 5, w, Math.round(img.height * w / img.width)); return; }
-      c.fillStyle = INK; c.fillRect(x, y - 3, w, 14); c.fillStyle = '#e8c98a'; c.fillRect(x + 3, y - 1, w - 6, 10);
-      c.fillStyle = '#c4452e'; c.fillRect(x + 6, y + 3, w - 12, 2);
-    });
-    sea(ctx, c, lvl, 0.35);
+    const lvl = surface(data, t), wet = t >= SWELL;
+    if (wet) sea(ctx, c, lvl, false);
+    drawBoards(c, { stage, t, lvl, wet: wet && t < HIGH, img: art(ctx, 'ev-surf'), still: t < SWELL || t > DRAIN - 50 });
   },
-  drawFront(ctx, c) {                                            // over the fighters: the water they wade in, and the crest
-    const { data, t, stage } = ctx;
-    if (!data.dir) return;
-    sea(ctx, c, surface(data, t), 0.42);
-    if (t < SWELL || t > CREST + 40) return;
-    const img = art(ctx, 'ev-wave'), x = crestX(data, t), B = stage.cameraBounds;
-    const H = Math.min(620, data.level - B.y + 200), bottom = data.level + 200;
-    if (img) {
-      const W = Math.round(img.width * H / img.height);
-      c.save(); c.imageSmoothingEnabled = false;
-      if (data.dir > 0) c.drawImage(img, x - W, bottom - H, W, H);
-      else { c.translate(x + W, bottom - H); c.scale(-1, 1); c.drawImage(img, 0, 0, W, H); }
-      c.restore();
-      return;
-    }
+  drawFront(ctx, c) {                                            // over the fighters: the water they wade in, bubbles, the crest
+    const { data, t, world } = ctx;
+    if (!data.dir || t < SWELL) return;
+    const lvl = surface(data, t);
+    sea(ctx, c, lvl, true);
+    drawBubbles(c, world, lvl, t);
+    if (t > CREST + 40) return;
+    const box = crestBox(ctx, drawX(data, t), data.level);
+    if (box) { drawCrest(c, box, t); return; }
+    const x = crestX(data, t), B = ctx.stage.cameraBounds, H = Math.min(620, data.level - B.y + 200), bottom = data.level + 200;
     c.fillStyle = NAVY; c.fillRect(Math.min(x, x - data.dir * 260), bottom - H, 260, H);    // drawn stand-in: a blue wall
     c.fillStyle = FOAM; c.fillRect(Math.min(x, x - data.dir * 260), bottom - H, 260, 24);
   },
@@ -106,23 +98,18 @@ export const WAVE = {
 };
 
 function crestX(data, t) { const k = Math.max(0, Math.min(1, (t - SWELL) / (CREST - SWELL))); return data.x0 + (data.x1 - data.x0) * k; }
+// drawn position: keeps rolling past the rules' end point so it leaves the screen instead of parking
+function drawX(data, t) { return t <= CREST ? crestX(data, t) : data.x1 + (data.x1 - data.x0) / (CREST - SWELL) * (t - CREST); }
 function surface(data, t) {                                      // rises with the crest, holds, then drains below the floor
   if (t <= HIGH) return data.level;
   return data.level + (t - HIGH) / (DRAIN - HIGH) * 260;
 }
 
-// The sea: filled from the crest back toward where the wave came from, then everywhere.
-function sea({ data, t, stage }, c, lvl, alpha) {
-  if (t < SWELL) return;
-  const B = stage.cameraBounds, crest = crestX(data, t);
-  const x0 = data.dir > 0 ? B.x : crest, x1 = data.dir > 0 ? crest : B.x + B.w;
-  if (x1 <= x0) return;
-  const y1 = B.y + B.h;
-  c.fillStyle = SEA + alpha + ')'; c.fillRect(x0, lvl, x1 - x0, y1 - lvl);
-  c.fillStyle = FOAM;                                           // a rolling foam line on the surface
-  for (let x = Math.floor(x0 / 24) * 24; x < x1; x += 24) {
-    const h = 3 + ((((x / 24) | 0) + (t >> 2)) & 3);
-    c.fillRect(x, Math.round(lvl - h / 2), 16, h > 4 ? 4 : 3);
-  }
-  if (alpha < 0.4) { c.fillStyle = PAPER; c.globalAlpha = 0.25; c.fillRect(x0, lvl + 10, x1 - x0, 3); c.globalAlpha = 1; }
+// The sea: from the crest back toward where the wave came from (all of it once the crest has gone).
+function sea(ctx, c, lvl, front) {
+  const { data, t, stage } = ctx, B = stage.cameraBounds;
+  const crest = t > CREST + 40 ? (data.dir > 0 ? B.x + B.w + 2000 : B.x - 2000) : drawX(data, t);
+  const box = t <= CREST + 40 ? crestBox(ctx, crest, data.level) : null;
+  const x0 = data.dir > 0 ? B.x - 200 : crest, x1 = data.dir > 0 ? crest : B.x + B.w + 200;
+  drawSea(c, { x0, x1, y1: B.y + B.h + 400, lvl, t, box, front });
 }
