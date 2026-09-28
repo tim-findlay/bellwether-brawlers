@@ -13,6 +13,7 @@ import { drawHelp, HELP_TABS } from './help.js';
 const ITEMS = [
   { label: 'VERSUS CPU', sub: 'You against the office. Pick a fighter, pick a floor, win the bell.', go: ['select', { mode: 'cpu' }] },
   { label: 'LOCAL VERSUS', sub: 'Two players, one keyboard or two pads. Settle it like colleagues.', go: ['select', { mode: '2p' }] },
+  { label: 'OFFICE TOURNAMENT', sub: 'Four or eight entrants, players or CPUs, one bracket, one cup.', go: ['tour', {}] },
   { label: 'HOW TO PLAY', sub: 'Controls, stocks, composure and the office rules.', page: 'help' },
   { label: 'RECORDS', sub: 'Who has taken the bell home, and how often.', page: 'records' },
   { label: 'SETTINGS', sub: 'Events, CPU difficulty, sound and screen shake.', page: 'settings' },
@@ -24,7 +25,7 @@ const SETTINGS = [
   { key: 'sfx', label: 'SOUND', desc: 'Hits, swings, footfalls, bells and klaxons.', opts: [[true, 'ON'], [false, 'OFF']] },
   { key: 'music', label: 'MUSIC', desc: 'A tune per stage; more joins in on the last stock.', opts: [[true, 'ON'], [false, 'OFF']] },
   { key: 'shake', label: 'SCREEN SHAKE', desc: 'Camera shake on big hits and ring-outs (cosmetic).', opts: [[true, 'ON'], [false, 'OFF']] },
-  { key: 'reset', label: 'RESET RECORDS', desc: 'Clear every win on the records board.', action: true },
+  { key: 'reset', label: 'RESET RECORDS', desc: 'Clear every win and cup on the records board.', action: true },
   { key: 'done', label: 'DONE', desc: 'Back to the main menu.', action: true },
 ];
 
@@ -68,7 +69,11 @@ export function makeMenu(G) {
           if (row.key === 'done') { G.audio.play('menuBack'); page = 'main'; }
           else if (row.key === 'reset') {
             if (!confirmReset) { confirmReset = true; G.audio.play('klaxon'); }
-            else { for (const k of Object.keys(G.scores)) delete G.scores[k]; G.saveScores(); confirmReset = false; G.audio.play('menuConfirm'); }
+            else {
+              for (const k of Object.keys(G.scores)) delete G.scores[k];
+              for (const k of Object.keys(G.cups)) delete G.cups[k];
+              G.saveScores(); G.saveCups(); confirmReset = false; G.audio.play('menuConfirm');
+            }
           } else applySetting(row, 1);
         }
         if (back) { G.audio.play('menuBack'); page = 'main'; }
@@ -97,7 +102,7 @@ export function makeMenu(G) {
 
     drawMain(c) {
       logo(c, 220, 96, 0.52, t, G);
-      menuList(c, ITEMS, idx, 64, 196, { w: 340, h: 46, gap: 10, anim });
+      menuList(c, ITEMS, idx, 64, 184, { w: 340, h: 40, gap: 7, anim });   // six items clear the footer
 
       // featured fighter card
       const n = CHARACTERS.length, slot = 300;
@@ -169,6 +174,8 @@ export function makeMenu(G) {
         c.fillStyle = RULE; c.fillRect(x + 12, y + 146, 172, 12);
         c.fillStyle = leader === ch ? BRASS : NAVY; c.fillRect(x + 12, y + 146, Math.round(172 * wins / top), 12);
         if (leader === ch) chip(c, 'TOP DOG', x + 184, y + 118, BRASS, { align: 'right' });
+        const cups = G.cups?.[ch.id] || 0;
+        if (cups) chip(c, `${cups} CUP${cups === 1 ? '' : 'S'}`, x + 184, y + 14, BRICK, { align: 'right' });   // tournament wins
       });
       text(c, total ? `${total} match${total === 1 ? '' : 'es'} settled on this machine` : 'No matches yet — go and settle something.', 480, 492, { font: F.body(18), color: INK });
       hints(c, [['ESC', 'Back']], 522);

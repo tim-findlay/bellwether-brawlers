@@ -54,8 +54,8 @@ export function makeSplash(G) {
       plaque(c, 1290 - 360 * pk - 330, 418, 330, 62, { fill: PAPER });
       text(c, b.name, 1270 - 360 * pk, 454, { font: F.head(34), align: 'right' });
       text(c, b.title, 1270 - 360 * pk, 472, { font: F.mono(10), align: 'right', color: BRICK });
-      chip(c, 'P1', 40, 40, INK);
-      chip(c, params.mode === '2p' ? 'P2' : 'CPU', 920, 40, INK, { align: 'right' });
+      chip(c, params.c1 === 'cpu' ? 'CPU' : 'P1', 40, 40, INK);
+      chip(c, params.c2 ? (params.c2 === 'cpu' ? 'CPU' : 'P2') : params.mode === '2p' ? 'P2' : 'CPU', 920, 40, INK, { align: 'right' });
 
       if (t > 18) vsBadge(c, G, 480, 230, 210, t - 18);
 

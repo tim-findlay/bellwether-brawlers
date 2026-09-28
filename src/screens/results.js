@@ -34,6 +34,10 @@ export function makeResults(G) {
       bits = bits.filter(b => b.life > 0);
       if (t % 45 === 0) burst(80 + G.rng() * 400, -10, 10);
       if (t < 30) return;
+      if (params.tour) {                                         // tournament: back to the bracket with the winning side
+        if (G.input.confirmPressed() || G.input.keyPressed('Space') || G.input.backPressed()) { G.audio.play('menuConfirm'); G.go('tour', { winnerSide: params.winnerSide }); }
+        return;
+      }
       const { dx } = nav();
       if (dx) { idx = (idx + dx + OPTIONS.length) % OPTIONS.length; G.audio.play('menuMove'); }
       if (G.input.confirmPressed() || G.input.keyPressed('Space')) {
@@ -106,13 +110,14 @@ export function makeResults(G) {
       }
 
       // options row
-      OPTIONS.forEach((o, i) => {
-        const sel = i === idx, w = 220, x = 480 - (OPTIONS.length * w + 2 * 16) / 2 + i * (w + 16), y = 446;
+      const opts = params.tour ? ['CONTINUE'] : OPTIONS;
+      opts.forEach((o, i) => {
+        const sel = i === idx, w = 220, x = 480 - (opts.length * w + (opts.length - 1) * 16) / 2 + i * (w + 16), y = 446;
         plaque(c, x, y - (sel ? 4 : 0), w, 44, { fill: sel ? BRICK : CARD, shadow: sel ? 6 : 4 });
         text(c, o, x + w / 2, y + 30 - (sel ? 4 : 0), { font: F.head(21), color: sel ? PAPER : INK });
       });
       c.fillStyle = INK; c.fillRect(0, 504, 960, 36);
-      hints(c, [[['A', 'D'], 'Choose'], [['ENTER', 'F'], 'Select'], ['ESC', 'Fighters']], 527, { color: PAPER });
+      hints(c, params.tour ? [[['ENTER', 'F'], 'Back to the bracket']] : [[['A', 'D'], 'Choose'], [['ENTER', 'F'], 'Select'], ['ESC', 'Fighters']], 527, { color: PAPER });
     },
   };
 }

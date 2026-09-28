@@ -16,6 +16,7 @@ import { makeSelect } from './screens/select.js';
 import { makeFight } from './screens/fight.js';
 import { makeResults } from './screens/results.js';
 import { makeSplash } from './screens/splash.js';
+import { makeTournament } from './screens/tournament.js';
 import { Wipe } from './render/ui.js';
 
 const DT = 1000 / 60;
@@ -68,8 +69,11 @@ async function boot() {
     rng: mulberry32(Date.now() & 0xffffffff),
     settings: { music: true, ...loadJSON('bb.settings.v3', { events: true, difficulty: 'easy', sfx: true, shake: true }) },
     scores: loadJSON('bb.scores', {}),
+    cups: loadJSON('bb.cups', {}),            // office tournament wins per fighter
+    tour: null,                               // the bracket in progress (this session only)
     saveSettings() { saveJSON('bb.settings.v3', G.settings); },
     saveScores() { saveJSON('bb.scores', G.scores); },
+    saveCups() { saveJSON('bb.cups', G.cups); },
     screens: {},
     screen: null,
     go(name, p) {
@@ -92,6 +96,7 @@ async function boot() {
   G.screens.fight = makeFight(G);
   G.screens.results = makeResults(G);
   G.screens.splash = makeSplash(G);
+  G.screens.tour = makeTournament(G);
 
   bootEl.classList.add('done');
 

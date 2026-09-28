@@ -231,6 +231,7 @@ All WebAudio synthesis — **zero audio files, zero licensing risk** on a public
 - **Select:** grid + a **"?" random card** on the opponent pick (CPU or P2). Cards keep photos, archetype, counterplay tip, win tally.
 - **Help/menus:** rewritten for v3 verbs — run/dash/double-jump/fast-fall/dodge/recovery, stocks and blast zones. Pause (Esc) overlay unchanged.
 - **Results:** winner photo + stocks remaining; rematch flow and localStorage win tally carry over.
+- **Office tournament (main menu):** a single-elimination bracket of 4 or 8 entrants — any fighter per slot, each a player or a CPU, seeds in the listed order or shuffled. Matches rotate through the selectable stages and run through the normal VS splash → fight → results flow (results offers CONTINUE; a double ring-out replays the match). A lone player always takes the P1 side, two players meeting take P1 and P2, and CPU-vs-CPU matches can be watched or simmed instantly. The champion gets a cup on the records board (`bb.cups`, cleared with the records). Logic in `src/screens/bracket.js` (tested), screen in `src/screens/tournament.js`.
 
 ## CPU
 

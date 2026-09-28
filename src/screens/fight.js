@@ -36,8 +36,11 @@ export function makeFight(G) {
       params = p;
       stage = stageById(p.stageId) || stageById('office');
       const cfgs = [byId(p.p1), byId(p.p2)];
-      const c1 = new PlayerController(G.input, P1MAP);
-      const c2 = p.mode === '2p' ? new PlayerController(G.input, P2MAP) : new AIController(G.settings.difficulty, G.rng);
+      // who drives each side: a tournament names them (c1/c2: 'human' | 'cpu'); otherwise P1 is a
+      // player and P2 is a player in local versus, a CPU in versus CPU
+      const ctl = (who, map) => (who === 'cpu' ? new AIController(G.settings.difficulty, G.rng) : new PlayerController(G.input, map));
+      const c1 = ctl(p.c1 || 'human', P1MAP);
+      const c2 = ctl(p.c2 || (p.mode === '2p' ? 'human' : 'cpu'), P2MAP);
       world = new FightWorld({ cfgs, controllers: [c1, c2], stage: geometryOf(stage.id), fx: G.fx, audio: G.audio, rng: G.rng, settings: G.settings });
       events = new EventDirector(world, EVENTS, { enabled: G.settings.events, difficulty: G.settings.difficulty, stageId: params.stageId });
       events.art = G.uiArt;                                  // event props (assets/ui/ev-*.png), optional
@@ -100,11 +103,11 @@ export function makeFight(G) {
         for (const f of world.fighters) f.animT++;
         camera.update(targets());
         if (phaseT >= OUTRO_FRAMES) {
-          if (ko.winner < 0) { G.go('select', { mode: params.mode }); return; }
+          if (ko.winner < 0) { G.go(params.tour ? 'splash' : 'select', params.tour ? params : { mode: params.mode }); return; }   // a tournament replays a draw
           const winner = world.fighters[ko.winner], loser = world.fighters[1 - ko.winner];
           G.scores[winner.cfg.id] = (G.scores[winner.cfg.id] || 0) + 1;
           G.saveScores();
-          G.go('results', { ...params, winnerId: winner.cfg.id, loserId: loser.cfg.id, stocks: winner.stocks });
+          G.go('results', { ...params, winnerId: winner.cfg.id, loserId: loser.cfg.id, stocks: winner.stocks, winnerSide: ko.winner });
         }
       }
     },

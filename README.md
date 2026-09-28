@@ -8,7 +8,7 @@ A lightly pixelated office **platform fighter** starring your coworkers — eigh
 
 ## How to play
 
-**Versus CPU** or **Local Versus** (two players on one keyboard, or two pads). Pick your fighter, pick your opponent, pick an arena, then the VS splash drops you into the fight. In Local Versus both players pick at the same time on their own keys. The main menu also has **How to Play**, **Records** (wins per fighter, kept in this browser) and **Settings** (office events, CPU difficulty, sound, screen shake, reset records). **Esc** (or a pad's Back button) pauses: resume, how to play, restart the match or quit to the menu.
+**Versus CPU** or **Local Versus** (two players on one keyboard, or two pads). Pick your fighter, pick your opponent, pick an arena, then the VS splash drops you into the fight. In Local Versus both players pick at the same time on their own keys. The main menu also has an **Office Tournament** (a 4- or 8-fighter bracket, each slot a player or a CPU; the champion takes a cup), **How to Play**, **Records** (wins and cups per fighter, kept in this browser) and **Settings** (office events, CPU difficulty, sound, music, screen shake, reset records). **Esc** (or a pad's Back button) pauses: resume, how to play, restart the match or quit to the menu.
 
 - **3 stocks each, untimed.** The only KO is a **ring-out**: knock your colleague past the edge of the screen (any side).
 - **Composure** (your bar) never kills. It drains as you take hits and the emptier it is, the farther every hit sends you. It refills only when you lose a stock — waiting heals nothing.
