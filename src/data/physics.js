@@ -60,4 +60,18 @@ export const PHYS = {
   // cut its recovery short — after this fraction of it — into a jump, a dash,
   // or another light / heavy. A whiffed light keeps its full recovery (the punish).
   HIT_CANCEL_FRAC: 0.4,
+  // The combo system (2026-09-28, Tim: "mirror Brawlhalla … a blueprint for new
+  // characters"). Brawlhalla's model: every move carries a FIXED stun (frames,
+  // not scaled by damage — data: `stun` on the move, defaults in
+  // characters/_shared.js), launches add stun on top while they fly; a hit is a
+  // TRUE follow-up when it lands before the victim has had POST_STUN_LOCK free
+  // frames (they can't dodge or jump in that window); landing the same move
+  // twice in one combo gives the repeat STALE_STUN_MULT of its stun (no jab
+  // loops — use the kit); and a landed hit opens a CHASE DODGE: a short burst in
+  // the held direction, cancellable into any attack (the follow-up tool).
+  POST_STUN_LOCK: 3,        // frames after hitstun with no dodge / jump — the escape needs more than this
+  STALE_STUN_MULT: 0.5,     // the same move twice in one combo: half its fixed stun on the repeat
+  CHASE_DODGE_IMPULSE: 9,   // px/f burst, decays over the duration; no i-frames
+  CHASE_DODGE_DURATION: 12,
+  CHASE_CANCEL_FROM: 2,     // an attack may cut a chase dodge short from this frame
 };

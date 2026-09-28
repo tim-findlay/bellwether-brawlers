@@ -13,6 +13,7 @@ import { isOffStage } from './ai/nav.js';
 import { recover } from './ai/recovery.js';
 import { think, hazardResponse, mistakePlan } from './ai/tactics.js';
 import { act, aerialAim, aerialPress } from './ai/actions.js';
+import { comboStep } from './ai/combos.js';
 
 // decide: frames between decisions (reaction) · mistake: chance a decision is
 // replaced by a mild random one · mashDelay/mashCps: URGENT UNDERWRITING ·
@@ -50,6 +51,7 @@ export class AIController {
     this.dash = 0;                 // ±1 on the tick a dash is requested
     this.tapDown = false;          // fresh down tap this tick (drop-through)
     this.swungThisAir = false;
+    this.route = null;             // the combo route being played out (ai/combos.js)
     this.recoverWait = 0;
     this.reversedAt = -1;
     this.lastHitFrame = 0;         // impatience: nothing landing for a while -> go in
@@ -84,6 +86,7 @@ export class AIController {
 
     if (isOffStage(world.stage, f)) {
       if (this.mode !== 'recovery') { this.mode = 'recovery'; this.recoverWait = this.profile.recoverDelay; this.plan = { kind: 'approach' }; }
+      this.route = null;
       recover(this, f, world);
       if (f.state === 'normal' && f.body.stun === 0 && !f.attack && f.body.airJumps > 0 && !this.swungThisAir) this._edgeAerial(f, opp, world);
       this._compose(f);
@@ -103,21 +106,9 @@ export class AIController {
       if (hz) this.plan = hz;
     }
     if (f.state === 'normal') act(this, f, opp, world);
-    if (f.state === 'normal') this._string(f, opp, world);
+    if (f.state === 'normal') comboStep(this, f, opp, world);   // play out a blueprint route once a starter lands
     if (f.attack?.victim && f.attack.move.aimable) this._aimThrow(f, world);
     this._compose(f);
-  }
-
-  // Hit-confirm: a light just connected — string a follow-up into the cancel
-  // window (decided once per attack; harder CPUs string more often).
-  _string(f, opp, world) {
-    const a = f.attack;
-    if (!a || a.slot !== 'light' || !a.hasHit || a.aiString !== undefined) return;
-    a.aiString = this.rng() < this.profile.mixup;
-    if (!a.aiString || opp.body.stun === 0) return;
-    if (a.aerial) return;          // ground strings only: CPU air strings chased launched targets off-stage (loiter test, 8 seeds)
-    this.gAim = opp.y < f.y - 30 ? 'd' : 's'; this.gAimDir = opp.x >= f.x ? 1 : -1; this.gAimUntil = this.frame + PHYS.INPUT_BUFFER;
-    this.press(this.rng() < 0.3 ? 'heavy' : 'light');
   }
 
   // Holding a victim with an aimable grab: throw toward the nearer edge (hold back

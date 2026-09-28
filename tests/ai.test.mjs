@@ -59,9 +59,11 @@ test('recovery never burns the double jump when drifting home is enough', () => 
 });
 
 test('a CPU never dashes in the air', () => {
+  // (the "they do dash" guard sums seeds 7-9: one seeded match can go 3000 frames without a ground dash)
   for (const [a, b] of [['nick', 'mike'], ['adrian', 'richy']]) {
-    const { w, c } = mk(a, b, 'palace', ['normal', 'normal'], 7);
     let dashes = 0;
+    for (const seed of [7, 8, 9]) {
+    const { w, c } = mk(a, b, 'palace', ['normal', 'normal'], seed);
     for (let t = 0; t < 3000 && !w.over; t++) {
       for (const f of w.fighters) f.controller.update(f, w);
       for (const f of w.fighters) {
@@ -71,8 +73,9 @@ test('a CPU never dashes in the air', () => {
       }
       w.update();
     }
-    assert.ok(dashes > 0, `${a}/${b}: the CPUs do dash on the ground (${dashes})`);
     assert.ok(c.every(x => x.isCPU));
+    }
+    assert.ok(dashes > 0, `${a}/${b}: the CPUs do dash on the ground (${dashes})`);
   }
 });
 

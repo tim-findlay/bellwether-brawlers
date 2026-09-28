@@ -8,6 +8,7 @@
 import { MovementBody } from './movement.js';
 import { PHYS } from '../data/physics.js';
 import { holidayTick, homeTime } from './specials.js';
+import { cancelOpen, wantsCancel, chaseOpen, chase, chaseCuts } from './combo.js';
 
 export const STOCKS = 3;
 export const CHAIR_DESCENT = 60;     // frames: bounds-top -> respawn hover point
@@ -38,6 +39,7 @@ export class Fighter {
     this.cd = { s1: 0, s2: 0 };
     this.state = 'normal'; this.stateT = 0;
     this.attack = null; this.landLag = 0; this.chair = null; this.hazardInv = 0; this.tripOnLand = false; this.recoveryUsed = false;
+    this.comboMoves = new Set(); this.chaseUsed = false;   // combo system: moves that hit me this combo · chase dodge spent this airtime
     this.statuses = new Map();
     this.controller.reversed = false;
     this.hurtFlash = 0; this.cancelFlash = 0; this.animT = (this.side + 1) * 17;
@@ -235,7 +237,11 @@ export class Fighter {
     let vx = Math.cos(rad) * speed * dir;
     let vy = -Math.sin(rad) * speed;
     if (this.grounded && vy > -2 && kbAngle < 180) vy = -2;      // pop off the floor so flinches read
-    const stun = Math.max(8, Math.round(speed * PHYS.HITSTUN_PER_KB));
+    // combo system: the move's FIXED stun (data), halved if it already hit me this combo (stale), or the launch's flight stun
+    const key = opts.move || null, stale = !!key && this.comboMoves.has(key);
+    if (key) this.comboMoves.add(key);
+    const fixed = (opts.stun ?? opts.move?.stun ?? 0) * (stale ? PHYS.STALE_STUN_MULT : 1);
+    const stun = Math.max(8, Math.round(fixed), Math.round(speed * PHYS.HITSTUN_PER_KB));
     this.body.launch(vx, vy, stun);
     this.state = 'hitstun'; this.stateT = 0;
     if (status) this.applyStatus(status.name, status.dur, status.data || {});
@@ -301,9 +307,14 @@ export class Fighter {
     if (this.state === 'hitstun' && this.body.stun === 0) { this.state = 'normal'; this.stateT = 0; }
 
     const x0 = this.body.x;
+    const b = this.body;
+    if (b.grounded && b.state !== 'chase') this.chaseUsed = false;
+    if (this.comboMoves.size && b.stun === 0 && b.postStun === 0) this.comboMoves.clear();   // I got out: the combo is over
     if (this.state === 'normal') {
-      if (this._cancelOpen() && this._wantsCancel(intent)) { this.attack = null; this.cancelFlash = 6; }   // hit-confirm cancel
+      if (chaseOpen(this) && intent.dodge) chase(this, intent);                                      // chase dodge after a landed hit
+      else if (cancelOpen(this) && wantsCancel(this, intent)) { this.attack = null; this.cancelFlash = 6; }   // hit-confirm cancel
       if (this.actionable) this._readButtons(intent);
+      else if (chaseCuts(this)) { b.endChase(); this._readButtons(intent); }                         // the chase cuts into the follow-up
       if (this.attack && this.state === 'normal') this.advanceAttack();
     }
     // a step-in or slide stops at the edge you stand on and at the opponent's body
@@ -341,17 +352,6 @@ export class Fighter {
     }
     if (this.landLag > 0) this.landLag--;
     this._tickAnim();
-  }
-
-  // Hit-confirm cancel window: a light that connected, past HIT_CANCEL_FRAC of its recovery.
-  _cancelOpen() {
-    const a = this.attack, m = a?.move;
-    if (!a || a.slot !== 'light' || !a.hasHit) return false;
-    return a.frame > (m.startup || 0) + (m.active || 0) + Math.ceil((m.recover || 0) * PHYS.HIT_CANCEL_FRAC);
-  }
-  _wantsCancel(intent) {
-    const c = this.controller;
-    return c.buffered('light') || c.buffered('heavy') || intent.jump || intent.dashLeft || intent.dashRight;
   }
 
   // Ground friction while a ground move runs (PHYS "attacks in motion"): the

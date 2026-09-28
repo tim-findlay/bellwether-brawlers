@@ -33,6 +33,7 @@ export class MovementBody {
     this.out = false;            // crossed a blast zone
     this.friction = null;        // ground friction override (sliding attacks); null = RUN_FRICTION
     this.stun = 0;               // hitstun frames left: intent ignored, launch drag applies
+    this.postStun = 0;           // frames after hitstun with dodge / jump locked (PHYS.POST_STUN_LOCK)
     this.landed = false;         // true on the tick the body touched down (landing lag hook)
     this.consumedJump = false;   // adapter reads these to consume buffered presses
     this.consumedDodge = false;
@@ -40,7 +41,7 @@ export class MovementBody {
 
   get airMax() { return this.stats.runMax * PHYS.AIR_MAX_FACTOR; }
   get dashSpeed() { return this.stats.runMax * PHYS.DASH_SPEED_FACTOR; }
-  get dodging() { return this.state === 'dodge' || this.state === 'airdodge'; }
+  get dodging() { return this.state === 'dodge' || this.state === 'airdodge' || this.state === 'chase'; }
 
   // i-frame query for later phases + the graybox readout
   invulnerable() {
@@ -62,6 +63,20 @@ export class MovementBody {
     this._setState(this.grounded ? 'idle' : 'air');
   }
 
+  // Chase dodge (the combo system): a short burst in (dx, dy) after a landed hit —
+  // gravity hangs, no i-frames; the Fighter cuts it into an attack. Not a dodge
+  // for the cooldown: it spends nothing and protects nothing.
+  chase(dx, dy) {
+    const len = Math.hypot(dx, dy) || 1;
+    this.dodgeVec = { x: (dx / len) * PHYS.CHASE_DODGE_IMPULSE, y: (dy / len) * PHYS.CHASE_DODGE_IMPULSE };
+    this.vx = this.dodgeVec.x; this.vy = this.dodgeVec.y;
+    if (dy < 0) { this.grounded = false; this.onPlatform = false; this.coyoteT = 0; }
+    this.dashT = 0; this.fastFalling = false;
+    this.dodgeT = PHYS.CHASE_DODGE_DURATION;
+    this._setState('chase');
+  }
+  endChase() { if (this.state !== 'chase') return; this.dodgeT = 0; this.dodgeVec = null; this._setState(this.grounded ? 'idle' : 'air'); }
+
   update(intent, stage) {
     this.consumedJump = false; this.consumedDodge = false; this.landed = false;
     this.stateT++;
@@ -73,6 +88,7 @@ export class MovementBody {
 
     if (this.stun > 0) {                     // hitstun: no steering, gravity + drag only
       this.stun--;
+      if (this.stun === 0) this.postStun = PHYS.POST_STUN_LOCK;
       if (this.grounded) { this.vx *= PHYS.RUN_FRICTION; if (Math.abs(this.vx) < PHYS.GROUND_DEADZONE) this.vx = 0; }
       else { this.vx *= PHYS.LAUNCH_DRAG; this.vy = Math.min(this.vy + PHYS.GRAV, this.stats.fallMax); }
       const pb = this.y;
@@ -80,6 +96,10 @@ export class MovementBody {
       this._collide(stage, pb);
       this._blast(stage);
       return;
+    }
+    if (this.postStun > 0) {                 // just out of hitstun: no dodge / jump / dash yet (the true-combo window)
+      this.postStun--;
+      intent = { ...intent, jump: false, dodge: false, dashLeft: false, dashRight: false };
     }
     if (this.state === 'ledge') { this._ledge(intent); this._blast(stage); return; }
 
@@ -226,8 +246,8 @@ export class MovementBody {
   _dodges(intent) {
     if (this.dodging) {                                    // tick an active dodge
       this.dodgeT--;
-      if (this.state === 'airdodge') {                     // graybox decision: air dodge
-        const k = this.dodgeT / PHYS.AIR_DODGE_DURATION;   // suspends gravity, impulse decays
+      if (this.state === 'airdodge' || this.state === 'chase') {   // graybox decision: air dodge
+        const k = this.dodgeT / (this.state === 'chase' ? PHYS.CHASE_DODGE_DURATION : PHYS.AIR_DODGE_DURATION);   // suspends gravity, impulse decays
         this.vx = this.dodgeVec.x * k; this.vy = this.dodgeVec.y * k;
       } else {
         this.vx = this.dodgeVec ? this.dodgeVec.x * (this.dodgeT / PHYS.SPOT_DODGE_DURATION) : 0;

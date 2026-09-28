@@ -38,6 +38,10 @@ Bindings are by **physical key position** (US labels shown), so they work on any
 
 **On the conference-room TV:** plug everything into the one PC and open the game full screen (**Settings → Full Screen**, or F11). Two keyboards work — the browser hears both, so P1 plays on the WASD side of one and P2 on the arrow side of the other (which also avoids the key-ghosting you get with two people on one board). Two pads are better still: the first connected pad is P1, the second P2. **How to Play → TV SETUP** is a live check: hold anything and it lights up under the player it belongs to, with the connected pads named.
 
+### Combos
+
+Brawlhalla-style. Every fighter has the same five basic combos — **Jab String** (Light › toward+Light), **Confirm** (Light › toward+Heavy), **Pop-Up** (down+Light › Jump › Air Light), **Chase** (toward+Light › Dodge › Air toward+Light) and **Jump-In** (Air Light falling › Light) — so learning one fighter teaches you all of them. After any hit lands, **Dodge chases** them. The same move twice in a combo loses its hold, so mix it up. Practise them in the **Practice Arena**: its Combo Trials tick off as you land each one for real.
+
 ### The roster
 
 | Fighter | Archetype | Specials | Super |
@@ -100,7 +104,7 @@ Runs N CPU-vs-CPU matches per ordered pairing (seeded RNG, events on, 3 stocks) 
 
 Everything is data-driven — see [DESIGN.md](DESIGN.md) for the full architecture.
 
-- **A fighter:** add `src/data/characters/<id>.js` (stats inside the BALANCE.md bands, light/heavy/aerials — the side/down lights, signatures, recovery and ground pound are derived for you, override any of them under `kit` — two specials, super, AI hints, drawn-body palette) and list it in `src/data/characters/index.js`. Drop `assets/headshots/<id>.png` (square photo) for the win screen, and `assets/sprites/<id>/{idle,run,jump,attack}.png` (64 px cells, described in `src/data/sprites.js`) for animation and the select card — **no code change**; without them the drawn cartoon head / body is used.
+- **A fighter:** add `src/data/characters/<id>.js` (stats inside the BALANCE.md bands, light/heavy/aerials — the side/down lights, signatures, recovery and ground pound are derived for you, override any of them under `kit` — two specials, super, AI hints, drawn-body palette) and list it in `src/data/characters/index.js`. Drop `assets/headshots/<id>.png` (square photo) for the win screen, and `assets/sprites/<id>/{idle,run,jump,attack}.png` (64 px cells, described in `src/data/sprites.js`) for animation and the select card — **no code change**; without them the drawn cartoon head / body is used. Then `node src/dev/combos.js <id>` must read `ok` for every combo route — the new-fighter checklist is in [DESIGN.md](DESIGN.md) ("Combos").
 - **A stage:** add an object to `src/data/stages.js` (geometry: slab, soft platforms, spawns, respawn, camera bounds, blast zones; plus palette/art metadata) and optionally drop a 480×270 `assets/stages/<id>.png` far backdrop and a 512 px wide `assets/stages/<id>-slab.png` arena piece (top edge = walkable top). Without them the procedural layers and slab draw. `selectable: false` keeps it event-only, like Berlin.
 - **Front-end art:** replace `assets/ui/logo.png`, `vs.png` or `trophy.png` (keyed PNG, any size; drawn to fit). Delete one and the code-drawn version returns.
 - **An event:** add an object to `src/data/events.js`, or a module in `src/data/events/` listed there (telegraph, weight, optional `requiresCharacter` / `stages`, and small start/update/draw hooks — `drawFront` draws over the fighters).

@@ -13,6 +13,8 @@
 // variants are DERIVED by expandKit() below; any field of any variant can be
 // overridden in `kit: { lights: { s: {...} }, sigs: {...}, recovery: {...}, groundPound: {...} }`.
 
+import { PHYS } from '../physics.js';
+
 // The four aerials every fighter carries (Light + held direction in the air).
 // Overrides let a fighter tune any field; names come from DESIGN.md.
 export function aerials({ n, s, u, d }, tune = {}) {
@@ -36,7 +38,8 @@ export function expandKit(cfg) {
     s: { ...L, name: N.sLight || `${L.name} (side)`, dmg: L.dmg + 1, kb: r1(L.kb * 1.1), kbScale: L.kbScale + 1, kbAngle: 28,
          range: Math.round(L.range * 1.2), step: 18, startup: L.startup + 2, recover: L.recover + 3, ...K.lights?.s },
     // down light: a low sweep that pops them up — the combo starter into aerials
-    d: { ...L, name: N.dLight || `${L.name} (low)`, kbAngle: 72, kb: r1(L.kb * 0.9), range: Math.round(L.range * 0.9), low: true, step: 6,
+    // (the Pop-Up starter: a fixed-force pop to head height, whatever their composure)
+    d: { ...L, name: N.dLight || `${L.name} (low)`, kbAngle: 82, kb: LAUNCHER_KB, range: Math.round(L.range * 0.9), low: true, step: 6,
          startup: L.startup + 1, recover: L.recover + 2, ...K.lights?.d },
   };
   const sigs = {
@@ -54,5 +57,31 @@ export function expandKit(cfg) {
   // ground pound: air heavy + down — a diving spike, the heaviest landing lag in the kit
   const groundPound = { name: N.groundPound || `${A.d.name} Pound`, kind: 'aerial', dmg: 9, kb: 7, kbScale: 10, kbAngle: 270, range: 60,
     startup: 10, active: 30, recover: 12, landLag: 20, dive: 15, spike: true, ...K.groundPound };
-  return { ...cfg, lights, sigs, recovery, groundPound };
+  const kit = { ...cfg, lights, sigs, recovery, groundPound, aerials: { ...A } };
+  if (K.lights?.d?.kb === undefined) lights.d.kb = LAUNCHER_KB + Math.max(0, (kit.aerials.n.startup || 6) - 6);   // slower nAir: pop them higher
+  comboStuns(kit, K.stun || {});
+  return kit;
+}
+
+// ---- the combo blueprint (DESIGN.md "Combos", src/data/combos.js) -------------------
+// A starter's FIXED stun is derived from the fighter's own frame data so its
+// universal route links: long enough to cancel (or chase) and land the next
+// move, plus a small margin for the step between them. A new fighter gets
+// working combos for free; `kit.stun = { nLight, sLight, dLight, nAir }` adds
+// frames per starter when the lab (node src/dev/combos.js) says a route drops.
+// Enders (sAir, signatures) carry no fixed stun: their launch is their stun.
+const cancelAt = (m) => (m.active || 0) + Math.ceil((m.recover || 0) * PHYS.HIT_CANCEL_FRAC) + 1;   // hit -> first cancel frame
+export const COMBO_MARGIN = 3;
+export const STARTER_KB_SCALE = 1.5;   // Brawlhalla's split: starters are (almost) fixed force, enders carry the scaling
+export const LAUNCHER_KB = 11;          // dLight's fixed pop (launch ≈ kb × KB_BASE_MULT): to head height; +1 per frame of nAir startup past 6
+function comboStuns(k, add) {
+  const L = k.lights, A = k.aerials, S = k.sigs, lock = PHYS.POST_STUN_LOCK, M = COMBO_MARGIN;
+  const set = (m, frames, extra = 0) => {
+    if (m.stun === undefined) m.stun = Math.max(12, Math.round(frames - lock + M + extra));
+    if (m.starterScale === undefined) m.kbScale = Math.min(m.kbScale ?? 0, STARTER_KB_SCALE);   // fixed force: the same shove at any composure
+  };
+  set(L.n, cancelAt(L.n) + S.s.startup, add.nLight);                                          // Confirm: nLight > sHeavy
+  set(L.s, (L.s.active || 0) + 1 + PHYS.CHASE_CANCEL_FROM + 4 + A.s.startup, add.sLight);     // Chase:   sLight > chase > sAir
+  set(L.d, cancelAt(L.d) + 3 + A.n.startup, add.dLight);                                      // Pop-Up:  dLight > jump > nAir
+  set(A.n = { ...A.n }, (A.n.landLag || 8) + L.n.startup + 6, add.nAir);                       // Jump-In: nAir > land > nLight
 }

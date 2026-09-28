@@ -20,7 +20,7 @@
   `kb = (move.kb × KB_BASE_MULT + move.kbScale × KB_SCALE_MULT × emptiness) / weight`, where `emptiness = 1 − gauge/maxGauge` (multipliers 0.8 / 2.0 since the Phase-3b feel pass: early hits flinch, late hits kill).
   **kb is the launch speed in px/frame at base zoom, set (not added) along `kbAngle`** (per-move data, degrees; spikes use 270 ± 15) on the frame the hit lands. Hitstun = `round(kb × HITSTUN_PER_KB)` frames.
   **Kill-class** = kb ≥ 17 on connect (carries a mid-weight from the lip past the widened side blast zone through two air jumps, an air dash and a ledge grab — sim-measured: the 25th-percentile fatal launch is 16.8 px/f, median 25). Hazards cap at 6.0.
-  Bands — lights kb 4–6 / kbScale 4–6 · nair/uair same · **side-airs (the aerial kill move) kb 5–7.5 / kbScale 8–13** · spikes kb 5–7 / kbScale 8–10 (angle 270 ± 15) · heavies kb 6–8 / kbScale 10–13, **startup 10–16f** (a heavy is a commitment, never a poke) · specials kb 5–9 / kbScale 6–13 · damage supers kb 8–10 / kbScale 14–18.
+  Bands — lights kb 4–6 / kbScale 4–6 as declared, **but the derived combo starters (nLight, sLight, dLight, nAir) are fixed force: kbScale ≤ 1.5, dLight kb 11+ (the pop)** — Combo doctrine below · uair same · **side-airs (the aerial kill move) kb 5–7.5 / kbScale 8–13** · spikes kb 5–7 / kbScale 8–10 (angle 270 ± 15) · heavies kb 6–8 / kbScale 10–13, **startup 10–16f** (a heavy is a commitment, never a poke) · specials kb 5–9 / kbScale 6–13 · damage supers kb 8–10 / kbScale 14–18.
 - **Kill calibration** (checked against the bands, Phase 3b): a top-band Heavy on a mid-weight reads 7.5×0.8 + 13×2.0×emptiness — **6.0 at full gauge (a flinch), 19 at half, 24.2 at 70 % empty** — so a signature kills from the lip once the victim is past half empty and from anywhere once they are near empty; a full-gauge fighter cannot be rung out by any single hit, supers included (a damage super tops out at 8 at emptiness 0). **What a KO looks like in practice (sim finding, pass 2):** the median stock is lost at emptiness 1.0 (the gauge is drained first, then one launch carries them); with the 28–35° side moves and the wider stages, side-blast deaths are now the majority (~55 %) and bottom-blast deaths the rest — a light fighter (Nick) dies sideways almost exclusively. Kills come from gauge drain plus edge proximity, never openers. Spikes KO off-stage at any gauge below ~70% — that's their job; their counterweights are the telegraph rule, the heaviest landing-lag band, and the fact that spiking off-stage risks your own stock.
 - **Armor (canonical definition):** during a move's declared armor frames, the first N hits taken (N = the armor value, usually 1) deal their gauge damage and apply their statuses but inflict **no knockback and no hitstun**; the armor is then spent for that use of the move. Unparryables cannot be armored through (Philosophy 2). Armor never blocks throws that connect by their own rules.
 - **Damage:** v2 values carry as gauge damage — lights 4–6, heavies 9–14, single-hit specials 7–14 (multi-hit and zone effects run lower per touch), damage supers 18–22 total. **No single interaction above 25 gauge.** Multi-part supers enforce this structurally.
@@ -29,6 +29,15 @@
 - **Dodge:** spot/step 18f duration, i-frames 2–13; air dodge 22f, i-frames 3–15, directional impulse 7; **air dodge is once per airtime** (refreshed on landing, ledge grab or respawn) on top of the **shared 60f cooldown**. Dodging is a resource: two reads per dodge cycle.
 - **Self-stagger** (Adrian's tax, replaces v2 trips): 30f non-actionable, fully vulnerable, no invulnerability on exit. **Hazard stagger:** 20f, never comboable, invulnerable through recovery.
 - **Respawn:** invulnerable until first action, hard cap 180f; spawn platform (the chair) descends from centre-top over 60f.
+
+## Combo doctrine (2026-09-28 — Brawlhalla-mirrored; DESIGN.md "Combos" is the blueprint)
+
+- **Fixed stun per move** (`stun`, frames). Hitstun = max(8, the move's stun, the launch's flight stun `speed × HITSTUN_PER_KB`). Starters' stun is **derived** from the fighter's own frame data in `expandKit()`; enders (side-airs, signatures, specials) carry none — their launch is their stun.
+- **Starters are fixed force** (kbScale ≤ `STARTER_KB_SCALE` 1.5), so a route works across a composure window instead of only at one damage; enders keep the kill scaling. Kill power is unchanged: signatures and side-airs still carry kbScale 8–13.
+- **True combo** = the next hit lands before the victim has had more than `POST_STUN_LOCK` (3) free frames; for those frames they cannot dodge, jump or dash.
+- **Stale rule:** the same move twice in one combo gets `STALE_STUN_MULT` (½) of its stun — no loops; every combo is a route through the kit.
+- **Chase dodge:** after any landed melee hit (not a super), Dodge = a 12-frame burst (`CHASE_DODGE_IMPULSE` 9) in the held direction, no i-frames, once per airtime, cut into any attack from frame 2. It spends no dodge and protects nothing.
+- **Ship gate (new, alongside the five sim gates):** `tests/combos.test.mjs` — every fighter lands every universal route as a true combo across its window vs the lightest, a mid-weight and the heaviest opponent, and a bare new-fighter file does too.
 
 ## physics.js — Phase-3 retune (2026-09-25)
 
@@ -86,7 +95,26 @@ Two independent samples before shipping a tuning pass: n ≈ 420–560 games per
 
 ## Current results
 
-**v3 balance pass 8 — party events (2026-09-28) — all five gates PASS on two independent seeds at N = 30.**
+**v3 balance pass 9 — the combo system (2026-09-28) — all five gates PASS on two independent seeds at N = 30; every fighter passes every combo route.**
+
+| Fighter | seed 1337 | seed 2024 |
+|---|---|---|
+| Ben | 54.8 % | 54.8 % |
+| Tim | 49.0 % | 51.4 % |
+| Adrian | 50.0 % | 53.6 % |
+| Richy | 50.5 % | 49.3 % |
+| Nick | 49.3 % | 45.0 % |
+| Abi | 48.6 % | 47.4 % |
+| Mike | 50.2 % | 50.0 % |
+| Seelye | 47.6 % | 48.6 % |
+| **camp (≤ 55)** | 17.3 % | 19.8 % |
+| **stall (≤ 45)** | 1.5 % | 1.1 % |
+| **engagement flags (< 2 %)** | 0.06 % | 0.06 % |
+| **recovery dishonest (< 10 %)** | 1.26 % | 1.44 % |
+
+Spread 45.0–54.8 % (the tightest yet; pass 8: 45.7–56.9 %). Avg match 5592 / 5605 f (~93 s, down ~8 s: combos add damage); 0 / 0 capped, 0 stuck. **Engine change, called out (Tim's sign-off: "look to mirror it … a blueprint"):** the Combo doctrine above — fixed stun, fixed-force starters, the escape lock, the stale rule, the chase dodge — plus the CPU now plays the routes out after a starter lands (`engine/ai/combos.js`, replacing the old light-string reflex; easy 20 % / normal 50 % / hard 85 %, never off-stage). **Why:** frame-perfect light › light › heavy was a true combo for nobody (the victim was free 9–14 frames at full composure, pushed out of reach below half). **Tuning:** the first cut put Tim at 41.4 % (seed 1337), then with CPU combos Adrian at 58.2 % and Richy at 42.6 % (seed 2024) — Adrian Toothbrush Jab dmg 5 → 4.5 and Pivot Table kbScale 11.5 → 11, Richy Short Squeeze kbScale 10.5 → 11. **Test changes, called out:** tests/practice.test.mjs's drop-gap window is now 3–7 f (the gap counts from the end of the escape lock); tests/ai.test.mjs's air-dash test sums seeds 7–9 for its "the CPU does dash on the ground" guard (one seeded match went 3000 frames without one after the tuning) — what both check is unchanged. **Soft spots:** Ben tops both seeds (54.8 %); the routes are sim-proven frame-perfect — a human pass should say whether the timings feel learnable.
+
+**v3 balance pass 8 — party events (2026-09-28, superseded) — all five gates PASS on two independent seeds at N = 30.**
 
 | Fighter | seed 1337 | seed 2024 |
 |---|---|---|

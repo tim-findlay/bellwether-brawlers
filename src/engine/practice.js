@@ -16,7 +16,7 @@ const DROP_WINDOW = 40;                   // a fresh hit this soon after a combo
 export class ComboTracker {
   constructor(world, attacker, dummy) {
     this.world = world; this.attacker = attacker; this.dummy = dummy;
-    this.hits = 0; this.dmg = 0; this.last = null; this.best = 0;
+    this.hits = 0; this.dmg = 0; this.last = null; this.best = 0; this.moves = [];   // moves: this combo's hits, in order
     this.endedAt = -1; this.ended = null;  // the finished combo: { hits, dmg } (for the callout)
     this.dropped = null;                   // { gap, at }: the last drop
     this.adv = null; this._adv = null;     // frame advantage on the last hit
@@ -32,7 +32,7 @@ export class ComboTracker {
   // could the dummy have acted? (no = the next hit is a true follow-up)
   trapped() {
     const d = this.dummy;
-    return this.hits > 0 && (d.state === 'hitstun' || d.state === 'stagger' || d.state === 'grabbed' || d.body.stun > 0);
+    return this.hits > 0 && (d.state === 'hitstun' || d.state === 'stagger' || d.state === 'grabbed' || d.body.stun > 0 || d.body.postStun > 0);   // postStun: can't dodge or jump yet
   }
 
   record(o, trapped, dmg) {
@@ -40,9 +40,10 @@ export class ComboTracker {
     if (!trapped) {
       if (this.hits > 0) this.close();
       if (this.endedAt >= 0 && f - this.endedAt <= DROP_WINDOW && this.ended?.hits >= 1) this.dropped = { gap: f - this.endedAt, at: f };
-      this.hits = 0; this.dmg = 0;
+      this.hits = 0; this.dmg = 0; this.moves = [];
     }
-    this.hits++; this.dmg += dmg;
+    this.hits++; this.dmg += dmg; this.moves.push(o.move || null);
+    this.onHit?.(this.moves);
     this.best = Math.max(this.best, this.hits);
     const speed = Math.hypot(d.body.vx, d.body.vy);
     this.last = { name: o.move?.name || 'hit', dmg, kb: speed, stun: d.body.stun, at: f, emptiness: 1 - d.gauge / d.maxGauge };

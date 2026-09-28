@@ -8,7 +8,7 @@ export default {
   body: { suit: '#474b52', trim: '#c9a227', skin: '#caa17a', hair: { color: '#1f1a16', style: 'beard' }, height: 1.0, extras: ['sweater', 'watch'] },
   stats: { gauge: 104, runMax: 5.4, jumpImpulse: 15, fallMax: 14, weight: 1.05 },
   light: { name: 'Bid', dmg: 5, kb: 5, kbScale: 5, kbAngle: 40, range: 60, startup: 4, active: 3, recover: 8 },
-  heavy: { name: 'Short Squeeze', dmg: 10, kb: 6.5, kbScale: 10.5, kbAngle: 150, range: 68, startup: 11, active: 4, recover: 17 },   // drags closer (angle past 90 = toward Richy)
+  heavy: { name: 'Short Squeeze', dmg: 10, kb: 6.5, kbScale: 11, kbAngle: 150, range: 68, startup: 11, active: 4, recover: 17 },   // drags closer (angle past 90 = toward Richy)
   aerials: aerials({ n: 'Portfolio Spin', s: 'Macro Slap', u: 'Uptick', d: 'Crash Out' }, { s: { kb: 7, kbScale: 12 } }),
   s1: { name: 'Daytona', kind: 'projectile', air: true, dmg: 8, kb: 7, kbScale: 6, kbAngle: 40, speed: 5, vy: -1.2, w: 18, h: 52, height: 60, shape: 'rolex', color: '#c9a227', dial: '#3f5a40', cooldown: 90, sharedLock: 40, tag: 'bull', startup: 11, active: 2, recover: 14 },
   s2: { name: 'Submariner', kind: 'groundProjectile', dmg: 8, kb: 6, kbScale: 6, kbAngle: 45, speed: 4.2, w: 18, h: 28, shape: 'sub', color: '#9aa4ab', dial: '#c4452e', cooldown: 100, sharedLock: 40, tag: 'bear', startup: 12, active: 2, recover: 15 },

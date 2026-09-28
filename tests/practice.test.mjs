@@ -40,7 +40,8 @@ test('a hit on a dummy that was free a moment ago starts a new combo and reports
   step(6);
   hit();
   assert.equal(combo.hits, 1, 'fresh combo');
-  assert.ok(combo.dropped && combo.dropped.gap >= 6 && combo.dropped.gap <= 10, `gap ${combo.dropped?.gap}`);
+  // the gap counts from the end of the escape lock (PHYS.POST_STUN_LOCK): 6 free-looking frames, 3 of them locked
+  assert.ok(combo.dropped && combo.dropped.gap >= 3 && combo.dropped.gap <= 7, `gap ${combo.dropped?.gap}`);
 });
 
 test('frame advantage on hit is measured (dummy free minus attacker free)', () => {
