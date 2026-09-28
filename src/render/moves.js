@@ -10,20 +10,43 @@ import { INK, PAPER, BRICK, BRASS } from './palette.js';
 // kinds that read as a "cast" (the special strip) vs a committed body swing (the heavy strip)
 const SPECIAL_KINDS = new Set(['projectile', 'lob', 'groundProjectile', 'fan', 'columns', 'zone', 'buff', 'borrow',
   'parry', 'catch', 'bell', 'shockwave', 'zoneSuper', 'hazardSuper', 'grab', 'teleport']);
-const HEAVY_KINDS = new Set(['lunge', 'dashCombo', 'flurry', 'shout']);
+const HEAVY_KINDS = new Set(['shout']);
+const LUNGE_KINDS = new Set(['lunge', 'dashCombo', 'flurry']);
+// what a missing strip degrades to (the sheet may predate the strip)
+export const FALLBACK = { lunge: 'heavy', heavy: 'attack', special: 'attack', dodge: 'run', hurt: 'idle' };
 const PX = 6;                                    // smear pixel size, world px (reads at the fight camera's zoom)
 
-// Which strip a move wants: per-move `anim` wins, then kind/slot. The caller
-// falls back to 'attack' when the sheet lacks the strip.
+// Which strip a move wants: per-move `anim` wins, then kind/slot; a lunge, a
+// big step-in or any swing thrown at a run plays the running lunge. Decided
+// once per attack (the slide decays mid-move; the picture mustn't flip). The
+// caller walks FALLBACK when the sheet lacks the strip.
+const picked = new WeakMap();
 export function animFor(f) {
-  const a = f.attack, m = a?.move;
-  if (!m) return 'attack';
+  const a = f.attack;
+  if (!a?.move) return 'attack';
+  if (!picked.has(a)) picked.set(a, pick(f, a, a.move));
+  return picked.get(a);
+}
+function pick(f, a, m) {
   if (m.anim) return m.anim;
   if (m.lift) return 'jump';
   if (a.aerial) return 'attack';
   if (SPECIAL_KINDS.has(m.kind)) return 'special';
+  const running = f.body?.grounded && Math.abs(f.body.vx || 0) > (f.stats?.runMax || 5) * 0.6;
+  if (LUNGE_KINDS.has(m.kind) || (m.step || 0) >= 24 || (running && !HEAVY_KINDS.has(m.kind))) return 'lunge';
   if (HEAVY_KINDS.has(m.kind) || a.slot === 'heavy' || a.slot === 'super') return 'heavy';
   return 'attack';
+}
+
+// Body language outside attacks (render only): lean into the run, lean back on a
+// skid-turn, stretch on take-off and fast-fall. Returns drawSprite opts.
+export function motionPose(f, name, t) {
+  const b = f.body, face = b?.facing ?? 1, vx = b?.vx || 0, max = f.stats?.runMax || 5;
+  if (name === 'run') return Math.sign(vx) === -face && Math.abs(vx) > 1.5 ? { rot: -0.1 * face } : { rot: 0.07 * face * Math.min(1, Math.abs(vx) / max) };
+  if (name === 'dash') return { rot: 0.12 * face, squashX: 1.06, squashY: 0.96 };
+  if (name === 'jump' && t < 6) { const k = 1 - t / 6; return { squashX: 1 - 0.1 * k, squashY: 1 + 0.12 * k }; }
+  if (name === 'fastfall') return { squashX: 0.94, squashY: 1.07 };
+  return {};
 }
 
 // Phase-synced frame: wind-up frames over the startup, the strip's key frame
@@ -163,7 +186,8 @@ export function recordTrail(f, pose) {
   let tr = trails.get(f);
   if (!tr) { tr = { ghosts: [], last: null }; trails.set(f, tr); }
   const b = f.body, m = f.attack?.move;
-  const fast = (m?.travel && f.attack.frame <= (m.startup || 0) + (m.active || 0)) || b.state === 'dash' || b.state === 'airdodge' || m?.kind === 'dashCombo';
+  const live = m && f.attack.frame <= (m.startup || 0) + (m.active || 0);
+  const fast = (live && (m.travel || (m.step || 0) >= 24 || Math.abs(b.vx || 0) > 4)) || b.state === 'dash' || b.state === 'airdodge' || m?.kind === 'dashCombo';
   const jumped = tr.last && Math.hypot(b.x - tr.last.x, b.y - tr.last.y) > 70 && f.state === 'normal';   // teleport
   if (fast || jumped) tr.ghosts.push({ ...(jumped ? tr.last : pose), life: jumped ? 16 : 8, puff: jumped });
   for (const g of tr.ghosts) g.life--;

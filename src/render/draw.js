@@ -11,7 +11,7 @@ import { drawSprite, frameFor, hasAnim } from './sprites.js';
 import { drawSky, drawStageWorld } from './stage.js';
 import { drawFallbackBody, drawKoBurst, drawChair, poseFor } from './body.js';
 import { drawProjectiles, drawZones, drawStrikes, drawHazards } from './objects.js';
-import { animFor, attackFrame, aerialRot, drawMoveFX, recordTrail, drawLaunchTrail } from './moves.js';
+import { animFor, attackFrame, aerialRot, drawMoveFX, recordTrail, drawLaunchTrail, motionPose, FALLBACK } from './moves.js';
 import { INK, PAPER, shade } from './palette.js';
 
 export { shade };
@@ -92,17 +92,22 @@ export class Renderer {
     let anim = 'idle', frame = 0;
     switch (an.name) {
       case 'idle': anim = 'idle'; frame = frameFor(A.idle, t); break;
-      case 'run': anim = 'run'; frame = frameFor(A.run, t); break;
-      case 'dash': anim = 'run'; frame = frameFor(A.run, t * 1.6); break;
-      case 'jump': anim = 'jump'; frame = Math.min(Math.floor((A.jump?.frames ?? 1) * 0.4), Math.floor(t * (A.jump?.fps ?? 12) / 60)); break;
+      case 'run': anim = 'run'; frame = frameFor(A.run, t); Object.assign(opts, motionPose(f, 'run', t)); break;
+      case 'dash':                                       // push-off from the lunge strip, then a sprint; air dash holds the horizontal frame
+        if (hasAnim(sheet, 'lunge') && (f.body?.airDash || t < 4)) { anim = 'lunge'; frame = f.body?.airDash ? 2 : 1; }
+        else { anim = 'run'; frame = frameFor(A.run, t * 1.6); Object.assign(opts, motionPose(f, 'dash', t)); }
+        break;
+      case 'jump': anim = 'jump'; frame = Math.min(Math.floor((A.jump?.frames ?? 1) * 0.4), Math.floor(t * (A.jump?.fps ?? 12) / 60)); Object.assign(opts, motionPose(f, 'jump', t)); break;
       case 'fall': case 'fastfall': {
         const n = A.jump?.frames ?? 1;
         anim = 'jump'; frame = Math.min(n - 1, Math.floor(n * 0.6) + Math.floor(t * (A.jump?.fps ?? 12) / 60));
+        Object.assign(opts, motionPose(f, an.name, t));
         break;
       }
       case 'attack': {                                   // per-move strip, phase-synced to the hitbox
         anim = animFor(f);
-        if (!hasAnim(sheet, anim)) anim = anim === 'jump' ? 'jump' : 'attack';
+        while (!hasAnim(sheet, anim) && FALLBACK[anim]) anim = FALLBACK[anim];
+        if (!hasAnim(sheet, anim)) anim = 'attack';
         if (anim === 'jump') frame = Math.min((A.jump?.frames ?? 1) - 1, Math.floor((A.jump?.frames ?? 1) * 0.4));
         else frame = attackFrame(f, A[anim]);
         opts.rot = aerialRot(f);
@@ -114,9 +119,12 @@ export class Renderer {
         anim = 'jump'; frame = Math.min(n - 1, Math.floor(n * 0.4)); opts.rot = -(f.body?.facing ?? 1) * 0.12;
         break;
       }
-      case 'dodge': case 'airdodge':
-        anim = 'run'; frame = 3; opts.alpha = f.invulnerable && (t & 1) ? 0.25 : 0.5;
+      case 'dodge': case 'airdodge': {                   // guard, duck, hop, guard over the dodge; i-frames read as a flicker
+        const dur = an.name === 'airdodge' ? 22 : 18;
+        if (hasAnim(sheet, 'dodge')) { anim = 'dodge'; frame = Math.min(A.dodge.frames - 1, Math.floor(t * A.dodge.frames / dur)); opts.alpha = f.invulnerable ? ((t >> 1) & 1 ? 0.45 : 0.75) : 1; }
+        else { anim = 'run'; frame = 3; opts.alpha = f.invulnerable && (t & 1) ? 0.25 : 0.5; }
         break;
+      }
       case 'hurt':
         if (hasAnim(sheet, 'hurt')) { anim = 'hurt'; frame = Math.min(A.hurt.frames - 1, Math.floor(t * (A.hurt.fps ?? 14) / 60)); }
         else { anim = 'idle'; frame = 0; }
