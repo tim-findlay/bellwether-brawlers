@@ -7,7 +7,7 @@ export default {
   tip: 'Worst recovery in the game by design — knock him off and guard the edge. Jump the grab wind-up.',
   passive: { name: 'Armored', desc: 'His heavy and his ground pound shrug off one hit. Worst recovery in the game: knock him off and guard the ledge.' },   // shown in the move list (render only)
   body: { suit: '#33302e', trim: '#e8a33d', skin: '#e0b490', hair: { color: '#5a4030', style: 'side' }, height: 0.98, build: 'broad', extras: ['hivis', 'hardhat'] },   // fit and stocky, no belly (art only; weight is a stat)
-  stats: { gauge: 102, runMax: 4.4, jumpImpulse: 14, fallMax: 16, weight: 1.10 },
+  stats: { gauge: 98, runMax: 5.2, jumpImpulse: 14, fallMax: 16, weight: 1.05 },
   light: { name: 'Hard Hat', dmg: 5, kb: 5, kbScale: 6, kbAngle: 40, range: 60, startup: 6, active: 3, recover: 12 },
   heavy: { name: 'Wrecking Swing', dmg: 10, kb: 7, kbScale: 11.5, kbAngle: 35, range: 72, startup: 14, active: 4, recover: 22, armor: [7, 13] },
   aerials: aerials({ n: 'Site Sweep', s: 'Girder Swing', u: 'Header', d: 'Demolition Drop' }, { u: { dmg: 7, kbScale: 8 }, d: { dmg: 9, kb: 7, kbScale: 10, startup: 14, landLag: 18, armor: [4, 14] } }),

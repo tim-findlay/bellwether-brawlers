@@ -7,7 +7,7 @@ export default {
   tip: 'Get inside his reach — everything Ben does up close is slow. Jump the water polo ball or it drags you in. His recoveries are long straight lines: wait for them.',
   passive: { name: 'Wingspan', desc: 'The longest reach in the game — but everything up close is slow. Get inside.' },   // shown in the move list (render only)
   body: { suit: '#2a3f5c', trim: '#a93c2c', skin: '#e8c39a', hair: { color: '#7a5b3a', style: 'side' }, height: 1.14, extras: ['tie'] },
-  stats: { gauge: 110, runMax: 4.8, jumpImpulse: 14.5, fallMax: 15, weight: 1.06 },
+  stats: { gauge: 107, runMax: 5.3, jumpImpulse: 14.5, fallMax: 15, weight: 1.06 },
   light: { name: 'Pistachio Flick', dmg: 5, kb: 5.5, kbScale: 5, kbAngle: 40, range: 68, startup: 5, active: 3, recover: 10 },
   heavy: { name: 'Wingspan', dmg: 11, kb: 7.5, kbScale: 12.5, kbAngle: 35, range: 92, startup: 14, active: 4, recover: 20 },
   aerials: aerials({ n: 'Air Clearance', s: 'Long Reach', u: 'Pistachio Pop', d: 'L-Plate Drop' }, { s: { range: 90, kb: 7, kbScale: 12, startup: 9 } }),

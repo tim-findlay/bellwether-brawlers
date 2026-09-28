@@ -7,7 +7,7 @@ export default {
   tip: 'Dodge the Drawdown, don’t stand in the paperwork, and never eat Enforcement with a LIEN on you — jump it.',
   passive: { name: 'Lien', desc: 'His heavy and his recovery mark you for 8 s; his next special collects +4, the super +8.' },   // shown in the move list (render only)
   body: { suit: '#3f5a3c', trim: '#f3ead8', skin: '#e8c39a', hair: { color: '#4a3b2a', style: 'side' }, trousers: '#3a3d45', height: 1.04, extras: ['sweater'] },   // forest-green quarter-zip over a white button-down, charcoal trousers
-  stats: { gauge: 106, runMax: 5.0, jumpImpulse: 14.5, fallMax: 15, weight: 1.05 },
+  stats: { gauge: 104, runMax: 5.4, jumpImpulse: 14.5, fallMax: 15, weight: 1.05 },
   light: { name: 'Term Sheet', dmg: 5, kb: 5, kbScale: 5, kbAngle: 40, range: 60, startup: 5, active: 3, recover: 8 },
   heavy: { name: 'Leverage', dmg: 11, kb: 7, kbScale: 11, kbAngle: 35, range: 66, startup: 12, active: 4, recover: 15, applyStatus: { name: 'lien', dur: 480 } },
   aerials: aerials({ n: 'Burp Cloth', s: 'Fresh One', u: 'Night Feed', d: 'Hard Maturity' }, { s: { applyStatus: { name: 'slow', dur: 60 }, callout: 'STINKED!' } }),

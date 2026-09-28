@@ -7,7 +7,7 @@ export default {
   tip: 'DODGE the gold Daytona, JUMP the Submariner skimming the floor — then walk in during the lock. Off stage, the market closes.',
   passive: { name: 'Diversified Portfolio', desc: 'Landing the two watches alternately builds +1 damage per switch, up to +3. They share one cooldown.' },   // shown in the move list (render only)
   body: { suit: '#474b52', trim: '#c9a227', skin: '#caa17a', hair: { color: '#1f1a16', style: 'beard' }, height: 1.0, extras: ['sweater', 'watch'] },
-  stats: { gauge: 104, runMax: 5.4, jumpImpulse: 15, fallMax: 14, weight: 1.05 },
+  stats: { gauge: 107, runMax: 5.5, jumpImpulse: 15, fallMax: 14, weight: 1.05 },
   light: { name: 'Bid', dmg: 5, kb: 5, kbScale: 5, kbAngle: 40, range: 60, startup: 4, active: 3, recover: 8 },
   heavy: { name: 'Short Squeeze', dmg: 10, kb: 6.5, kbScale: 11.5, kbAngle: 150, range: 68, startup: 11, active: 4, recover: 17 },   // drags closer (angle past 90 = toward Richy)
   aerials: aerials({ n: 'Portfolio Spin', s: 'Macro Slap', u: 'Uptick', d: 'Crash Out' }, { s: { kb: 7, kbScale: 12 } }),

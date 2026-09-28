@@ -156,14 +156,14 @@ Five phases, small rollbackable commits throughout; the page must load clean aft
 *Kit rethink (2026-09-25, Tim's note "a bit stale / dated"; proposal and sign-off: `docs/PROPOSAL-kits.md`): every kit now turns on **one verb nobody else has** — Ben controls space, Tim steals tempo, Adrian gambles, Richy alternates, Nick steals kit, Abi denies, Mike absorbs and throws, Seelye marks and collects. The derived recoveries and ground pounds carry per-fighter identity through `kit` overrides.*
 
 ### BEN — "The Big Boss" — long-range bully
-110 / 4.8 / 1.06 (fast-faller) — Paynter trench coat, Chelsea boots. Decides where the fight happens.
+107 / 5.3 / 1.06 (fast-faller) — Paynter trench coat, Chelsea boots. Decides where the fight happens.
 - **Skip Shot** (s1, air-usable): a slow, straight water polo ball that **drags the target toward Ben** (angle 150°; was the My Office. Now. memo, same numbers). **Off the Lip** (chair-surf lunge — his air recovery special), **TWELFTH MAN** (unparryable roar cone; grounded, whiffs vs airborne — jump the roar), Pistachio Flick, Wingspan.
 - Signatures: **Corner Office** (side — the longest ground reach in the game, 100 px, and the slowest, 18f) · *Bottom Line* (down). Recovery **Chair Surf**: a long, flat, readable diagonal (110 px travel, low lift).
 - Aerials: *Air Clearance* (nair sweep) · *Long Reach* (the game's longest side-air) · *Pistachio Pop* (uair) · **L-Plate Drop** (dair spike — the London licence is in progress).
 - *Counterplay:* huge but slow; get inside the wingspan and stay there. Jump the polo ball or it drags you in. Both his recoveries are long straight lines — wait for them.
 
 ### TIM — "The Operator" — tempo all-rounder
-104 / 5.7 / 1.0 — brown satchel cross-body over the suit; clean-shaven. Steals turns, not stocks.
+104 / 5.65 / 1.0 — brown satchel cross-body over the suit; clean-shaven. Steals turns, not stocks.
 - **Scheduled Send** (s1, air-usable): marks the floor under the target and strikes 34 frames later (replaces Prompt Injection — no roster move reverses controls any more). **Zulu Time** (rewinds Scheduled Send, next hit +2; 8 s cooldown), Quick Sync, Hard Deadline.
 - **ASK CLAUDE** (super, replaces Run Flow): summons **Claude** — an all-terracotta helper in a suit with a cream shirt, round head, no logo — as a second fighter for 4.5 s. It runs at the opponent (hops up after them), throws jab-jab-push (3 / 3 / 8), rests, and goes again. **Any hit sends it home** ("BOOTED!"), a parry declines it, a blast zone puts it out of scope. Sprite sheet `claude` (idle / run / attack) with a drawn stand-in.
 - Recovery **Escalation** hits hard (8 dmg, kbScale 10) — he has no recovery special.
@@ -171,7 +171,7 @@ Five phases, small rollbackable commits throughout; the page must load clean aft
 - *Counterplay:* no recovery special — his jumps are honest; edge-guard him hard. Step off the marker: Scheduled Send only punishes standing still. When he asks Claude, one hit on the helper ends it.
 
 ### ADRIAN — "The Walking Hazard" — chaos rushdown
-94 / 5.8 / 0.97 — fuelled by Nero flat whites.
+97 / 5.7 / 0.97 — fuelled by Nero flat whites.
 - **Happy Accident:** when a whiffed move trips him (Clumsy Charge, Faceplant, Overshoot, Facedown), the fall itself hits whoever is at arm's reach (6 dmg, pop-up). The 30f self-stagger still runs in full.
 - **Toothbrush Toss** (s2, air-usable lob, replaces the placed Nero Spill): a toothbrush that lands in his flat white — a coffee puddle where it hits (Adrian immune).
 - Kept: Toothbrush Jab, Pivot Table, **Clumsy Charge** (air-usable lunge recovery — self-staggers on a botched landing), **FULL AUDIT** (multi-hit flail; self-staggers at the end even on hit — that planned trip never triggers Happy Accident).
@@ -180,13 +180,13 @@ Five phases, small rollbackable commits throughout; the page must load clean aft
 - *Counterplay:* whiff-bait everything, but stand just outside arm's reach of the fall, then punish the stagger. His own kit still fights him.
 
 ### RICHY — "The Market" — Rolex zoner
-104 / 5.4 / 1.05 — meme connoisseur, Excel macro artisan. A Rolex man: the candles are watches now, and they still oppose — **dodge the Daytona (Bull), jump the Submariner (Bear).**
+107 / 5.5 / 1.05 — meme connoisseur, Excel macro artisan. A Rolex man: the candles are watches now, and they still oppose — **dodge the Daytona (Bull), jump the Submariner (Bear).**
 - Kept (the best-designed system in the roster, unchanged): Bid, Short Squeeze (drags closer), **Daytona** (was Bull Run — a thrown gold Daytona, air-usable, angled up), **Submariner** (was Bear Raid — a steel Sub skimming along its surface), the watch lock (**both watches share one 40-frame lock** — there is always a walk-forward window), **Diversified Portfolio** (+1 gauge damage per landed Bull/Bear alternation, cap +3), **RATE HIKES** (renamed from To The Moon: three rising columns from the main stage; first connecting column only).
 - Aerials: *Portfolio Spin* (nair) · **Macro Slap** (sair — he is the Excel macro artisan) · *Uptick* (uair mini-candle) · *Crash Out* (dair spike). The 2021 crypto names are retired.
 - *Counterplay:* no recovery special and average air speed — get him off stage and the market closes.
 
 ### NICK — "The Concierge" — teleport glass cannon
-100 / 6.2 / 0.97 (floaty) — fastest, still the lightest. Knows a guy. Knows *your* guy.
+105 / 5.85 / 0.97 (floaty) — fastest, still the lightest. Knows a guy. Knows *your* guy.
 - **I KNOW YOUR GUY** (super, replaces Lifetime Platinum): for 10 s his s2 becomes a copy of **the opponent's s1** — +2 startup, its own cooldown capped at 150f, supers never copied. Using it is a commitment, so meter still builds. HUD tag **ON LOAN**.
 - Kept: Name Drop, Fund Structure, **Status Match** (air-usable — *the* recovery teleport; fixed arrival, punishable), **Points Redemption** (card fan).
 - Recovery **Priority Boarding**: floaty and high, with 8 i-frames.
@@ -203,7 +203,7 @@ Five phases, small rollbackable commits throughout; the page must load clean aft
 - *Counterplay:* pressure through Last Orders — one hit cancels the regen; bait the parry with a grab or a projectile, it does nothing to either.
 
 ### MIKE — "The Site Manager" — armored grappler tank
-102 / 4.4 / 1.12 (fastest faller) — early forties, brown hair under the hard hat; fit, stocky and broad-shouldered, no belly (Tim's notes; art only); Manchester United scarf, worn with hi-vis.
+98 / 5.2 / 1.05 (fastest faller) — early forties, brown hair under the hard hat; fit, stocky and broad-shouldered, no belly (Tim's notes; art only); Manchester United scarf, worn with hi-vis.
 - **Scaffold Slam** (grounded unparryable command grab; whiffs vs airborne — jump the wind-up) is now **aimable**: hold back at the release to throw over the shoulder toward the other edge.
 - Kept: Hard Hat, Wrecking Swing (1-hit armor — armor rules in BALANCE.md), **Demolition Day** (shockwave that destroys any projectiles it meets), **WRECKING BALL** (high sweep one way, low return drag the other — dodge under the first pass, jump the second), Berlin home-turf buff (+12% damage, +0.3 run).
 - Recovery **Scaffold Rise**: the worst climb in the game (low lift) but armored — it can't be swatted, only ledge-guarded. Ground pound **Site Drop** is armored like Demolition Drop.
@@ -211,7 +211,7 @@ Five phases, small rollbackable commits throughout; the page must load clean aft
 - *Counterplay:* worst recovery in the game by design — no recovery special, heaviest fall. Knock him off and guard the ledge rather than swatting the climb.
 
 ### SEELYE — "The Lender" — setplay collector, debt side, new dad
-106 / 5.0 / 1.05 — **a regular businessman in a forest-green Peter Millar-style quarter-zip over a white button-down, charcoal trousers, no tie** (Tim's notes: not a BBQ guy; green pullover). The BBQ kit is retired for debt finance and fatherhood.
+104 / 5.4 / 1.05 — **a regular businessman in a forest-green Peter Millar-style quarter-zip over a white button-down, charcoal trousers, no tie** (Tim's notes: not a BBQ guy; green pullover). The BBQ kit is retired for debt finance and fatherhood.
 - **LIEN** is the verb: Leverage (heavy) and **Term Sheet Rise** (recovery) mark the target for 8 s. His next special collects +4 ("LIEN COLLECTED!"); his super collects +8.
 - **Drawdown** (s1, air-usable lob — a loan binder; leaves a burning paperwork zone on the platform it lands on), **Dad Reflexes** (projectile catch → +20 meter), **ENFORCEMENT** (super, replaces Low & Slow: a parryable grounded cone, 12 dmg, 24f startup; **+8 on a liened target — "LIEN ENFORCED!"**, 20 total).
 - Aerials: *Burp Cloth* (nair) · **Fresh One** (sair — a lobbed diaper; on hit: 1 s slow, callout **"STINKED!"**) · *Night Feed* (uair) · *Hard Maturity* (dair spike).

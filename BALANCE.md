@@ -15,7 +15,7 @@
 
 ## Numbers doctrine
 
-- **Gauge band:** 94 (Adrian) – 110 (Ben). **Weight band:** 0.97 (Nick/Adrian) – 1.10 (Mike) — narrowed in the Phase-3 pass (the bands were restated from the data in pass 3; the old 85–110 / 0.9–1.08 text had gone stale after pass 2): weight divides the launch speed linearly, so the old 0.85–1.45 spread alone swung kill thresholds by ~70 %. **Run band:** 4.4 (Mike) – 6.2 (Nick) px/frame at base zoom. Fall speed correlates with weight (floaties live longer upward, die earlier sideways). Per-character values live in `src/data/characters/<id>.js`, inside these bands; `physics.js` holds the universal constants and formulas.
+- **Gauge band:** 97 (Adrian) – 107 (Ben/Richy) (pass 12). **Weight band:** 0.97 (Nick/Adrian) – 1.06 (Ben) (pass 12; was 1.10, Mike) — narrowed in the Phase-3 pass (the bands were restated from the data in pass 3; the old 85–110 / 0.9–1.08 text had gone stale after pass 2): weight divides the launch speed linearly, so the old 0.85–1.45 spread alone swung kill thresholds by ~70 %. **Run band:** 5.2 (Mike) – 5.85 (Nick) px/frame at base zoom — pass 12 narrowed it from 4.4–6.2 (Tim: "the characters should not differ this much in speed"; Brawlhalla's speed stat moves run speed only a little). Speed is no longer a balancing lever: pay for strengths with gauge, weight and frame data. Fall speed correlates with weight (floaties live longer upward, die earlier sideways). Per-character values live in `src/data/characters/<id>.js`, inside these bands; `physics.js` holds the universal constants and formulas.
 - **Knockback (canonical formula):**
   `kb = (move.kb × KB_BASE_MULT + move.kbScale × KB_SCALE_MULT × emptiness) / weight`, where `emptiness = 1 − gauge/maxGauge` (multipliers 0.8 / 2.0 since the Phase-3b feel pass: early hits flinch, late hits kill).
   **kb is the launch speed in px/frame at base zoom, set (not added) along `kbAngle`** (per-move data, degrees; spikes use 270 ± 15) on the frame the hit lands. Hitstun = `round(kb × HITSTUN_PER_KB)` frames.
@@ -49,7 +49,7 @@
 |----------|-------|----------|-------|
 | GRAV (global) | 0.85 px/f² | RUN_ACCEL | 1.3 (pass 11; was 0.9) |
 | TURN_ACCEL_MULT | 2.6 (accel × this while vx opposes the held direction; pass 11, was 2.2) | RUN_FRICTION | 0.7 (pass 11; was 0.76) |
-| RUN_MAX | per-char 4.4–6.2 | JUMP_IMPULSE | per-char 14–16 |
+| RUN_MAX | per-char 5.2–5.85 (pass 12) | JUMP_IMPULSE | per-char 14–16 |
 | DOUBLE_JUMP | 1.0 × jump · **AIR_JUMPS 2** (three jumps per airtime) | AIR_ACCEL | 0.7 (pass 11; was 0.55) |
 | AIR_MAX | 0.9 × run | FAST_FALL_MULT | 2.2 |
 | FALL_MAX | per-char 12–16 | DASH_SPEED | 2.0 × run |
@@ -99,7 +99,26 @@ Two independent samples before shipping a tuning pass: n ≈ 420–560 games per
 
 ## Current results
 
-**v3 balance pass 11 — Brawlhalla movement (2026-09-28) — all five gates PASS on two independent seeds at N = 30; every route passes, every step ≥ 8 f lenient.**
+**v3 balance pass 12 — one speed class (2026-09-28) — all five gates PASS on two independent seeds at N = 30; every route passes, every step ≥ 8 f lenient.**
+
+| Fighter | seed 1337 | seed 2024 |
+|---|---|---|
+| Ben | 50.0 % | 54.5 % |
+| Tim | 47.1 % | 49.8 % |
+| Adrian | 48.6 % | 47.6 % |
+| Richy | 48.5 % | 48.6 % |
+| Nick | 48.8 % | 48.1 % |
+| Abi | 53.6 % | 46.0 % |
+| Mike | 50.0 % | 52.9 % |
+| Seelye | 53.5 % | 52.6 % |
+| **camp (≤ 55)** | 14.9 % | 16.0 % |
+| **stall (≤ 45)** | 0.2 % | 0.6 % |
+| **engagement flags (< 2 %)** | 0.18 % | 0.06 % |
+| **recovery dishonest (< 10 %)** | 1.47 % | 1.85 % |
+
+Spread 46.0–54.5 % (the tightest yet). Avg match 5523 / 5494 f (~92 s); 1 / 1 capped, 0 stuck. **Data change (Tim: "the characters should not differ this much in speed"):** runMax Mike 4.4 → 5.2, Ben 4.8 → 5.3, Seelye 5.0 → 5.4, Richy 5.4 → 5.5, Abi 5.6, Tim 5.7 → 5.65, Adrian 5.8 → 5.7, Nick 6.2 → 5.85 — the order is kept, the gap is 12 % instead of 41 %. Speed alone put Mike at 63 % and Nick at 38–42 %, so the slow tanks paid for it elsewhere. **Tuning:** Mike gauge 102 → 98 and weight 1.10 → 1.05; Ben gauge 110 → 107; Seelye gauge 106 → 104; Nick gauge 100 → 105; Richy gauge 104 → 107; Adrian gauge 94 → 97. Jump heights (impulse 14–16) and fall speeds (12–16) are unchanged. **Soft spots:** Abi swings 7.6 points between seeds; Ben 4.5.
+
+**v3 balance pass 11 — Brawlhalla movement (2026-09-28, superseded) — all five gates PASS on two independent seeds at N = 30; every route passes, every step ≥ 8 f lenient.**
 
 | Fighter | seed 1337 | seed 2024 |
 |---|---|---|
