@@ -44,7 +44,6 @@ export function motionPose(f, name, t) {
   const b = f.body, face = b?.facing ?? 1, vx = b?.vx || 0, max = f.stats?.runMax || 5;
   if (name === 'run') return Math.sign(vx) === -face && Math.abs(vx) > 1.5 ? { rot: -0.1 * face } : { rot: 0.07 * face * Math.min(1, Math.abs(vx) / max) };
   if (name === 'dash') return { rot: 0.12 * face, squashX: 1.06, squashY: 0.96 };
-  if (name === 'jump' && t < 6) { const k = 1 - t / 6; return { squashX: 1 - 0.1 * k, squashY: 1 + 0.12 * k }; }
   if (name === 'fastfall') return { squashX: 0.94, squashY: 1.07 };
   return {};
 }

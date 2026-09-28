@@ -12,6 +12,7 @@ import { drawSky, drawStageWorld } from './stage.js';
 import { drawFallbackBody, drawKoBurst, drawChair, poseFor } from './body.js';
 import { drawProjectiles, drawZones, drawStrikes, drawHazards } from './objects.js';
 import { animFor, attackFrame, aerialRot, drawMoveFX, recordTrail, drawLaunchTrail, motionPose, FALLBACK } from './moves.js';
+import { animate } from './animator.js';
 import { INK, PAPER, shade } from './palette.js';
 import { drawHolidayMark, drawAssists } from './specials.js';
 
@@ -121,7 +122,7 @@ export class Renderer {
         opts.rot = aerialRot(f);
         break;
       }
-      case 'land': anim = 'idle'; frame = 0; opts.squashX = 1.12; opts.squashY = 0.88; break;
+      case 'land': anim = 'idle'; frame = 0; break;                        // the squash comes from the animator's spring
       case 'ledge': {                                     // hanging: the jump sheet's apex frame, leaning into the lip
         const n = A.jump?.frames ?? 1;
         anim = 'jump'; frame = Math.min(n - 1, Math.floor(n * 0.4)); opts.rot = -(f.body?.facing ?? 1) * 0.12;
@@ -167,6 +168,8 @@ export class Renderer {
     for (const g of recordTrail(f, { x, y, anim, frame, facing, scale, rot: opts.rot || 0 })) {   // afterimages (dash, lunge, teleport)
       drawSprite(c, sheet, g.anim, g.frame, g.x, g.y, g.facing, scale, { tint: PAPER, tintAlpha: 0.7, alpha: (g.puff ? 0.5 : 0.35) * g.life / (g.puff ? 16 : 8), rot: g.rot });
     }
+    const ghost = animate(f, an.name, { anim, frame, opts });          // springs, eased lean, crossfade (render/animator.js)
+    if (ghost && hasAnim(sheet, ghost.anim)) drawSprite(c, sheet, ghost.anim, ghost.frame, x, y, facing, scale, ghost);
     drawSprite(c, sheet, anim, frame, x, y, facing, scale, opts);
     return true;
   }

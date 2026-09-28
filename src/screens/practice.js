@@ -88,7 +88,7 @@ export function makePractice(G) {
       params = p; stage = stageById(p.stageId) || stageById('office');
       t = 0; paused = false; row = 0; showList = false; flash = null;
       build();
-      this.world = world; this.combo = combo;          // dev: inspectable from the drive harness
+      this.world = world; this.combo = combo; this.camera = camera;   // dev: inspectable from the drive harness
       G.fx.banner('PRACTICE ARENA', { dur: 70, sub: 'Esc for options · M move list · R reset', color: NAVY });
     },
 
