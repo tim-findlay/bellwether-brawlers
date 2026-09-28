@@ -18,6 +18,7 @@ import { stageById, geometryOf } from '../data/stages.js';
 import { EVENTS } from '../data/events.js';
 import { drawHUD } from '../render/hud.js';
 import { drawMoveList, frames } from './movelist.js';
+import { ROUTES, moveFor, HIT_STEPS } from '../data/combos.js';
 import { plaque, text, chip, hints, makeNav, F, INK, PAPER, BRICK, NAVY, BRASS, GREEN, MUTED } from '../render/ui.js';
 
 const OPTS = [
@@ -30,10 +31,12 @@ const OPTS = [
 ];
 const ACTIONS = ['RESUME', 'MOVE LIST', 'RESET POSITIONS', 'CHANGE FIGHTERS', 'QUIT TO MENU'];
 const ROWS = [{ act: 'RESUME' }, ...OPTS.map(o => ({ opt: o })), ...ACTIONS.slice(1).map(a => ({ act: a }))];
-const RESET_AFTER = 70;                          // frames a free, untouched dummy waits before its composure resets
+const RESET_AFTER = 70;
+const STEP_LABEL = (st) => ({ jump: 'JUMP', chase: 'DODGE' }[st] || `${st.endsWith('Air') ? 'AIR ' : ''}${{ n: '', s: '→', d: '↓', u: '↑' }[st[0]]}${st.endsWith('Heavy') ? 'HEAVY' : 'LIGHT'}`);                          // frames a free, untouched dummy waits before its composure resets
 
 export function makePractice(G) {
   let world, events, camera, params, stage, combo, t, paused, row, showList, flash, freeT = [0, 0];
+  const trials = new Map();                      // fighter id -> Set of route ids landed (this session)
   const o = { dummy: 'stand', gauge: 'full', meter: true, cooldowns: true, boxes: false, events: false };
   const nav = makeNav(G);
 
@@ -55,6 +58,14 @@ export function makePractice(G) {
     events = new EventDirector(world, EVENTS, { enabled: o.events, difficulty: 'normal', stageId: stage.id });
     events.art = G.uiArt;
     combo = new ComboTracker(world, me(), dummy());
+    const done = trials.get(params.p1) || new Set(); trials.set(params.p1, done);
+    combo.onHit = (moves) => {                   // a trial is landed when its hits end this true combo, in order
+      for (const r of ROUTES) {
+        if (done.has(r.id)) continue;
+        const need = HIT_STEPS(r).map(st => moveFor(me().cfg, st)), tail = moves.slice(-need.length);
+        if (tail.length === need.length && need.every((m, i) => m === tail[i])) { done.add(r.id); note(`${r.name.toUpperCase()} ✓`); G.audio.play('heal'); }
+      }
+    };
     camera = new Camera(960, 540, world.stage.cameraBounds);
     camera.update(targets()); camera.update(targets());
     if (o.gauge !== 'keep') dummy().gauge = gaugeTarget(dummy());
@@ -188,7 +199,24 @@ export function makePractice(G) {
         text(c, `LAST HIT ${L.name}: ${Math.round(L.dmg)} dmg · launch ${L.kb.toFixed(1)}${adv}`, 30, 494, { font: F.body(15, 700), align: 'left', color: NAVY });
         text(c, `best combo ${combo.best} · dummy ${Math.round((1 - d.gauge / d.maxGauge) * 100)}% empty (${L.kb >= 17 ? 'KILL-CLASS' : 'launch grows as it empties'})`, 30, 512, { font: F.body(13), align: 'left', color: MUTED });
       }
-      if (flash && flash.t < 60) chip(c, flash.s, 944, 404, BRASS, { align: 'right' });
+      if (flash && flash.t < 60) chip(c, flash.s, 944, 380, BRASS, { align: 'right' });
+      this.drawTrials(c);
+    },
+
+    // bottom-right card: the universal routes (src/data/combos.js) as trials
+    drawTrials(c) {
+      const done = trials.get(params.p1) || new Set(), x = 572, y = 404, w = 372;
+      plaque(c, x, y, w, 118, { fill: PAPER, shadow: 5 });
+      c.fillStyle = INK; c.fillRect(x + 3, y + 3, w - 6, 24);
+      text(c, 'COMBO TRIALS', x + 14, y + 20, { font: F.mono(11), color: PAPER, align: 'left' });
+      text(c, `${done.size}/${ROUTES.length} · M: move list`, x + w - 12, y + 20, { font: F.mono(10), color: '#d9ceb4', align: 'right' });
+      ROUTES.forEach((r, i) => {
+        const ry = y + 44 + i * 17, ok = done.has(r.id);
+        c.fillStyle = ok ? GREEN : '#e6dcc4'; c.fillRect(x + 12, ry - 10, 12, 12);
+        if (ok) text(c, '✓', x + 18, ry, { font: F.mono(10), color: PAPER });
+        text(c, r.name, x + 32, ry, { font: F.head(14), align: 'left', color: ok ? GREEN : INK });
+        text(c, r.steps.map(STEP_LABEL).join(' › '), x + w - 12, ry, { font: F.body(13), align: 'right', color: MUTED });
+      });
     },
 
     drawPause(c) {

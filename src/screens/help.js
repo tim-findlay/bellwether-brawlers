@@ -15,7 +15,7 @@ const CONTROLS = [
   ['LIGHT', '+ direction · on hit: cancel into more', ['F'], ['K'], 'X / □'],
   ['HEAVY', 'signatures · in the air: recovery', ['G'], ['L'], 'B / ○'],
   ['SPECIAL 1 / 2', 'cooldown pips under your bar', ['H', 'J'], [';', "'"], 'RB / LB'],
-  ['DODGE', 'spot · step · air (i-frames)', ['V'], ['/'], 'TRIGGERS'],
+  ['DODGE', 'i-frames · after a hit lands: chase', ['V'], ['/'], 'TRIGGERS'],
   ['SUPER', 'needs a full gold meter', ['SPACE'], ['ENTER'], 'Y / △'],
 ];
 
