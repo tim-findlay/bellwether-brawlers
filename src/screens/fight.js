@@ -13,9 +13,10 @@ import { stageById, geometryOf } from '../data/stages.js';
 import { EVENTS } from '../data/events.js';
 import { drawHUD } from '../render/hud.js';
 import { drawHelp, HELP_TABS } from './help.js';
+import { drawMoveList } from './movelist.js';
 import { plaque, text, menuList, hints, header, makeNav, F, INK, PAPER, BRICK, BRASS, MUTED } from '../render/ui.js';
 
-const PAUSE_ITEMS = [{ label: 'RESUME' }, { label: 'HOW TO PLAY' }, { label: 'RESTART MATCH' }, { label: 'QUIT TO MENU' }];
+const PAUSE_ITEMS = [{ label: 'RESUME' }, { label: 'MOVE LIST' }, { label: 'HOW TO PLAY' }, { label: 'RESTART MATCH' }, { label: 'QUIT TO MENU' }];
 
 const INTRO_FRAMES = 90;
 const OUTRO_FRAMES = 150;
@@ -23,7 +24,7 @@ const OUTRO_FRAMES = 150;
 export function makeFight(G) {
   let world, events, camera, params, stage;
   let phase, phaseT, paused, t, ko, shownOverride = null;
-  let pIdx = 0, pPage = 'list', pTab = 0;
+  let pIdx = 0, pPage = 'list', pTab = 0, pSide = 0;
   const pAnim = [];
   const nav = makeNav(G);
 
@@ -115,6 +116,11 @@ export function makeFight(G) {
     updatePause() {
       const { dx, dy } = nav();
       const ok = G.input.confirmPressed();
+      if (pPage === 'moves') {                                   // ← → flips between the two fighters
+        if (dx) { pSide = 1 - pSide; G.audio.play('menuMove'); }
+        if (ok || G.input.backPressed()) { pPage = 'list'; G.audio.play('menuBack'); }
+        return;
+      }
       if (pPage === 'help') {
         if (dx) { const n = HELP_TABS.length - 1; pTab = (pTab + dx + n) % n; G.audio.play('menuMove'); }   // TV SETUP (last) is menu-only
         if (ok || G.input.backPressed()) { pPage = 'list'; G.audio.play('menuBack'); }
@@ -126,14 +132,19 @@ export function makeFight(G) {
       if (ok) {
         G.audio.play('menuConfirm');
         if (pIdx === 0) paused = false;
-        else if (pIdx === 1) { pPage = 'help'; pTab = 0; }
-        else if (pIdx === 2) G.go('fight', params);
+        else if (pIdx === 1) { pPage = 'moves'; pSide = 0; }
+        else if (pIdx === 2) { pPage = 'help'; pTab = 0; }
+        else if (pIdx === 3) G.go('fight', params);
         else G.go('menu');
       }
     },
 
     drawPause(c) {
       c.fillStyle = 'rgba(43,38,32,0.62)'; c.fillRect(0, 0, 960, 540);
+      if (pPage === 'moves') {
+        drawMoveList(c, world.fighters[pSide].cfg, { hint: `P${pSide + 1} · ← → other fighter · ESC back` });
+        return;
+      }
       if (pPage === 'help') {
         c.fillStyle = PAPER; c.fillRect(0, 0, 960, 540);
         header(c, 'HOW TO PLAY', { sub: 'PAUSED' });
@@ -141,11 +152,11 @@ export function makeFight(G) {
         hints(c, [[['←', '→'], 'Tab'], ['ESC', 'Back']], 520);
         return;
       }
-      plaque(c, 300, 110, 360, 330, { fill: PAPER, shadow: 8 });
-      c.fillStyle = INK; c.fillRect(303, 113, 354, 52);
-      c.fillStyle = BRASS; c.fillRect(303, 165, 354, 4);
-      text(c, 'PAUSED', 480, 150, { font: F.head(32), color: PAPER });
-      menuList(c, PAUSE_ITEMS, pIdx, 340, 190, { w: 280, h: 46, gap: 12, anim: pAnim });
+      plaque(c, 300, 96, 360, 380, { fill: PAPER, shadow: 8 });
+      c.fillStyle = INK; c.fillRect(303, 99, 354, 52);
+      c.fillStyle = BRASS; c.fillRect(303, 151, 354, 4);
+      text(c, 'PAUSED', 480, 136, { font: F.head(32), color: PAPER });
+      menuList(c, PAUSE_ITEMS, pIdx, 340, 170, { w: 280, h: 46, gap: 10, anim: pAnim });
       hints(c, [[['W', 'S'], 'Move'], [['ENTER', 'F'], 'Select'], ['ESC', 'Resume']], 500, { color: PAPER });
     },
 

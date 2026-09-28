@@ -5,6 +5,7 @@
 // once on their own keys (P1 WASD + F, P2 arrows + K). Then the arena
 // carousel, built from the real stage art, and on to the VS splash.
 
+import { drawMoveList } from './movelist.js';
 import { CHARACTERS } from '../data/characters.js';
 import { SELECTABLE_STAGES } from '../data/stages.js';
 import {
@@ -18,7 +19,7 @@ const TILE = 104, TGAP = 8, TX = (960 - (N * TILE + (N - 1) * TGAP)) / 2, TY = 9
 const READY_HOLD = 36;                      // frames the READY stamps show before the arena pick
 
 export function makeSelect(G) {
-  let mode = 'cpu', phase = 'fighters', t = 0, readyT = 0, lastMover = 0;
+  let mode = 'cpu', phase = 'fighters', t = 0, readyT = 0, lastMover = 0, showMoves = false;
   let cursor = [0, 1], locked = [false, false], lockT = [0, 0];
   let stageIdx = 0, stageT = 0;
   const navAny = makeNav(G), navP1 = makeNav(G, P1_DIRS), navP2 = makeNav(G, P2_DIRS);
@@ -66,6 +67,8 @@ export function makeSelect(G) {
     },
 
     updateFighters() {
+      if (G.input.keyPressed('KeyM')) { showMoves = !showMoves; G.audio.play('menuMove'); return; }   // M: the hovered fighter's move list
+      if (showMoves) { if (G.input.backPressed() || G.input.confirmPressed()) { showMoves = false; G.audio.play('menuBack'); } return; }
       if (solo()) {
         const side = active(), { dx } = navAny();
         move(side, dx);
@@ -102,6 +105,7 @@ export function makeSelect(G) {
       c.setTransform(1, 0, 0, 1, 0, 0);
       if (phase === 'fighters') this.drawFighters(c);
       else this.drawStage(c);
+      if (showMoves && phase === 'fighters') drawMoveList(c, CHARACTERS[cursor[lastMover]], { hint: 'M or ESC to close' });
     },
 
     // ---- fighter select --------------------------------------------------------
@@ -135,8 +139,8 @@ export function makeSelect(G) {
       plaque(c, 30, 488, 900, 26, { fill: INK, shadow: 0, lw: 0 });
       text(c, `HOW TO BEAT ${who.name}: ${who.tip}`, 480, 506, { font: F.body(15), color: PAPER });
       const keys = solo()
-        ? [[['A', 'D'], 'Choose'], [['ENTER', 'F'], 'Lock in'], ['R', 'Random'], ['ESC', 'Back']]
-        : [[['A', 'D'], 'P1'], ['F', 'Lock'], [['←', '→'], 'P2'], ['K', 'Lock'], [['R', '\\'], 'Random'], ['ESC', 'Back']];
+        ? [[['A', 'D'], 'Choose'], [['ENTER', 'F'], 'Lock in'], ['R', 'Random'], ['M', 'Moves'], ['ESC', 'Back']]
+        : [[['A', 'D'], 'P1'], ['F', 'Lock'], [['←', '→'], 'P2'], ['K', 'Lock'], [['R', '\\'], 'Random'], ['M', 'Moves'], ['ESC', 'Back']];
       hints(c, keys, 532);
     },
 

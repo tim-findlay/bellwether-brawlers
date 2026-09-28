@@ -1,8 +1,10 @@
-// The practice arena's move list: every move in a fighter's (expanded) kit with
-// its input, damage and frame data, read straight from the character data —
-// so it is never out of date. Render only.
+// The move list: every move in a fighter's (expanded) kit, read straight from
+// the character data so it can never go stale. Left: the normals with input,
+// damage and frame data. Right: the specials, super and passive, each with its
+// plain-English `desc`. Used by the practice arena (M), the fight pause menu
+// and the select screen. Render only.
 
-import { plaque, text, chip, F, INK, PAPER, BRICK, NAVY, BRASS, GREEN, CARD, MUTED } from '../render/ui.js';
+import { plaque, text, chip, wrap, F, INK, PAPER, BRICK, NAVY, BRASS, GREEN, CARD, MUTED } from '../render/ui.js';
 
 // [input label, move, group colour]
 export function kitRows(cfg) {
@@ -23,21 +25,51 @@ export const frames = (m) => {
   return `${m.startup ?? 0}f start · ${m.active ?? 0} active · ${m.recover ?? 0} rec${land}`;
 };
 
-export function drawMoveList(c, cfg, { x = 150, y = 70, cur = null } = {}) {
-  const rows = kitRows(cfg), W = 660, H = 46 + rows.length * 25;
+const short = (m) => `${m.startup ?? 0} · ${m.active ?? 0} · ${m.recover ?? 0}${m.landLag ? ` · ${m.landLag}` : ''}`;
+const KEYS = { 'SPECIAL 1': 'H / RB', 'SPECIAL 2': 'J / LB', SUPER: 'SPACE / △' };
+
+export function drawMoveList(c, cfg, { cur = null, hint = 'M to close' } = {}) {
+  const x = 24, y = 58, W = 912, H = 440;
   plaque(c, x, y, W, H, { fill: PAPER, shadow: 8 });
-  c.fillStyle = INK; c.fillRect(x + 3, y + 3, W - 6, 34);
-  text(c, `${cfg.name} · MOVE LIST`, x + 16, y + 27, { font: F.head(22), color: PAPER, align: 'left' });
-  text(c, 'M to close', x + W - 16, y + 26, { font: F.mono(10), color: '#d9ceb4', align: 'right' });
+  c.fillStyle = INK; c.fillRect(x + 3, y + 3, W - 6, 36);
+  text(c, `${cfg.name} · ${cfg.title}`, x + 16, y + 28, { font: F.head(22), color: PAPER, align: 'left' });
+  text(c, hint, x + W - 16, y + 27, { font: F.mono(10), color: '#d9ceb4', align: 'right' });
+
+  // left: the normals (the shared grammar — every fighter has these)
+  const rows = kitRows(cfg).filter(([k]) => !KEYS[k]), lx = x + 12, lw = 470;
+  text(c, 'NORMALS', lx + 4, y + 60, { font: F.mono(11), color: MUTED, align: 'left' });
+  text(c, 'DMG', lx + 292, y + 60, { font: F.mono(9), color: MUTED });
+  text(c, 'START · ACT · REC · LAND', lx + lw - 6, y + 60, { font: F.mono(9), color: MUTED, align: 'right' });
   rows.forEach(([input, m, col], i) => {
-    const ry = y + 44 + i * 25, on = cur && cur === m;
-    if (on) { c.fillStyle = '#f3dfa6'; c.fillRect(x + 6, ry - 2, W - 12, 24); }
-    else if (i % 2 === 0) { c.fillStyle = CARD; c.fillRect(x + 6, ry - 2, W - 12, 24); }
-    c.fillStyle = col; c.fillRect(x + 10, ry + 2, 6, 16);
-    text(c, input, x + 24, ry + 16, { font: F.mono(11), color: INK, align: 'left' });
-    text(c, m.name || '—', x + 150, ry + 16, { font: F.head(16), color: INK, align: 'left' });
+    const ry = y + 70 + i * 29, on = cur && cur === m;
+    c.fillStyle = on ? '#f3dfa6' : i % 2 === 0 ? CARD : PAPER; c.fillRect(lx, ry, lw, 27);
+    c.fillStyle = col; c.fillRect(lx + 4, ry + 5, 5, 17);
+    text(c, input, lx + 16, ry + 18, { font: F.mono(10), color: INK, align: 'left' });
+    text(c, m.name || '—', lx + 120, ry + 19, { font: F.head(15), color: INK, align: 'left' });
     const dmg = m.totalDmg ?? m.dmg;
-    if (dmg) chip(c, `${dmg} DMG`, x + 400, ry + 3, col, { align: 'right' });
-    text(c, frames(m), x + W - 14, ry + 16, { font: F.body(14), color: MUTED, align: 'right' });
+    if (dmg) text(c, `${dmg}`, lx + 292, ry + 19, { font: F.head(15), color: col });
+    text(c, short(m), lx + lw - 6, ry + 18, { font: F.body(13), color: MUTED, align: 'right' });
   });
+
+  // right: specials, super, passive — what they actually do
+  const rx = x + 496, rw = W - 508;
+  text(c, 'SPECIALS & SUPER', rx, y + 60, { font: F.mono(11), color: MUTED, align: 'left' });
+  let ry = y + 70;
+  for (const [label, m, col] of [['SPECIAL 1', cfg.s1, NAVY], ['SPECIAL 2', cfg.s2, NAVY], ['SUPER', cfg.super, BRICK]]) {
+    if (!m) continue;
+    const on = cur && cur === m;
+    c.fillStyle = on ? '#f3dfa6' : CARD; c.fillRect(rx, ry, rw, 86);
+    chip(c, `${label} · ${KEYS[label]}`, rx + 8, ry + 8, col);
+    text(c, label === 'SUPER' ? m.name.toUpperCase() : m.name, rx + 10, ry + 44, { font: F.head(19), color: INK, align: 'left' });
+    const dmg = m.totalDmg ?? m.dmg;
+    if (dmg) text(c, `${dmg} DMG`, rx + rw - 10, ry + 44, { font: F.mono(11), color: col, align: 'right' });
+    wrap(c, m.desc || '', rw - 20, F.body(14)).slice(0, 2).forEach((ln, i) => text(c, ln, rx + 10, ry + 62 + i * 16, { font: F.body(14), color: INK, align: 'left' }));
+    ry += 92;
+  }
+  if (cfg.passive) {
+    c.fillStyle = '#efe3c2'; c.fillRect(rx, ry, rw, 70);
+    chip(c, 'PASSIVE', rx + 8, ry + 8, BRASS);
+    text(c, cfg.passive.name, rx + 84, ry + 21, { font: F.head(16), color: INK, align: 'left' });
+    wrap(c, cfg.passive.desc, rw - 20, F.body(14)).slice(0, 2).forEach((ln, i) => text(c, ln, rx + 10, ry + 44 + i * 16, { font: F.body(14), color: INK, align: 'left' }));
+  }
 }

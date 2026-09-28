@@ -151,7 +151,7 @@ export function makePractice(G) {
       if (o.events) events.drawUI(c);
       G.fx.drawUI(c, camera);
       this.drawPanel(c);
-      if (showList && !paused) drawMoveList(c, me().cfg, { x: 150, y: 96, cur: me().attack?.move || null });
+      if (showList && !paused) drawMoveList(c, me().cfg, { cur: me().attack?.move || null });
       if (paused) this.drawPause(c);
     },
 
