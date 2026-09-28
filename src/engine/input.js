@@ -68,6 +68,7 @@ export class Input {
   confirmPressed() { return CONFIRM_CODES.some(c => this.keyPressed(c)); }
   backPressed() { return this.keyPressed(BACK_CODE); }
   startPressed() { return START_CODES.some(c => this.keyPressed(c)); }
+  anyPressed() { return this.pressedNow.size > 0; }   // any key or pad button this tick (attract mode)
 
   buffered(code, win = BUFFER_FRAMES) {
     const pf = this.pressFrame[code];

@@ -6,11 +6,11 @@ export class Camera {
   constructor(viewW, viewH, bounds, opts = {}) {
     this.viewW = viewW; this.viewH = viewH;
     this.bounds = bounds;                       // world rect the camera may show
-    this.pad = opts.pad ?? 150;                 // world px kept around targets
+    this.pad = opts.pad ?? 140;                 // world px kept around targets
     // cover-fit: at full zoom-out the view stays INSIDE the bounds (no stray
     // space past the camera box on either axis)
     this.minZoom = opts.minZoom ?? Math.max(viewW / bounds.w, viewH / bounds.h);
-    this.maxZoom = opts.maxZoom ?? 1.15;
+    this.maxZoom = opts.maxZoom ?? 1.3;          // 1.15 -> 1.3 (TV pass): fighters read bigger when they're close
     this.ease = opts.ease ?? 0.12;              // per-frame lerp factor
     this.x = bounds.x + bounds.w / 2;
     this.y = bounds.y + bounds.h / 2;

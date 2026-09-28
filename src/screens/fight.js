@@ -14,7 +14,8 @@ import { EVENTS } from '../data/events.js';
 import { drawHUD } from '../render/hud.js';
 import { drawHelp, HELP_TABS } from './help.js';
 import { drawMoveList } from './movelist.js';
-import { plaque, text, menuList, hints, header, makeNav, F, INK, PAPER, BRICK, BRASS, MUTED } from '../render/ui.js';
+import { ComboTracker } from '../engine/practice.js';
+import { plaque, text, menuList, hints, header, makeNav, F, INK, PAPER, BRICK, BRASS, MUTED, NAVY } from '../render/ui.js';
 
 const PAUSE_ITEMS = [{ label: 'RESUME' }, { label: 'MOVE LIST' }, { label: 'HOW TO PLAY' }, { label: 'RESTART MATCH' }, { label: 'QUIT TO MENU' }];
 
@@ -25,6 +26,7 @@ export function makeFight(G) {
   let world, events, camera, params, stage;
   let phase, phaseT, paused, t, ko, shownOverride = null;
   let pIdx = 0, pPage = 'list', pTab = 0, pSide = 0;
+  let combos = [];                                   // [P1's combos on P2, P2's on P1] — the room should see them
   const pAnim = [];
   const nav = makeNav(G);
 
@@ -48,12 +50,14 @@ export function makeFight(G) {
       if (G.devEvent) events.force(G.devEvent);
       camera = new Camera(960, 540, world.stage.cameraBounds);
       camera.update(targets()); camera.update(targets());
+      combos = [new ComboTracker(world, world.fighters[0], world.fighters[1]), new ComboTracker(world, world.fighters[1], world.fighters[0])];
       phase = 'intro'; phaseT = 0; paused = false; t = 0; ko = null; shownOverride = null;
       G.audio.play('roundGo');
     },
 
     update() {
       t++;
+      if (params.demo && t > 20 && G.input.anyPressed()) { G.go('title'); return; }   // attract mode: any key hands the TV back
       if (paused) { this.updatePause(); return; }
       if ((G.input.backPressed() || G.input.startPressed?.()) && phase !== 'outro') {   // Esc, or a pad's Back / Start
         paused = true; pIdx = 0; pPage = 'list'; G.audio.play('menuBack');
@@ -72,6 +76,7 @@ export function makeFight(G) {
         if (G.fx.frozen()) return;                    // hitstop
         for (const f of world.fighters) f.controller.update?.(f, world);
         world.update();
+        for (const k of combos) k.update();
         events.update();
         for (const f of world.fighters) if (f.hasStatus('noMeter') && t % 20 === 0) G.fx.confetti(f.x, f.y - 90, 3);
         for (const ev of world.events.splice(0)) {
@@ -104,6 +109,7 @@ export function makeFight(G) {
         for (const f of world.fighters) f.animT++;
         camera.update(targets());
         if (phaseT >= OUTRO_FRAMES) {
+          if (params.demo) { G.go('title'); return; }                      // exhibitions never touch the records
           if (ko.winner < 0) { G.go(params.tour ? 'splash' : 'select', params.tour ? params : { mode: params.mode }); return; }   // a tournament replays a draw
           const winner = world.fighters[ko.winner], loser = world.fighters[1 - ko.winner];
           G.scores[winner.cfg.id] = (G.scores[winner.cfg.id] || 0) + 1;
@@ -167,7 +173,27 @@ export function makeFight(G) {
       drawHUD(c, world, camera, { t, sprites: G.sprites });
       events.drawUI(c);
       G.fx.drawUI(c, camera);
+      combos.forEach((k, i) => {                          // "3 HITS" under the attacker's plate, "4 HIT COMBO!" when it ends
+        const live = k.hits >= 2, done = !live && k.ended?.hits >= 3 && world.frame - k.endedAt < 70;
+        if (!live && !done) return;
+        const x = i ? 780 : 180, n = live ? k.hits : k.ended.hits;
+        text(c, live ? `${n} HITS` : `${n} HIT COMBO!`, x, 128, { font: F.logo(live ? 24 : 28), color: i ? BRICK : NAVY });
+        if (done) text(c, `${Math.round(k.ended.dmg)} damage`, x, 148, { font: F.body(15, 700), color: INK });
+      });
 
+      // first-timer strip: each human's keys for the first seconds of the match (the room has never seen them)
+      const hintT = phase === 'intro' ? 0 : t - INTRO_FRAMES;
+      if (!params.demo && (phase === 'intro' || (phase === 'fight' && hintT < 420))) {
+        c.globalAlpha = hintT > 360 ? (420 - hintT) / 60 : 1;
+        world.fighters.forEach((f, i) => {
+          if (f.controller.isCPU) return;
+          const keys = i ? '← ↑ ↓ → move · K light · L heavy · ; \' specials · / dodge · ENTER super' : 'W A S D move · F light · G heavy · H J specials · V dodge · SPACE super';
+          const x = i ? 486 : 14, w = 460;
+          plaque(c, x, 490, w, 24, { fill: INK, shadow: 0, lw: 0 });
+          text(c, `P${i + 1}  ${keys}`, x + w / 2, 507, { font: F.body(13, 700), color: PAPER });
+        });
+        c.globalAlpha = 1;
+      }
       if (phase === 'intro' && phaseT > 30) {
         const go = phaseT > INTRO_FRAMES - 30, k = go ? Math.min(1, (phaseT - (INTRO_FRAMES - 30)) / 6) : Math.min(1, (phaseT - 30) / 6);
         const word = go ? 'FIGHT!' : 'READY?';
@@ -176,6 +202,10 @@ export function makeFight(G) {
         for (let d = 6; d > 0; d--) { c.fillStyle = INK; c.fillText(word, d, d); }
         c.fillStyle = go ? BRICK : PAPER; c.fillText(word, 0, 0);
         c.restore();
+      }
+      if (params.demo && (t >> 5) % 2 === 0) {              // the attract-mode strip
+        plaque(c, 330, 486, 300, 32, { fill: INK, shadow: 0 });
+        text(c, 'EXHIBITION · PRESS ANY KEY', 480, 508, { font: F.head(18), color: PAPER });
       }
       if (paused) this.drawPause(c);
     },

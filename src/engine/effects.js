@@ -73,8 +73,12 @@ export class FX {
   }
 
   // Floating combat text at WORLD coords (projected on the UI layer).
+  // Callouts: words get a paper chip (readable on a TV across the room), bare
+  // numbers (damage) stay small. A new callout near a fresh one stacks above it.
   text(x, y, str, color = '#f2e9d8') {
-    this.floaters.push({ x, y, str, color, t: 0, dur: 45 });
+    const word = !/^[+\-]?\d+(\.\d+)?$/.test(String(str));
+    for (const f of this.floaters) if (f.word && word && f.t < 24 && Math.abs(f.x - x) < 90 && Math.abs(f.y - y) < 26) y = f.y - 26;
+    this.floaters.push({ x, y, str: String(str), color, t: 0, dur: word ? 60 : 45, word });
   }
 
   banner(text, { sub = '', dur = 110, color = '#2b2620', bg = '#f2e9d8', sound = null } = {}) {
@@ -119,12 +123,21 @@ export class FX {
       const a = f.t < 8 ? f.t / 8 : f.t > f.dur - 12 ? (f.dur - f.t) / 12 : 1;
       const s = camera?.worldToScreen ? camera.worldToScreen(f.x, f.y) : { x: f.x, y: f.y };
       ctx.globalAlpha = Math.max(0, a);
-      ctx.font = "12px 'Silkscreen'";
       ctx.textAlign = 'center';
-      ctx.fillStyle = '#2b2620';
-      ctx.fillText(f.str, Math.round(s.x) + 1, Math.round(s.y) + 1);
-      ctx.fillStyle = f.color;
-      ctx.fillText(f.str, Math.round(s.x), Math.round(s.y));
+      const x = Math.round(s.x), y = Math.round(s.y);
+      if (f.word) {                                   // a paper chip, ink rule, the colour as the text
+        const pop = f.t < 6 ? 0.7 + 0.05 * f.t : 1;
+        ctx.font = `700 ${Math.round(15 * pop)}px 'Silkscreen', monospace`;
+        const w = Math.ceil(ctx.measureText(f.str).width) + 14;
+        ctx.fillStyle = '#2b2620'; ctx.fillRect(x - w / 2 - 2, y - 15, w + 4, 22);
+        ctx.fillStyle = '#f2e9d8'; ctx.fillRect(x - w / 2, y - 13, w, 18);
+        ctx.fillStyle = f.color === '#f2e9d8' ? '#2b2620' : f.color;   // paper-on-paper would vanish: ink instead
+        ctx.fillText(f.str, x, y + 1);
+      } else {
+        ctx.font = "700 14px 'Silkscreen', monospace";
+        ctx.fillStyle = '#2b2620'; ctx.fillText(f.str, x + 1, y + 1);
+        ctx.fillStyle = f.color; ctx.fillText(f.str, x, y);
+      }
     }
     ctx.globalAlpha = 1;
     // banners — paper slab with ink text, slides in/out

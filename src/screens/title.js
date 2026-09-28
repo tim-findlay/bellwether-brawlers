@@ -1,23 +1,33 @@
 // Title screen: the Office far layer drifting behind its arena piece, all
 // eight fighters lined up on it (each throws the odd jab), the logo, and a
-// blinking PRESS START plaque. Any confirm goes to the main menu.
+// blinking PRESS START plaque. Any confirm goes to the main menu; left idle
+// for ATTRACT_AFTER it runs a CPU exhibition (fight.js `demo`).
 
 import { CHARACTERS } from '../data/characters.js';
-import { stageById } from '../data/stages.js';
+import { stageById, SELECTABLE_STAGES } from '../data/stages.js';
 import { backdrop, logo, fighter, floorShadow, plaque, text, keycap, F, INK, PAPER, BRICK } from '../render/ui.js';
 
 const SLAB_W = 860, SLAB_Y = 432;
+const ATTRACT_AFTER = 25 * 60;          // idle this long on the title: a CPU exhibition plays (the TV entertains the room)
 
 export function makeTitle(G) {
-  let t = 0;
+  let t = 0, idle = 0;
   const office = stageById('office');
   return {
-    enter() { t = 0; },
+    enter() { t = 0; idle = 0; },
     update() {
       t++;
       if (t > 10 && (G.input.confirmPressed() || G.input.keyPressed('Space'))) {
         G.audio.play('menuConfirm');
         G.go('menu');
+        return;
+      }
+      idle = G.input.anyPressed() ? 0 : idle + 1;                       // someone's here: hold the exhibition off
+      if (idle >= ATTRACT_AFTER) {
+        const ids = CHARACTERS.map(c => c.id), a = ids[Math.floor(G.rng() * ids.length)];
+        const rest = ids.filter(i => i !== a), b = rest[Math.floor(G.rng() * rest.length)];
+        const st = SELECTABLE_STAGES[Math.floor(G.rng() * SELECTABLE_STAGES.length)].id;
+        G.go('fight', { mode: 'cpu', demo: true, c1: 'cpu', c2: 'cpu', p1: a, p2: b, stageId: st });
       }
     },
     draw() {

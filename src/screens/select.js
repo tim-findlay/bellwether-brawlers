@@ -137,7 +137,9 @@ export function makeSelect(G) {
 
       const who = CHARACTERS[cursor[lastMover]];
       plaque(c, 30, 488, 900, 26, { fill: INK, shadow: 0, lw: 0 });
-      text(c, `HOW TO BEAT ${who.name}: ${who.tip}`, 480, 506, { font: F.body(15), color: PAPER });
+      const tip = `HOW TO BEAT ${who.name}: ${who.tip}`;              // shrink to fit the bar (the longest tips ran off both ends)
+      let fs = 15; c.font = F.body(fs); while (fs > 11 && c.measureText(tip).width > 884) c.font = F.body(--fs);
+      text(c, tip, 480, 506, { font: F.body(fs), color: PAPER });
       const keys = solo()
         ? [[['A', 'D'], 'Choose'], [['ENTER', 'F'], 'Lock in'], ['R', 'Random'], ['M', 'Moves'], ['ESC', 'Back']]
         : [[['A', 'D'], 'P1'], ['F', 'Lock'], [['←', '→'], 'P2'], ['K', 'Lock'], [['R', '\\'], 'Random'], ['M', 'Moves'], ['ESC', 'Back']];
