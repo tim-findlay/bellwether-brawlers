@@ -7,7 +7,7 @@ export default {
   tip: 'The lightest fighter — everything launches him early. The teleport arrival is a written invitation, and when he swipes the Amex, step off the gold marks.',
   passive: { name: 'Lightest fighter', desc: 'The fastest runner and the lightest — the easiest to launch sideways.' },   // shown in the move list (render only)
   body: { suit: '#2c3e5f', trim: '#e8e4da', skin: '#e8c39a', hair: { color: '#23201c', style: 'quiff' }, height: 1.0, extras: ['sneakers'] },
-  stats: { gauge: 98, runMax: 5.85, jumpImpulse: 16, fallMax: 12, weight: 0.97 },
+  stats: { gauge: 96, runMax: 5.85, jumpImpulse: 16, fallMax: 12, weight: 0.97 },
   light: { name: 'Name Drop', dmg: 5, kb: 4.5, kbScale: 5, kbAngle: 40, range: 56, startup: 3, active: 2, recover: 6 },
   heavy: { name: 'Fund Structure', dmg: 10, kb: 6.5, kbScale: 11.5, kbAngle: 35, range: 64, startup: 12, active: 3, recover: 16 },
   aerials: aerials({ n: 'Velvet Rope', s: 'Card Fan', u: 'Upgrade', d: 'Check-Out' }, { s: { startup: 6, kb: 5.5, kbScale: 12 } }),

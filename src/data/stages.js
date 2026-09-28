@@ -299,13 +299,51 @@ export const STAGES = [
       blast: { left: 270, right: 2130, top: 130, bottom: 1300 },
     },
   },
+  {
+    id: 'battersea',
+    name: 'BATTERSEA',
+    blurb: 'Four chimneys, one river, no mercy.',
+    selectable: true,
+    sky: ['#9dbfdc', '#e6edf0'],
+    groundFill: '#8f4b35', groundLine: '#6e3526', groundTile: '#a3593f',
+    layers: [],                                              // backdrop is the drop-in assets/stages/battersea.png
+    art: { platforms: ['tray', 'rail', 'tray'], far: '#b9c7d2', parallax: 0.25 },
+    // BATTERSEA — the power station roof over the Thames: a long slab, two gantry ledges and a high rail
+    geometry: {
+      slabs: [{ x: 760, y: 780, w: 880, h: 150 }],   // h: the art's vertical brick wall (measured; wall.js)
+      platforms: [{ x: 890, y: 670, w: 190 }, { x: 1320, y: 670, w: 190 }, { x: 1060, y: 555, w: 280 }],
+      spawns: [{ x: 970, y: 780 }, { x: 1430, y: 780 }],
+      respawn: { x: 1200, y: 710 },
+      cameraBounds: { x: 140, y: 50, w: 2120, h: 1390 },
+      blast: { left: 290, right: 2110, top: 120, bottom: 1300 },
+    },
+  },
+  {
+    id: 'standard',
+    name: 'THE STANDARD',
+    blurb: 'Rooftop bar is open. So is the fight.',
+    selectable: true,
+    sky: ['#9cc0de', '#eae6da'],
+    groundFill: '#cfc6b3', groundLine: '#a89f8c', groundTile: '#dcd4c2',
+    layers: [],                                              // backdrop is the drop-in assets/stages/standard.png
+    art: { platforms: ['awning', 'bench', 'awning'], far: '#c8cdd0', parallax: 0.25 },
+    // THE STANDARD, King's Cross — the hotel's rooftop terrace: a mid-length slab, two cabanas and a high bar
+    geometry: {
+      slabs: [{ x: 800, y: 770, w: 800, h: 155 }],   // h: the art's concrete wall (measured; wall.js)
+      platforms: [{ x: 910, y: 655, w: 180 }, { x: 1310, y: 655, w: 180 }, { x: 1070, y: 540, w: 260 }],
+      spawns: [{ x: 1000, y: 770 }, { x: 1400, y: 770 }],
+      respawn: { x: 1200, y: 700 },
+      cameraBounds: { x: 160, y: 40, w: 2080, h: 1390 },
+      blast: { left: 310, right: 2090, top: 110, bottom: 1290 },
+    },
+  },
 ];
 
 export const stageById = (id) => STAGES.find(s => s.id === id);
 export const SELECTABLE_STAGES = STAGES.filter(s => s.selectable);
 
 // v3 platform-fighter geometry (Phase 2+). v2 visuals above are untouched.
-export const STAGE_IDS_V3 = ['office', 'palace', 'pub', 'berlin', 'rooftop', 'tube'];
+export const STAGE_IDS_V3 = STAGES.map(s => s.id);             // every stage's art is drop-in by id
 export function geometryOf(id) { return stageById(id)?.geometry ?? null; }
 
 // Layers only (no sky, no ground): the v3 world renderer paints these into a

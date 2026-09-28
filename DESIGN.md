@@ -226,7 +226,7 @@ Five phases, small rollbackable commits throughout; the page must load clean aft
 - Aerials: *Burp Cloth* (nair) · **Fresh One** (sair — a lobbed diaper; on hit: 1 s slow, callout **"STINKED!"**) · *Night Feed* (uair) · *Hard Maturity* (dair spike).
 - *Counterplay:* dodge the Drawdown, don't stand in the paperwork, and never eat Enforcement with a LIEN on you — jump it, or parry it.
 
-## Stages (five player-selectable; Berlin event-only)
+## Stages (seven player-selectable; Berlin event-only)
 
 All: blast zones on four sides, ledge grab on every slab lip, a wall to slide down on each side of the main slab (as deep as the art); soft platforms reachable with jump → air jump. Phase 3b scaled every layout ×1.35 and pushed the blast zones out (+160 px sideways, +90 px down) — Tim's "stage should be larger". All platforms are **static** — any sway is backdrop art, never collision. Each stage has a Higgsfield backdrop (`assets/stages/<id>.png`, drop-in).
 
@@ -235,6 +235,8 @@ All: blast zones on four sides, ledge grab on every slab lip, a wall to slide do
 3. **THE BELLWETHER ARMS** — the scrappy local. Asymmetric: awning + hanging-sign platforms stacked on the pub side, a bench platform on the other. Golden hour, warm diegetic windows — and the chalkboard always reads **"☀ 30°C · THURSDAY · 6PM"**.
 4. **THE ROOFTOP** — best view in the building, worst place to fall. Long slab, two low AC-unit platforms and the water tank up top; a tri-plat with the top platform higher than the Office's.
 5. **THE PLATFORM** — mind the gap. A long, low tube-station stage: two bench platforms and one hanging roundel sign; play stays close to the floor and the sides are the danger.
+6. **BATTERSEA** (2026-09-28, Tim's request) — the power station roof over the Thames: a long red-brick slab with art-deco window fins, two gantry ledges low and a wide rail up high; the four white chimneys stand in the far layer. Deep brick walls (h 150) to slide down. Its own song: a steady river-side stomp.
+7. **THE STANDARD** (2026-09-28, Tim's request; the King's Cross hotel Bellwether owns) — the rooftop terrace: white board-marked concrete with the red pill-shaped lift set into its side, wooden decking on top, two cabana awnings and a high bench; St Pancras across the road in the far layer. Mid-length slab (800), deep concrete walls (h 155). Its own song: lounge house at golden hour.
 6. **BERLIN — EVENT ONLY** — the gate. One wide, high drop-through platform on the Brandenburg silhouette (columns are backdrop, no collision). Arrives only via Mike's BERLIN TRIP and leaves with it.
 
 ## Stage hazards (the office events, reworked)

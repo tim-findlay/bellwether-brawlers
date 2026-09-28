@@ -15,7 +15,7 @@
 
 ## Numbers doctrine
 
-- **Gauge band:** 98 (Mike/Nick) – 108 (Seelye) (pass 13). **Weight band:** 0.97 (Nick/Adrian) – 1.06 (Ben) (pass 12; was 1.10, Mike). **Jump / fall (pass 13):** every fighter jumps 16 and falls at 12 — one generous, floaty air class (Tim: "same jump height (generous) and fall speeds (floaty) for better recovery"); weight is the only thing that separates how fighters fly. — narrowed in the Phase-3 pass (the bands were restated from the data in pass 3; the old 85–110 / 0.9–1.08 text had gone stale after pass 2): weight divides the launch speed linearly, so the old 0.85–1.45 spread alone swung kill thresholds by ~70 %. **Run band:** 5.2 (Mike) – 5.85 (Nick) px/frame at base zoom — pass 12 narrowed it from 4.4–6.2 (Tim: "the characters should not differ this much in speed"; Brawlhalla's speed stat moves run speed only a little). Speed is no longer a balancing lever: pay for strengths with gauge, weight and frame data. Fall speed correlates with weight (floaties live longer upward, die earlier sideways). Per-character values live in `src/data/characters/<id>.js`, inside these bands; `physics.js` holds the universal constants and formulas.
+- **Gauge band:** 96 (Nick) – 110 (Richy) (pass 14). **Weight band:** 0.97 (Nick/Adrian) – 1.06 (Ben) (pass 12; was 1.10, Mike). **Jump / fall (pass 13):** every fighter jumps 16 and falls at 12 — one generous, floaty air class (Tim: "same jump height (generous) and fall speeds (floaty) for better recovery"); weight is the only thing that separates how fighters fly. — narrowed in the Phase-3 pass (the bands were restated from the data in pass 3; the old 85–110 / 0.9–1.08 text had gone stale after pass 2): weight divides the launch speed linearly, so the old 0.85–1.45 spread alone swung kill thresholds by ~70 %. **Run band:** 5.2 (Mike) – 5.85 (Nick) px/frame at base zoom — pass 12 narrowed it from 4.4–6.2 (Tim: "the characters should not differ this much in speed"; Brawlhalla's speed stat moves run speed only a little). Speed is no longer a balancing lever: pay for strengths with gauge, weight and frame data. Fall speed correlates with weight (floaties live longer upward, die earlier sideways). Per-character values live in `src/data/characters/<id>.js`, inside these bands; `physics.js` holds the universal constants and formulas.
 - **Knockback (canonical formula):**
   `kb = (move.kb × KB_BASE_MULT + move.kbScale × KB_SCALE_MULT × emptiness) / weight`, where `emptiness = 1 − gauge/maxGauge` (multipliers 0.8 / 2.0 since the Phase-3b feel pass: early hits flinch, late hits kill).
   **kb is the launch speed in px/frame at base zoom, set (not added) along `kbAngle`** (per-move data, degrees; spikes use 270 ± 15) on the frame the hit lands. Hitstun = `round(kb × HITSTUN_PER_KB)` frames.
@@ -99,7 +99,26 @@ Two independent samples before shipping a tuning pass: n ≈ 420–560 games per
 
 ## Current results
 
-**v3 balance pass 13 — one air class + Tim's kit notes (2026-09-28) — all five gates PASS on two independent seeds at N = 30; every route passes, every step ≥ 9 f lenient.**
+**v3 balance pass 14 — two new stages (2026-09-28) — all five gates PASS on two independent seeds at N = 30; every route passes, every step ≥ 9 f lenient.**
+
+| Fighter | seed 1337 | seed 2024 |
+|---|---|---|
+| Ben | 54.5 % | 53.1 % |
+| Tim | 50.2 % | 54.5 % |
+| Adrian | 43.7 % | 45.5 % |
+| Richy | 48.0 % | 45.5 % |
+| Nick | 55.5 % | 49.0 % |
+| Abi | 47.6 % | 49.3 % |
+| Mike | 52.9 % | 54.3 % |
+| Seelye | 47.6 % | 48.8 % |
+| **camp (≤ 55)** | 12.9 % | 12.4 % |
+| **stall (≤ 45)** | 0.1 % | 0.2 % |
+| **engagement flags (< 2 %)** | 0.3 % | 0.36 % |
+| **recovery dishonest (< 10 %)** | 2.1 % | 2.07 % |
+
+Avg match 5753 / 5741 f (~96 s); 4 / 4 capped, 0 stuck. **Data:** two selectable stages, BATTERSEA and THE STANDARD (DESIGN.md "Stages" 6–7), join the sim's rotation (seven stages now, 240 games each). **Tuning:** Nick gauge 98 → 96; Richy gauge 107 → 110; Seelye gauge 108 → 106. **AI change, called out:** the CPU gets one reaction roll per Gone Viral snap (`snapRead`: easy 0.35, normal 0.6, hard 0.85) instead of a fresh roll every tick, which had it dodging nearly every snap and left Richy at 38.6 %. **Test changes:** tests/stages.test.mjs lists the two new stages; `STAGE_IDS_V3` is now derived from `STAGES`.
+
+**v3 balance pass 13 — one air class + Tim's kit notes (2026-09-28, superseded) — all five gates PASS on two independent seeds at N = 30; every route passes, every step ≥ 9 f lenient.**
 
 | Fighter | seed 1337 | seed 2024 |
 |---|---|---|

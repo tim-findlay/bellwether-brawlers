@@ -1,6 +1,6 @@
 # BELLWETHER BRAWLERS
 
-A lightly pixelated office **platform fighter** starring your coworkers — eight fighters with real sprite animation and a Brawlhalla-style directional kit, five painted stages (plus Berlin), random office events, keyboard or gamepad, and a CPU-vs-CPU balance harness with five ship gates. Pure HTML5 canvas + vanilla JavaScript ES modules. **No framework, no bundler, no build step** — the only external resource is web fonts from the Google Fonts CDN (graceful system fallbacks).
+A lightly pixelated office **platform fighter** starring your coworkers — eight fighters with real sprite animation and a Brawlhalla-style directional kit, seven painted stages (plus Berlin), random office events, keyboard or gamepad, and a CPU-vs-CPU balance harness with five ship gates. Pure HTML5 canvas + vanilla JavaScript ES modules. **No framework, no bundler, no build step** — the only external resource is web fonts from the Google Fonts CDN (graceful system fallbacks).
 
 **Play it live:** https://tim-findlay.github.io/bellwether-brawlers/ *(repo is currently private — Pages serves once it's public again)*
 

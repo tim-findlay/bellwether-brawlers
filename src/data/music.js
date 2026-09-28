@@ -1,6 +1,6 @@
 // Music data (v3 sound pass), played by src/engine/music.js. One loop per
 // stage in its own idiom — office bossa, pub folk shuffle, rooftop breeze,
-// tube drive, palace harpsichord, Berlin minimal — plus the menu theme and a
+// tube drive, palace harpsichord, Berlin minimal, Battersea stomp, Standard lounge house — plus the menu theme and a
 // victory jingle. Warm acoustic-ish timbres, soft drums: daylight, not neon.
 //
 // A song: bpm, optional swing (0..0.5 of a 16th), chords (one per bar) and
@@ -80,6 +80,22 @@ export const SONGS = {
     { inst: 'bass', octave: 2, pattern: '..1...1...1...1.' },
     { inst: 'pluck', octave: 4, pattern: '1..5..8..5..3...', vol: 0.7 },
     { inst: 'rim', pattern: '....x.......x...', min: 0.5 },
+  ] },
+  battersea: { bpm: 112, chords: ['Dm', 'Bb', 'F', 'C'], tracks: [                          // the power station: a big, steady river-side stomp
+    { inst: 'bass', octave: 2, pattern: '1..1..1.1..1..5.' },
+    { inst: 'kick', pattern: 'x...x...x...x...' },
+    { inst: 'snare', pattern: '....x.......x...', vol: 0.8 },
+    { inst: 'pad', octave: 3, pattern: 'c...............', len: 16, vol: 0.7 },
+    { inst: 'pluck', octave: 5, pattern: '1...5...8...5...', min: 0.5, vol: 0.7 },
+    { inst: 'hat', pattern: '..x...x...x...x.', vol: 0.7 },
+  ] },
+  standard: { bpm: 120, swing: 0.1, chords: ['Fmaj7', 'Em7', 'Dm7', 'Cmaj7'], tracks: [     // the rooftop bar: lounge house at golden hour
+    { inst: 'kick', pattern: 'x...x...x...x...', vol: 0.8 },
+    { inst: 'hat', pattern: '..x...x...x...x.' },
+    { inst: 'epiano', octave: 4, pattern: '..c...c...c...c.', len: 2, vol: 0.8 },
+    { inst: 'bass', octave: 2, pattern: '1..1....1..5....' },
+    { inst: 'shaker', pattern: 'x.xxx.xxx.xxx.xx', vol: 0.6 },
+    { inst: 'pluck', octave: 5, pattern: '3...5...7...8...', min: 0.5, vol: 0.6 },
   ] },
   boombap: { bpm: 90, swing: 0.3, chords: ['Am7', 'Am7', 'Dm7', 'Em7'], tracks: [            // DESIGN: Seelye in the match -> 90s boom-bap
     { inst: 'kick', pattern: 'x.........x.x...' },

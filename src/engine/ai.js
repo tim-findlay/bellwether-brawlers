@@ -21,9 +21,9 @@ import { comboStep } from './ai/combos.js';
 // chance per approach · mixup: jump-in / aerial willingness · recoverDelay:
 // ticks of hesitation once actionable off-stage (the floor itself never scales).
 export const DIFFICULTY = {
-  easy:   { decide: 40, mistake: 0.4,  mashDelay: 60, mashCps: 4,   superChance: 0.3,  edgeGuard: 0.1,  dash: 0.05, mixup: 0.15, recoverDelay: 20 },
-  normal: { decide: 22, mistake: 0.2,  mashDelay: 45, mashCps: 6,   superChance: 0.6,  edgeGuard: 0.4,  dash: 0.25, mixup: 0.4,  recoverDelay: 8 },
-  hard:   { decide: 12, mistake: 0.06, mashDelay: 30, mashCps: 9,   superChance: 0.9,  edgeGuard: 0.7,  dash: 0.5,  mixup: 0.7,  recoverDelay: 2 },
+  easy:   { decide: 40, mistake: 0.4,  mashDelay: 60, mashCps: 4,   superChance: 0.3,  edgeGuard: 0.1,  dash: 0.05, mixup: 0.15, recoverDelay: 20, snapRead: 0.35 },
+  normal: { decide: 22, mistake: 0.2,  mashDelay: 45, mashCps: 6,   superChance: 0.6,  edgeGuard: 0.4,  dash: 0.25, mixup: 0.4,  recoverDelay: 8, snapRead: 0.6 },
+  hard:   { decide: 12, mistake: 0.06, mashDelay: 30, mashCps: 9,   superChance: 0.9,  edgeGuard: 0.7,  dash: 0.5,  mixup: 0.7,  recoverDelay: 2, snapRead: 0.85 },
   // sim-only (BALANCE.md gates 2/3): must lose to `normal`. Never offered in the menu.
   stall:  { decide: 16, mistake: 0.08, mashDelay: 40, mashCps: 6.5, superChance: 0.5,  edgeGuard: 0.2,  dash: 0.3,  mixup: 0.3,  recoverDelay: 4, stall: true },
   camp:   { decide: 16, mistake: 0.08, mashDelay: 40, mashCps: 6.5, superChance: 0.5,  edgeGuard: 0.3,  dash: 0.3,  mixup: 0.3,  recoverDelay: 4, camp: true },
@@ -106,7 +106,9 @@ export class AIController {
       if (hz) this.plan = hz;
     }
     // the fast ones (the Fulham crowd, the meme snap) need a same-tick read, at every difficulty
-    if (world.hazards.some(h => (h.type === 'crowd' || h.type === 'meme') && h.immune !== f) && this.rng() > this.profile.mistake) {
+    // the meme gets one reaction roll per snap, by difficulty (rolling every tick meant a CPU always dodged it)
+    for (const h of world.hazards) if (h.type === 'meme' && h.target === f && h.aiReads == null) h.aiReads = this.rng() < (this.profile.snapRead ?? 0.6);
+    if (world.hazards.some(h => ((h.type === 'crowd' && h.immune !== f) || (h.type === 'meme' && h.target === f && h.aiReads))) && this.rng() > this.profile.mistake) {
       const hz = hazardResponse(f, world);
       if (hz && (hz.kind === 'jump' || hz.kind === 'dodge')) this.plan = hz;
     }

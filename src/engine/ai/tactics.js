@@ -107,7 +107,7 @@ export function hazardResponse(f, world) {
     return { kind: 'goto', x: Math.abs(x - hol.data.x) < 90 ? hol.data.x - dir * 150 : x, to: here };
   }
   for (const h of world.hazards) {                            // bikes and the wrecking ball's low return
-    if (h.type === 'meme' && h.target === f && h.locked) {   // Gone Viral: dodge the snap
+    if (h.type === 'meme' && h.target === f && h.locked && h.aiReads !== false) {   // Gone Viral: dodge the snap (if this CPU read it)
       const left = (h.m.snap ?? 64) - h.t;
       if (left >= 2 && left <= 10 && f.body.dodgeCd === 0) return { kind: 'dodge' };
       continue;
