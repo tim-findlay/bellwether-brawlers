@@ -74,8 +74,19 @@ export function hazardResponse(f, world) {
   const stage = world.stage, slab = mainSlab(stage);
   const onSlab = f.grounded && Math.abs(f.y - slab.y) < 4;
   const a = world.director?.active;
+  // the wave: get on a board before the crest, stay on it while the water's up
+  if (a?.def.id === 'wave' && (a.phase === 'telegraph' || a.t < 330) && onSlab && stage.platforms.length) {
+    const p = [...stage.platforms].sort((q, r) => Math.abs(q.x + q.w / 2 - f.x) - Math.abs(r.x + r.w / 2 - f.x))[0];
+    return { kind: 'goto', x: p.x + p.w / 2, to: p };
+  }
   if (a && a.phase === 'live') {
     const d = a.data;
+    // spin class: be in the air on the drop (the floor bounces)
+    if (a.def.id === 'spin' && onSlab && d.bar) { const k = (a.t - d.lead) % d.bar; if (k >= d.dropAt - 12 && k <= d.dropAt - 6) return { kind: 'jump' }; }
+    // fire drill: get to the muster point until you're ticked off
+    if (a.def.id === 'firedrill' && d.s && !d.counted.includes(world.fighters.indexOf(f)) && Math.abs(f.x - d.x) > 50) return { kind: 'goto', x: d.x, to: d.s };
+    // ginger shot: go and drink it once it has landed
+    if (a.def.id === 'ginger' && d.landed && d.taken < 0 && Math.abs(d.x - f.x) < 700) return { kind: 'goto', x: d.x, to: d.s };
     // pages to sign: the nearest landed one if it's close (fight on the way)
     if (a.def.id === 'deal' && d.pages) {
       const p = d.pages.filter(q => q.taken < 0 && q.landed).sort((q, r) => Math.abs(q.x - f.x) - Math.abs(r.x - f.x))[0];

@@ -78,5 +78,11 @@ export const SFX = {
   bikeBell:{ vary: 0, layers: [fm({ f0: 1568, ratio: 2.2, index: 1, dur: 0.12, vol: 0.07 }), fm({ f0: 1568, ratio: 2.2, index: 1, dur: 0.14, vol: 0.07, delay: 0.1 })] },
   alarm:   { vary: 0, gap: 0.5, layers: [0, 0.15, 0.3].map(d => osc({ type: 'square', f0: 880, dur: 0.1, vol: 0.07, lp: 2400, delay: d })) },
   bell:    { vary: 0, gap: 0.5, layers: [fm({ f0: 1175, ratio: 1.41, index: 1.5, dur: 0.9, vol: 0.1 }), fm({ f0: 587, ratio: 1.41, index: 1, dur: 1.1, vol: 0.07 })] },
+  surf:    { vary: 0, gap: 0.8, layers: [noise({ filter: 'lowpass', f0: 180, f1: 1400, dur: 1.4, vol: 0.2, attack: 0.35 }), noise({ filter: 'highpass', f0: 3000, f1: 1200, dur: 1.1, vol: 0.06, attack: 0.5, delay: 0.3 }), osc({ f0: 70, f1: 40, dur: 1.2, vol: 0.14, delay: 0.2 })] },
+  splash:  { vary: 0.08, gap: 0.1, layers: [noise({ filter: 'bandpass', f0: 1800, f1: 600, dur: 0.22, vol: 0.14 }), osc({ f0: 180, f1: 70, dur: 0.12, vol: 0.12 })] },
+  kick:    { vary: 0, layers: [osc({ f0: 140, f1: 45, dur: 0.14, vol: 0.34 }), noise({ filter: 'highpass', f0: 6000, dur: 0.02, vol: 0.04 })] },
+  drop:    { vary: 0, layers: [osc({ f0: 110, f1: 32, dur: 0.32, vol: 0.46 }), noise({ filter: 'lowpass', f0: 900, f1: 200, dur: 0.3, vol: 0.14 }), osc({ type: 'sawtooth', f0: 220, f1: 440, dur: 0.18, vol: 0.05, lp: 1400 })] },
+  gulp:    { vary: 0.05, layers: [osc({ type: 'triangle', f0: 420, f1: 180, dur: 0.1, vol: 0.12 }), osc({ type: 'triangle', f0: 380, f1: 160, dur: 0.1, vol: 0.12, delay: 0.13 })] },
+  foam:    { vary: 0.1, gap: 0.08, layers: [noise({ filter: 'highpass', f0: 2200, f1: 4200, dur: 0.18, vol: 0.06 })] },
   jet:     { vary: 0, gap: 0.5, layers: [noise({ filter: 'lowpass', f0: 250, f1: 900, dur: 0.7, vol: 0.12, attack: 0.25 }), osc({ type: 'sawtooth', f0: 180, f1: 600, dur: 0.6, vol: 0.04, lp: 900 })] },
 };

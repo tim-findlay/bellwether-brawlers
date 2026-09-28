@@ -172,6 +172,8 @@ export const STATUS_LABEL = {
   nextHit: ['NEXT HIT +', BRASS],
   regen: ['LAST ORDERS', GREEN],
   holiday: ['ON HOLLIBOBS', BRASS],
+  slick: ['FOAMED', NAVY],
+  soggy: ['SOGGY', NAVY],
   berlin: ['HOME TURF', NAVY],
   noMeter: ['NO METER', BRASS],
   borrowed: ['ON LOAN', NAVY],

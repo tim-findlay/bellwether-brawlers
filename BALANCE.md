@@ -9,8 +9,8 @@
    **Unparryable (v3 definition, replaces v2 "unblockable"):** pierces Calendar Block's parry and Dad Reflexes' catch and cannot be armored through; whiffs against airborne and non-actionable fighters; dodge i-frames avoid it. The universal answer is *jump it*.
 3. **Counterplay is a hard requirement.** Every special and super ships with a written counter in DESIGN.md. No counter, no ship. Spikes are covered collectively by the spike counter-rules (telegraph rule; heaviest landing lag; spiking off-stage risks your own stock) — an individual spike needs its own written counter only if it breaks those defaults.
 4. **Statuses are short, visible, worded.** *Impairing* statuses (slow, silence, burn — and `reversed`, which no roster move applies since the kit rethink) cap at 3.5 s, callouts + duration bars, nothing self-stacks, reversal still ends when its owner converts. Marks and self-buffs (lien 8 s, Zulu Time's nextHit 10 s, I KNOW YOUR GUY's borrowed special 10 s) are exempt from the cap — they impair nobody — but keep callouts and declared durations. The two staggers are fixed-frame *states* (Numbers doctrine), not statuses.
-5. **Hazards never decide matches.** Telegraphed ≥ 1 s; knockback ≤ 6.0 (below kill-class, see Knockback); never directed toward a blast zone; symmetric or dodgeable; suppressed during supers; hazard staggers are never comboable (recovery invulnerability).
-6. **No camping packages.** Composure refills **only** on stock loss — waiting heals nothing. *The single exception:* ABI's PUB O'CLOCK regen (2/s for 5 s), which cancels on any hit — it forces her opponent to engage, the opposite of camping; gates 2–4 cover any abuse. Hazard rewards are meter-only. Off-stage time is risk by construction (no ledge invulnerability, air dodge once per airtime). Hazards push toward centre. Self-buff supers that don't commit their user to engaging build no meter while active (none on the roster since LIFETIME PLATINUM was retired; the `noMeter` status remains). I KNOW YOUR GUY is not one: its payoff is a special Nick still has to land, so it builds meter. Camping and ledge-stalling must sim worse than fighting (gates 2–4).
+5. **Hazards never decide matches.** Telegraphed ≥ 1 s; knockback ≤ 6.0 (below kill-class, see Knockback); never directed toward a blast zone (the Wave's wipeout and Spin Class's bounce pop straight up; Fire Drill foam stops 110 px short of the lips); symmetric or dodgeable; suppressed during supers; hazard staggers are never comboable (recovery invulnerability).
+6. **No camping packages.** Composure refills **only** on stock loss — waiting heals nothing. *The single exception:* ABI's PUB O'CLOCK regen (2/s for 5 s), which cancels on any hit — it forces her opponent to engage, the opposite of camping; gates 2–4 cover any abuse. Hazard rewards are meter — *the second exception:* the **Ginger Shot** event (+20 composure, never past full; +5 meter on a full gauge): one bottle, dropped on the centre or a mirrored spot, first touch only, announced — a contested pickup you fight over, never something you can wait for. Off-stage time is risk by construction (no ledge invulnerability, air dodge once per airtime). Hazards push toward centre. Self-buff supers that don't commit their user to engaging build no meter while active (none on the roster since LIFETIME PLATINUM was retired; the `noMeter` status remains). I KNOW YOUR GUY is not one: its payoff is a special Nick still has to land, so it builds meter. Camping and ledge-stalling must sim worse than fighting (gates 2–4).
 7. **Recovery is a balance axis, not a right.** Who has a recovery special is deliberate (Ben, Adrian, Nick: yes; Mike: emphatically not). Tune kill power against recovery strength, not in isolation.
 
 ## Numbers doctrine
@@ -86,7 +86,26 @@ Two independent samples before shipping a tuning pass: n ≈ 420–560 games per
 
 ## Current results
 
-**v3 balance pass 7 — roster requests (2026-09-28) — all five gates PASS on two independent seeds at N = 30.**
+**v3 balance pass 8 — party events (2026-09-28) — all five gates PASS on two independent seeds at N = 30.**
+
+| Fighter | seed 1337 | seed 2024 |
+|---|---|---|
+| Ben | 52.1 % | 45.7 % |
+| Tim | 48.8 % | 48.1 % |
+| Adrian | 56.7 % | 56.9 % |
+| Richy | 46.9 % | 50.0 % |
+| Nick | 46.4 % | 54.0 % |
+| Abi | 51.0 % | 47.9 % |
+| Mike | 46.0 % | 49.5 % |
+| Seelye | 52.1 % | 47.9 % |
+| **camp (≤ 55)** | 15.7 % | 16.4 % |
+| **stall (≤ 45)** | 0.8 % | 1.1 % |
+| **engagement flags (< 2 %)** | 0.48 % | 0.18 % |
+| **recovery dishonest (< 10 %)** | 0.72 % | 0.79 % |
+
+Spread 45.7–56.9 %. Avg match 6082 / 6069 f (~101 s); 6 / 2 capped, 0 stuck. **What changed (Tim's brief):** four new events — **The Wave**, **Spin Class**, **Fire Drill** (the v2 names, rebuilt) and the **Ginger Shot** (DESIGN.md "Stage hazards" 7–10) — join the rotation (~1 in 3 rolls on seed 1337: wave 637, spin 693, fire drill 495, ginger 1043 of 6321). The CPU plays them (boards before the crest, jumps the drop, goes to the muster point, drinks the shot). **Engine change, called out (Tim's sign-off is the brief itself — "extinguisher foam makes the floor slick"):** a `slick` status sets the fighter's ground friction to `PHYS.SLICK_FRICTION` (0.955, vs RUN_FRICTION 0.76) while it lasts; only Fire Drill applies it. The first cut left Adrian at 58.8 % on seed 1337 (gate 1 fail) — Pivot Table kbScale 12 → 11.5 — which then put Nick at 58.3 % on seed 2024; Fund Structure kbScale 12 → 11.5 (undoing pass 5's raise). A shorter toothbrush puddle (240 → 180f) was tried first and moved nothing; it was reverted. **Soft spots:** Adrian is top on both seeds again (56.7 / 56.9 %) — the next data pass should start with him.
+
+**v3 balance pass 7 — roster requests (2026-09-28, superseded) — all five gates PASS on two independent seeds at N = 30.**
 
 | Fighter | seed 1337 | seed 2024 |
 |---|---|---|

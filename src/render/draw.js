@@ -69,6 +69,7 @@ export class Renderer {
     drawAssists(c, world, sprites?.get?.('claude') ?? null, t);
     drawHazards(c, world, t);
     drawProjectiles(c, world, t);
+    events?.drawFront?.(c);
     fx?.drawWorld?.(c);
     Camera.reset(c);
     if (events?.stageFade > 0) {                       // stage transition fade (Berlin)

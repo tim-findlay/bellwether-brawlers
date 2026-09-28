@@ -2,34 +2,23 @@
 // data + small behaviour hooks; src/engine/events.js schedules and telegraphs
 // them. Coordinates are world px on world.stage (slab = main slab, y = its top).
 // Rules (BALANCE.md philosophy 5): telegraphed >= 1 s, kb <= 6, never toward
-// a blast zone, symmetric or dodgeable, rewards are meter-only.
+// a blast zone, symmetric or dodgeable, rewards are meter — except the one
+// small contested heal, the Ginger Shot (BALANCE.md numbers doctrine).
 // Design rule for this set: every event gives the fight a PLACE or a REASON to
 // move — contested pickups, a room to hold, new routes, ground to cede — and
 // the fighting never stops for it (no freezes, no mashing).
 // Hooks: canRoll(ctx) gates the roll · ready(ctx) gates telegraph -> live ·
-// start/update/end/abort · drawWorld (camera space) · drawUI (960x540).
+// start/update/end/abort · drawWorld (camera space, behind the fighters) ·
+// drawFront (camera space, over them) · drawUI (960x540).
 // `stages` limits an event to the stages it belongs to (omitted = everywhere).
 
 import { geometryOf } from './stages.js';
 
-const PAPER = '#f2e9d8', INK = '#2b2620', BRICK = '#c4452e', NAVY = '#27425f', BRASS = '#c9a227', GREEN = '#3f5a40';
-
-const onSlab = (f, slab) => f.state === 'normal' && f.grounded && Math.abs(f.y - slab.y) < 3 && f.x >= slab.x && f.x <= slab.x + slab.w;
-const bothOnSlab = ({ world, slab }) => world.fighters.every(f => onSlab(f, slab));
-const midX = (slab) => slab.x + slab.w / 2;
-const standingOn = (f, s) => f.grounded && !f.chair && Math.abs(f.y - s.y) < 4 && f.x >= s.x - 6 && f.x <= s.x + s.w + 6;
-const art = (ctx, name) => ctx.director?.art?.get?.(name) ?? null;
-// the highest platform near the middle of the stage (the natural "high ground"), else the slab
-function centrePerch(stage, slab) {
-  const mid = midX(slab);
-  const near = stage.platforms.filter(p => Math.abs(p.x + p.w / 2 - mid) < slab.w * 0.2);
-  return near.sort((a, b) => a.y - b.y)[0] || slab;
-}
-function room(data, i, slab) {
-  const s = data.rooms[i];
-  data.s = s; data.w = Math.min(s.w, 170); data.x = s === slab ? midX(slab) : s.x + s.w / 2;
-}
-const pips = (c, x, y, n, of, col) => { for (let i = 0; i < of; i++) { c.fillStyle = INK; c.fillRect(x + i * 18 - 1, y - 1, 14, 14); c.fillStyle = i < n ? col : PAPER; c.fillRect(x + i * 18, y, 12, 12); } };
+import { PAPER, INK, BRICK, NAVY, BRASS, GREEN, bothOnSlab, midX, standingOn, art, centrePerch, room, pips } from './events/_shared.js';
+import { WAVE } from './events/wave.js';
+import { SPIN } from './events/spin.js';
+import { FIREDRILL } from './events/firedrill.js';
+import { GINGER } from './events/ginger.js';
 
 export const EVENTS = [
   {
@@ -259,6 +248,7 @@ export const EVENTS = [
       c.fillText(side < 0 ? '◀ WET SIDE' : 'WET SIDE ▶', 480, 122);
     },
   },
+  WAVE, SPIN, FIREDRILL, GINGER,                    // the party events (src/data/events/*)
   crosswind({ id: 'gust', stages: ['rooftop'], name: 'CROSSWIND', banner: 'CROSSWIND!', sub: 'the gusts blow anyone airborne back to the middle', sound: 'wave', kind: 'wind' }),
   crosswind({ id: 'train', stages: ['tube'], name: 'TRAIN APPROACHING', banner: 'TRAIN APPROACHING!', sub: 'the draught pulls anyone airborne to the middle', sound: 'jet', kind: 'train' }),
   {

@@ -129,6 +129,8 @@ export class EventDirector {
 
   // Inside the camera transform: world px, surfaces at their real y.
   drawWorld(ctx) { if (this.active?.phase === 'live') this.active.def.drawWorld?.(this.ctx(), ctx); }
+  // Inside the camera transform, over the fighters (the Wave's water).
+  drawFront(ctx) { if (this.active?.phase === 'live') this.active.def.drawFront?.(this.ctx(), ctx); }
   // Screen space, 960x540.
   drawUI(ctx) { if (this.active) this.active.def.drawUI?.(this.ctx(), ctx); }
 }

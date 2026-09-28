@@ -8,7 +8,7 @@ export default {
   body: { suit: '#3a4a63', trim: '#caa46a', skin: '#e8c39a', hair: { color: '#c2a36b', style: 'beard' }, height: 1.0, extras: [] },
   stats: { gauge: 94, runMax: 5.8, jumpImpulse: 15.5, fallMax: 13.5, weight: 0.97 },
   light: { name: 'Toothbrush Jab', dmg: 5, kb: 4.5, kbScale: 4, kbAngle: 40, range: 56, startup: 3, active: 3, recover: 10 },
-  heavy: { name: 'Pivot Table', dmg: 10, kb: 7, kbScale: 12, kbAngle: 40, range: 64, startup: 11, active: 4, recover: 16, bothSides: true },
+  heavy: { name: 'Pivot Table', dmg: 10, kb: 7, kbScale: 11.5, kbAngle: 40, range: 64, startup: 11, active: 4, recover: 16, bothSides: true },
   aerials: aerials({ n: 'Panic Flail', s: 'Overreach', u: 'Up-and-Over', d: 'Faceplant' }, { n: { range: 72 }, s: { kb: 6.5, kbScale: 11 }, d: { whiffStagger: true } }),
   s1: { name: 'Clumsy Charge', kind: 'lunge', air: true, dmg: 11, kb: 8, kbScale: 11, kbAngle: 35, travel: 170, range: 50, startup: 8, active: 8, recover: 18, cooldown: 380, whiffTrip: true },
   s2: { name: 'Toothbrush Toss', kind: 'lob', air: true, dmg: 5, kb: 4.5, kbScale: 4, kbAngle: 55, speed: 4.2, vy: -7, grav: 0.34, w: 24, h: 10, shape: 'toothbrush', color: '#5f9fc4', cooldown: 420, startup: 10, active: 2, recover: 16,

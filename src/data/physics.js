@@ -13,6 +13,7 @@ export const PHYS = {
   RUN_ACCEL: 0.9,           // px/f^2 toward the held direction
   TURN_ACCEL_MULT: 2.2,     // extra accel while vx opposes the held direction (skid-turn)
   RUN_FRICTION: 0.76,       // per-frame vx multiplier when no ground input
+  SLICK_FRICTION: 0.955,    // …on a slick floor (the 'slick' status: fire-drill foam) — you keep sliding
   AIR_ACCEL: 0.55,
   AIR_MAX_FACTOR: 0.9,      // air drift cap = runMax * this
   FAST_FALL_MULT: 2.2,      // gravity AND fall cap multiplier while fast-falling

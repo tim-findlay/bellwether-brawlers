@@ -311,10 +311,11 @@ export class Fighter {
     const guard = this.attack && !this.attack.aerial && !this.attack.move.travel && this.grounded;
     // movement: locked during ground attacks and landing lag; aerials keep drift
     let mi = intent;
-    this.body.friction = null;
+    const slick = this.hasStatus('slick') ? PHYS.SLICK_FRICTION : null;   // foam underfoot (events apply it)
+    this.body.friction = slick;
     if (this.attack) {
       if (this.attack.aerial) mi = { ...intent, jump: false, dodge: false, downTapped: false, dashLeft: false, dashRight: false };
-      else { mi = NEUTRAL; this.body.friction = this._slide(intent); }
+      else { mi = NEUTRAL; const f = this._slide(intent); this.body.friction = f === null ? slick : f; }
     } else if (this.landLag > 0) mi = NEUTRAL;
     if (this.body.stun === 0 && this.state === 'normal' && this.opp && !this.attack && this.landLag === 0 &&
         this.grounded && !intent.left && !intent.right && Math.abs(this.body.vx) < 0.5 && !this.body.dodging)

@@ -57,13 +57,17 @@ Seelye's LIEN: his heavy and his recovery mark you; his next special collects +4
 
 ### Office events (Settings → can be toggled; ON by default)
 
-All events are telegraphed with a klaxon + banner, are symmetric, never push toward a blast zone, reward meter only — and the fight never stops for them:
+All events are telegraphed with a klaxon + banner, are symmetric, never push toward a blast zone, reward meter (the ginger shot is the one small heal) — and the fight never stops for them:
 
 - **DEAL DEADLINE** — signature pages flutter down onto mirrored spots; touch them to sign. First to three closes the deal.
 - **INVESTMENT COMMITTEE** — an IC room lights up on the high ground; hold it alone to win the vote.
 - **SITE VISIT** — a crane lowers two scaffold decks over the stage for a few seconds: new ground, then gone.
 - **SPRINKLER TEST** (office, pub) — one half of the floor is soaked and slows you, then the other.
 - **CROSSWIND** (rooftop) / **TRAIN APPROACHING** (tube) — anyone airborne drifts back toward the middle.
+- **THE WAVE** — a wall of water rolls across the whole screen and the platforms turn into surfboards. Still on the floor when it hits? WIPEOUT (no damage — you just get soggy). Surfers get meter.
+- **SPIN CLASS** — the spin bikes come out and the floor bounces on every DROP (1 · 2 · 3 · DROP). Be in the air on the drop to catch the beat; most beats is Class MVP.
+- **FIRE DRILL** (office, pub, palace, tube) — the fire warden foams the floor (slippery!) and calls the roll at the muster point. First one there is accounted for.
+- **GINGER SHOT** — a ginger shot drops in; first to drink it gets some composure back.
 - **BERLIN TRIP** — Mike only: the stage crossfades to Berlin and he gets a home-turf buff for a stretch.
 
 ## Run locally
@@ -97,7 +101,7 @@ Everything is data-driven — see [DESIGN.md](DESIGN.md) for the full architectu
 - **A fighter:** add `src/data/characters/<id>.js` (stats inside the BALANCE.md bands, light/heavy/aerials — the side/down lights, signatures, recovery and ground pound are derived for you, override any of them under `kit` — two specials, super, AI hints, drawn-body palette) and list it in `src/data/characters/index.js`. Drop `assets/headshots/<id>.png` (square photo) for the win screen, and `assets/sprites/<id>/{idle,run,jump,attack}.png` (64 px cells, described in `src/data/sprites.js`) for animation and the select card — **no code change**; without them the drawn cartoon head / body is used.
 - **A stage:** add an object to `src/data/stages.js` (geometry: slab, soft platforms, spawns, respawn, camera bounds, blast zones; plus palette/art metadata) and optionally drop a 480×270 `assets/stages/<id>.png` far backdrop and a 512 px wide `assets/stages/<id>-slab.png` arena piece (top edge = walkable top). Without them the procedural layers and slab draw. `selectable: false` keeps it event-only, like Berlin.
 - **Front-end art:** replace `assets/ui/logo.png`, `vs.png` or `trophy.png` (keyed PNG, any size; drawn to fit). Delete one and the code-drawn version returns.
-- **An event:** add an object to `src/data/events.js` (telegraph, weight, optional `requiresCharacter`, and small start/update/draw hooks).
+- **An event:** add an object to `src/data/events.js`, or a module in `src/data/events/` listed there (telegraph, weight, optional `requiresCharacter` / `stages`, and small start/update/draw hooks — `drawFront` draws over the fighters).
 
 ## License
 
