@@ -39,7 +39,7 @@ export class Fighter {
     this.attack = null; this.landLag = 0; this.chair = null; this.hazardInv = 0; this.tripOnLand = false; this.recoveryUsed = false;
     this.statuses = new Map();
     this.controller.reversed = false;
-    this.hurtFlash = 0; this.animT = (this.side + 1) * 17;
+    this.hurtFlash = 0; this.cancelFlash = 0; this.animT = (this.side + 1) * 17;
     this._animName = 'idle'; this._animT = 0;
     this.custom = {};
   }
@@ -275,6 +275,7 @@ export class Fighter {
   update() {
     this.animT++; this.stateT++;
     if (this.hurtFlash > 0) this.hurtFlash--;
+    if (this.cancelFlash > 0) this.cancelFlash--;
     if (this.hazardInv > 0) this.hazardInv--;
     if (this.cd.s1 > 0) this.cd.s1--;
     if (this.cd.s2 > 0) this.cd.s2--;
@@ -295,6 +296,7 @@ export class Fighter {
 
     const x0 = this.body.x;
     if (this.state === 'normal') {
+      if (this._cancelOpen() && this._wantsCancel(intent)) { this.attack = null; this.cancelFlash = 6; }   // hit-confirm cancel
       if (this.actionable) this._readButtons(intent);
       if (this.attack && this.state === 'normal') this.advanceAttack();
     }
@@ -332,6 +334,17 @@ export class Fighter {
     }
     if (this.landLag > 0) this.landLag--;
     this._tickAnim();
+  }
+
+  // Hit-confirm cancel window: a light that connected, past HIT_CANCEL_FRAC of its recovery.
+  _cancelOpen() {
+    const a = this.attack, m = a?.move;
+    if (!a || a.slot !== 'light' || !a.hasHit) return false;
+    return a.frame > (m.startup || 0) + (m.active || 0) + Math.ceil((m.recover || 0) * PHYS.HIT_CANCEL_FRAC);
+  }
+  _wantsCancel(intent) {
+    const c = this.controller;
+    return c.buffered('light') || c.buffered('heavy') || intent.jump || intent.dashLeft || intent.dashRight;
   }
 
   // Ground friction while a ground move runs (PHYS "attacks in motion"): the

@@ -10,7 +10,7 @@ const CONTROLS = [
   ['MOVE', 'double-tap: dash · swing on the run: lunge', ['A', 'D'], ['←', '→'], 'STICK'],
   ['JUMP', 'twice more in the air', ['W'], ['↑'], 'A / ✕'],
   ['FAST-FALL / DROP', 'hold / tap on a platform', ['S'], ['↓'], 'DOWN'],
-  ['LIGHT', '+ direction: jab · side · down · aerials', ['F'], ['K'], 'X / □'],
+  ['LIGHT', '+ direction · on hit: cancel into more', ['F'], ['K'], 'X / □'],
   ['HEAVY', 'signatures · in the air: recovery', ['G'], ['L'], 'B / ○'],
   ['SPECIAL 1 / 2', 'cooldown pips under your bar', ['H', 'J'], [';', "'"], 'RB / LB'],
   ['DODGE', 'spot · step · air (i-frames)', ['V'], ['/'], 'TRIGGERS'],

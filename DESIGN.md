@@ -34,6 +34,7 @@ Universal constants live in **`src/data/physics.js`**; per-character movement nu
 - **Air dodge:** i-frames + a directional impulse; once per airtime, refreshed on landing, ledge grab or respawn; doubles as recovery.
 - **Ledge:** see core rules — grab, climb, ledge-jump, drop.
 - **Attacks in motion:** a ground move keeps the run — it slides through the wind-up and the hit (hold forward to keep more speed, hold back to brake, the recovery plants), and every ground move steps into its hit (lights a little, the side signature a real lunge). A dash-attack ends the dash at run speed. Steps and slides stop at the ledge and at the opponent's body; true lunges (`travel`) don't. Numbers in BALANCE.md ("Attacks in motion").
+- **Hit-confirm cancels:** a light that connects can cut its recovery short into a jump, a dash or another attack — strings are earned by landing the first hit; a whiffed light is still fully punishable. Numbers in BALANCE.md.
 - Feel floor: 5-frame coyote time, 6-frame input buffer (jump/dodge/attacks), per-aerial landing lag, per-character fall speed (gravity is global).
 
 Fixed-timestep 60 Hz logic is unchanged. Never tie gameplay to rAF rate.

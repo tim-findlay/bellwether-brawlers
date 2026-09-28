@@ -55,11 +55,15 @@
 | DROP_THROUGH_GRACE | 8f | AIR_MOMENTUM_DECAY | 0.985 |
 | GROUND_DEADZONE | 0.05 | | |
 | ATTACK_SLIDE | 0.88 (vx × this per frame, ground move startup + active, stick neutral) | ATTACK_SLIDE_HOLD | 0.95 (… holding the facing direction; holding back = RUN_FRICTION) |
-| ATTACK_CARRY_CAP | 1.15 × run (entry speed cap; a dash-attack ends the dash) | | |
+| ATTACK_CARRY_CAP | 1.15 × run (entry speed cap; a dash-attack ends the dash) | STEP_SCALE | 1.0 (× every move's `step`; the ?tune knob) |
+| BODY_GAP | 34 px | MELEE_H / MELEE_REACH | 76 px / × 1.1 |
+| HIT_CANCEL_FRAC | 0.4 (a light that connects may cancel after this much of its recovery) | | |
 
 Jump arcs under the new table (MID: impulse 15): single-jump rise ≈ 132 px in 18 frames; jump → double-jump ≈ 264 px; the third jump (AIR_JUMPS 2, Phase 3b) adds another 132 px of recovery reach, which the KB multipliers and the wider blast zones were tuned against. **Consequence called out:** the low platforms (≈110 px above the slab) are now single-jump reachable — the Phase-2 "deliberately just short" rule is retired in favour of pace; upper platforms still need the double jump or a platform hop.
 
 **Attacks in motion (2026-09-28, Tim's brief: "hit in motion, not stop-and-hit" — his sign-off for this feel change).** A ground move no longer plants the body on its first frame: the entry speed (capped at `ATTACK_CARRY_CAP × runMax`) slides through the startup and active frames under `ATTACK_SLIDE`, holding forward keeps more (`ATTACK_SLIDE_HOLD`), holding back brakes at `RUN_FRICTION`, and the recovery plants. A move's `carry` (0–1, default 1) scales the slide (`carry: 0` plants: Abi's parry). Every derived ground move also has an eased **`step`** (px) that accelerates into the active frames — lights n/s/d 8/18/6, signatures n/s/d 18/56/12 (Ben's Corner Office 40); the side variants' old linear `travel` became `step`. A step or slide **stops at the edge of the surface you stand on and 34 px short of the opponent's centre** (without the second rule a step carried attackers through a close target and left them facing the wrong way — engagement flags rose to 3.4 %); `travel` lunges are exempt (Off the Lip still leaves the stage, Clumsy Charge still runs through). The forward melee box grew 64 → 76 px tall and its reach × 1.1 (short hops slipped over it); the AI's `meleeHits` mirrors the box, the step and the carried run.
+
+**Hit-confirm cancels (2026-09-28, Tim's sign-off).** A **light that connects** (ground or aerial) may cut its recovery short once `HIT_CANCEL_FRAC` of it has passed — into a jump, a dash, or another light / heavy; a brass ring marks the cancel. A whiffed light keeps its full recovery, so the punish window survives. Nothing else cancels. The CPU strings a follow-up into the window with its profile's `mixup` chance (easy 0.15 … hard 0.7).
 
 I-frame windows are **0-indexed engine ticks** counted from the dodge's first full tick (the start tick is tick 0) — combat code must read them with that convention.
 
@@ -82,7 +86,26 @@ Two independent samples before shipping a tuning pass: n ≈ 420–560 games per
 
 ## Current results
 
-**v3 balance pass 5 — attacks in motion (2026-09-28) — all five gates PASS on two independent seeds at N = 30** (same methodology).
+**v3 balance pass 6 — hit-confirm cancels (2026-09-28) — all five gates PASS on two independent seeds at N = 30.**
+
+| Fighter | seed 1337 | seed 2024 |
+|---|---|---|
+| Ben | 51.2 % | 56.1 % |
+| Tim | 52.9 % | 46.3 % |
+| Adrian | 45.5 % | 46.7 % |
+| Richy | 52.1 % | 45.8 % |
+| Nick | 47.6 % | 50.0 % |
+| Abi | 50.5 % | 51.2 % |
+| Mike | 51.2 % | 54.6 % |
+| Seelye | 49.0 % | 49.3 % |
+| **camp (≤ 55)** | 18.6 % | 16.8 % |
+| **stall (≤ 45)** | 1.1 % | 1.1 % |
+| **engagement flags (< 2 %)** | 0.54 % | 0.3 % |
+| **recovery dishonest (< 10 %)** | 0.69 % | 0.69 % |
+
+Spread 45.5–56.1 %. Avg match 5934 / 5999 f (~99 s); 4 / 5 capped, 0 stuck. **What changed:** hit-confirm cancels (above). Unadjusted they lifted the fastest lights — Tim 57.6 %, Abi 55.5–56.2 % — so Tim's Quick Sync recovery 10 → 11f (it keeps the fastest startup) and Abi's Double-Booked kbScale 12.5 → 12. The CPU's first cut also strung *aerial* follow-ups, which chased launched targets off-stage: the normal profile's voluntary off-stage time rose from 1634 to 2195 frames over 8 seeded matches (tests/ai.test.mjs's loiter check failed on its seed) — CPU strings are now ground-only (1864 frames; the stall profile still loiters far more). With the AI settled Tim read 59.3 % on seed 2024, so Hard Deadline went back to kbScale 12 (pass 4 had raised it to 12.5). **Soft spots:** Tim moved 13 points on a 0.5 kbScale change between runs — he sits on a knife-edge in the sim and needs a human read, not more numbers.
+
+**v3 balance pass 5 — attacks in motion (2026-09-28, superseded) — all five gates PASS on two independent seeds at N = 30** (same methodology).
 
 | Fighter | seed 1337 | seed 2024 |
 |---|---|---|

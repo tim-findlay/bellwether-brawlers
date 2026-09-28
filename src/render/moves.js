@@ -93,6 +93,11 @@ const MELEE = new Set([undefined, 'melee', 'lunge', 'flurry', 'shout', 'dashComb
 
 export function drawMoveFX(c, f, t) {
   const a = f.attack, m = a?.move, b = f.body;
+  if (b && f.cancelFlash > 0) {                                   // hit-confirm cancel: a quick brass ring off the body
+    const r = 30 + (6 - f.cancelFlash) * 7, cy = b.y - (b.h || 96) * 0.5;
+    c.fillStyle = BRASS;
+    for (let i = 0; i < 12; i++) { const ang = (i / 12) * Math.PI * 2; c.fillRect(Math.round(b.x + Math.cos(ang) * r) - 2, Math.round(cy + Math.sin(ang) * r * 0.8) - 2, 4, 4); }
+  }
   if (!m || !b) return;
   const su = m.startup || 0, ac = Math.max(1, m.active || 0), fr = a.frame;
   const face = b.facing ?? 1, h = b.h || 96;

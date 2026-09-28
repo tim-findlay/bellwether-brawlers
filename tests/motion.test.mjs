@@ -100,3 +100,43 @@ test('a travel lunge still leaves the stage on purpose (Off the Lip)', () => {
   run(w, a.attack.move.startup + a.attack.move.active);
   assert.ok(a.body.x > edge, `lunged past the lip: x ${a.body.x.toFixed(1)} edge ${edge}`);
 });
+
+// ---- hit-confirm cancels (2026-09-28) ------------------------------------------
+const lightSetup = (gap) => {
+  const { w, c, a, b, slab } = mk('tim', 'mike');
+  a.body.x = slab.x + slab.w * 0.4; b.body.x = a.body.x + gap; run(w, 2); a.body.facing = 1;
+  c[0].q.add('light'); run(w, 1);
+  const m = a.attack.move;
+  return { w, c, a, b, m, open: (m.startup || 0) + (m.active || 0) + Math.ceil((m.recover || 0) * PHYS.HIT_CANCEL_FRAC) };
+};
+
+test('a light that connects cancels its recovery into another light', () => {
+  const { w, c, a, m, open } = lightSetup(50);
+  while (a.attack && !a.attack.hasHit && a.attack.frame < 30) run(w, 1);
+  assert.ok(a.attack?.hasHit, 'the light connected');
+  const first = a.attack;
+  while (a.attack === first && a.attack.frame < open) run(w, 1);
+  c[0].q.add('light'); run(w, 2);                     // the window is strict (> open): the press lands next tick
+  assert.ok(a.attack && a.attack !== first, 'a new light started out of the cancel');
+  assert.ok(first.frame < (m.startup || 0) + (m.active || 0) + (m.recover || 0), 'before the old recovery ran out');
+});
+
+test('a whiffed light keeps its whole recovery (no cancel)', () => {
+  const { w, c, a, m } = lightSetup(400);
+  const first = a.attack, total = (m.startup || 0) + (m.active || 0) + (m.recover || 0);
+  run(w, (m.startup || 0) + (m.active || 0) + 2);
+  c[0].q.add('light'); c[0].it = { jump: true }; run(w, 1); c[0].it = {};
+  assert.equal(a.attack, first, 'still in the whiffed light');
+  assert.equal(a.attack.hasHit, false);
+  while (a.attack === first) run(w, 1);
+  assert.ok(first.frame >= total - 1, `ran its full recovery (${first.frame}/${total})`);
+});
+
+test('the cancel window opens only after HIT_CANCEL_FRAC of the recovery', () => {
+  const { w, c, a, open } = lightSetup(50);
+  while (a.attack && !a.attack.hasHit && a.attack.frame < 30) run(w, 1);
+  const first = a.attack;
+  assert.ok(first.frame < open, 'hit lands before the window');
+  c[0].q.add('light'); run(w, 1);
+  assert.equal(a.attack, first, 'an early press is buffered, not a cancel');
+});

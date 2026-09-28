@@ -55,4 +55,8 @@ export const PHYS = {
   BODY_GAP: 34,             // a step / slide stops this far from the opponent's centre
   MELEE_H: 76,              // forward melee box height (was 64: short hops slipped over it)
   MELEE_REACH: 1.1,         // forward melee box width = move.range * this
+  // Hit-confirm cancels (2026-09-28, Tim's sign-off): a light that CONNECTS may
+  // cut its recovery short — after this fraction of it — into a jump, a dash,
+  // or another light / heavy. A whiffed light keeps its full recovery (the punish).
+  HIT_CANCEL_FRAC: 0.4,
 };

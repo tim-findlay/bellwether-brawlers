@@ -103,8 +103,21 @@ export class AIController {
       if (hz) this.plan = hz;
     }
     if (f.state === 'normal') act(this, f, opp, world);
+    if (f.state === 'normal') this._string(f, opp, world);
     if (f.attack?.victim && f.attack.move.aimable) this._aimThrow(f, world);
     this._compose(f);
+  }
+
+  // Hit-confirm: a light just connected — string a follow-up into the cancel
+  // window (decided once per attack; harder CPUs string more often).
+  _string(f, opp, world) {
+    const a = f.attack;
+    if (!a || a.slot !== 'light' || !a.hasHit || a.aiString !== undefined) return;
+    a.aiString = this.rng() < this.profile.mixup;
+    if (!a.aiString || opp.body.stun === 0) return;
+    if (a.aerial) return;          // ground strings only: CPU air strings chased launched targets off-stage (loiter test, 8 seeds)
+    this.gAim = opp.y < f.y - 30 ? 'd' : 's'; this.gAimDir = opp.x >= f.x ? 1 : -1; this.gAimUntil = this.frame + PHYS.INPUT_BUFFER;
+    this.press(this.rng() < 0.3 ? 'heavy' : 'light');
   }
 
   // Holding a victim with an aimable grab: throw toward the nearer edge (hold back
