@@ -10,7 +10,7 @@ import { mainSlab, midOf, roomOn, standingSurface, surfaceBelow, isOffStage } fr
 
 const RANGED = ['projectile', 'lob', 'groundProjectile', 'fan', 'columns'];
 const MELEE_KINDS = [undefined, 'melee', 'lunge', 'flurry', 'shout', 'dashCombo', 'aerial'];
-const HURT_W = 44, BODY_H = 96;
+const HURT_W = 44, BODY_H = 96, MELEE_H = 76;   // mirrors fighter.js
 
 // ---- geometry (mirrors Fighter.hitbox / hurtbox) --------------------------------
 
@@ -19,13 +19,15 @@ const HURT_W = 44, BODY_H = 96;
 export function meleeHits(f, m, opp, aim = null, slack = 0) {
   if (!m || !MELEE_KINDS.includes(m.kind)) return false;
   const b = f.body, reach = m.range || 60, h = BODY_H;
-  const travel = (m.kind === 'lunge' || m.kind === 'dashCombo' || m.kind === 'flurry') ? (m.travel || 0) : 0;
   const facing = opp.x >= b.x ? 1 : -1;                       // assume we square up before pressing
+  // lunges' travel, the eased step-in, and the run the swing carries (PHYS attacks in motion)
+  const travel = ((m.kind === 'lunge' || m.kind === 'dashCombo' || m.kind === 'flurry') ? (m.travel || 0) : 0)
+    + (m.step || 0) * 0.8 + (f.grounded && m.kind !== 'aerial' ? Math.max(0, b.vx * facing) * 5 : 0);
   let hx, hy, hw, hh;
   if (aim === 'u') { hx = b.x; hy = b.y - h - 10; hw = reach; hh = 50; }
   else if (aim === 'd') { hx = b.x; hy = b.y + 14; hw = reach; hh = 46; }
   else if (m.bothSides || aim === 'n') { hx = b.x; hy = b.y - h * 0.5; hw = reach * 1.7; hh = 64; }
-  else { hx = b.x + facing * (reach * 0.55 + travel * 0.5); hy = b.y - h * 0.5; hw = reach + travel; hh = 64; }
+  else { hx = b.x + facing * (reach * 0.55 + travel * 0.5); hy = b.y - h * 0.5; hw = reach * 1.1 + travel; hh = MELEE_H; }
   const ob = opp.hurtbox();
   return Math.abs(hx - ob.x) < (hw + ob.w) / 2 + slack && Math.abs(hy - ob.y) < (hh + ob.h) / 2 + slack * 0.5;
 }

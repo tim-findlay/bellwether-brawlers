@@ -31,22 +31,22 @@ const r1 = (v) => Math.round(v * 10) / 10;
 export function expandKit(cfg) {
   const L = cfg.light, H = cfg.heavy, A = cfg.aerials, K = cfg.kit || {}, N = K.names || {};
   const lights = {
-    n: L,
-    // side light: a short step-in poke that sends sideways — the string starter
+    n: { step: 8, ...L },                      // every ground move steps into the hit (`step`, eased; see PHYS attacks in motion)
+    // side light: a longer step-in poke that sends sideways — the string starter
     s: { ...L, name: N.sLight || `${L.name} (side)`, dmg: L.dmg + 1, kb: r1(L.kb * 1.1), kbScale: L.kbScale + 1, kbAngle: 28,
-         range: Math.round(L.range * 1.2), travel: 22, startup: L.startup + 2, recover: L.recover + 3, ...K.lights?.s },
+         range: Math.round(L.range * 1.2), step: 18, startup: L.startup + 2, recover: L.recover + 3, ...K.lights?.s },
     // down light: a low sweep that pops them up — the combo starter into aerials
-    d: { ...L, name: N.dLight || `${L.name} (low)`, kbAngle: 72, kb: r1(L.kb * 0.9), range: Math.round(L.range * 0.9), low: true,
+    d: { ...L, name: N.dLight || `${L.name} (low)`, kbAngle: 72, kb: r1(L.kb * 0.9), range: Math.round(L.range * 0.9), low: true, step: 6,
          startup: L.startup + 1, recover: L.recover + 2, ...K.lights?.d },
   };
   const sigs = {
-    n: H,
+    n: { step: 18, ...H },
     // side signature: the heavy with a lunge — reach at the cost of commitment
-    s: { ...H, name: N.sSig || `${H.name} (side)`, kbAngle: Math.min(H.kbAngle, 32), travel: 56, startup: H.startup + 2, recover: H.recover + 4,
+    s: { ...H, name: N.sSig || `${H.name} (side)`, kbAngle: Math.min(H.kbAngle, 32), step: 56, startup: H.startup + 2, recover: H.recover + 4,
          range: Math.round(H.range * 0.95), ...K.sigs?.s },
     // down signature: a low launcher that sends UP — sets up the air chase, kills off the top late
     d: { ...H, name: N.dSig || `${H.name} (low)`, kbAngle: 78, dmg: H.dmg - 1, kb: r1(H.kb * 0.95), kbScale: r1(H.kbScale * 0.9), low: true,
-         range: Math.round(H.range * 0.85), startup: Math.max(9, H.startup - 2), recover: H.recover + 2, ...K.sigs?.d },
+         range: Math.round(H.range * 0.85), step: 12, startup: Math.max(9, H.startup - 2), recover: H.recover + 2, ...K.sigs?.d },
   };
   // recovery: air heavy — a rising strike that also carries the body up (once per airtime)
   const recovery = { name: N.recovery || `${A.u.name} Rise`, kind: 'aerial', dmg: 7, kb: 6, kbScale: 9, kbAngle: 80, range: 64,

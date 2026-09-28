@@ -16,6 +16,8 @@ export const HAZARD_STAGGER = 20;    // hazard losers: brief, invulnerable throu
 const SLOT_PRIORITY = ['super', 's2', 's1', 'heavy', 'light'];
 const NEUTRAL = Object.freeze({ left: false, right: false, down: false, downTapped: false, jump: false, dodge: false, dashLeft: false, dashRight: false });
 const HURT_W = 44;
+const BODY_GAP = 34;                 // a sliding / stepping attack stops this far from the opponent's centre
+export const MELEE_H = 76;          // forward melee box height (was 64: short hops slipped over it)
 
 export class Fighter {
   constructor(cfg, side, controller, world) {
@@ -134,6 +136,11 @@ export class Fighter {
     }
     this.attack = { slot, move, frame: 0, hasHit: false, fired: false, aerial, aim: aim || 'n', hits: 0, armorSpent: false };
     this.body.fastFalling = false;
+    if (!aerial && this.grounded) {                                    // attacks in motion: keep the run, not the dash
+      const b = this.body, cap = this.stats.runMax * PHYS.ATTACK_CARRY_CAP * (move.carry ?? 1);
+      if (b.dashT > 0) { b.dashT = 0; b.dashCd = PHYS.DASH_COOLDOWN; }
+      b.vx = Math.max(-cap, Math.min(cap, b.vx));
+    }
     if (move.unparryable) this.world.fx.text(this.x, this.y - 134, 'UNPARRYABLE!', '#c4452e');
     if (this.cfg.hooks?.onMoveStart) this.cfg.hooks.onMoveStart(this, slot, move);
     if ((slot === 's1' || slot === 's2') && move.announce !== false) this.world.fx.text(this.x, this.y - 116, move.name.toUpperCase(), this.cfg.body.trim);
@@ -147,6 +154,11 @@ export class Fighter {
     if (m.travel && a.frame <= (m.startup || 0) + (m.active || 0)) {
       this.body.x += this.facing * (m.travel / ((m.startup || 0) + (m.active || 0)));
       if (this.airborne && m.kind !== 'aerial') this.body.vy = Math.min(this.body.vy, 0);   // lunges hover through their travel
+    }
+    if (m.step && !a.aerial) {                                           // eased step-in: accelerates into the active frames
+      const su = m.startup || 0, s0 = Math.floor(su * 0.35), s1 = su + Math.ceil((m.active || 0) / 2);
+      const e = (fr) => { const k = Math.max(0, Math.min(1, (fr - s0) / Math.max(1, s1 - s0))); return k * k * (3 - 2 * k); };
+      this.body.x += this.facing * m.step * (e(a.frame) - e(a.frame - 1));
     }
     if (m.lift && this.airborne) {                                       // recovery: rise through startup + active
       if (a.frame === 1) this.body.vy = -m.lift;
@@ -278,21 +290,31 @@ export class Fighter {
     }
     if (this.state === 'hitstun' && this.body.stun === 0) { this.state = 'normal'; this.stateT = 0; }
 
+    const x0 = this.body.x;
     if (this.state === 'normal') {
       if (this.actionable) this._readButtons(intent);
       if (this.attack && this.state === 'normal') this.advanceAttack();
     }
+    // a step-in or slide stops at the edge you stand on and at the opponent's body
+    // (a `travel` lunge doesn't: Off the Lip leaves the stage and runs through on purpose)
+    const guard = this.attack && !this.attack.aerial && !this.attack.move.travel && this.grounded;
     // movement: locked during ground attacks and landing lag; aerials keep drift
     let mi = intent;
-    if (this.attack) mi = this.attack.aerial ? { ...intent, jump: false, dodge: false, downTapped: false, dashLeft: false, dashRight: false } : NEUTRAL;
-    else if (this.landLag > 0) mi = NEUTRAL;
+    this.body.friction = null;
+    if (this.attack) {
+      if (this.attack.aerial) mi = { ...intent, jump: false, dodge: false, downTapped: false, dashLeft: false, dashRight: false };
+      else { mi = NEUTRAL; this.body.friction = this._slide(intent); }
+    } else if (this.landLag > 0) mi = NEUTRAL;
     if (this.body.stun === 0 && this.state === 'normal' && this.opp && !this.attack && this.landLag === 0 &&
         this.grounded && !intent.left && !intent.right && Math.abs(this.body.vx) < 0.5 && !this.body.dodging)
       this.body.facing = this.opp.x >= this.x ? 1 : -1;            // idle: square up to the opponent
+    if (guard) this._guardSlide(x0);
     this.body.update(mi, this.world.stage);
     if (this.body.consumedJump) this.controller.consume('up');
     if (this.body.consumedDodge) this.controller.consume('dodge');
     if (this.body.dashT > 0 && this.body.dashT % 3 === 0) this.world.fx.dust(this.x - this.body.dashDir * 12, this.y - (this.body.airDash ? 34 : 0), '#cbbfa6', 2);
+    if (this.attack && !this.attack.aerial && this.grounded && Math.abs(this.body.vx) > 2.5 && this.animT % 4 === 0)
+      this.world.fx.dust(this.x - Math.sign(this.body.vx) * 10, this.y, '#cbbfa6', 2);   // sliding-attack scuff
     if (this.body.landed) {
       if (this.attack?.aerial) {
         const m = this.attack.move, whiffed = !this.attack.hasHit;
@@ -305,6 +327,36 @@ export class Fighter {
     }
     if (this.landLag > 0) this.landLag--;
     this._tickAnim();
+  }
+
+  // Ground friction while a ground move runs (PHYS "attacks in motion"): the
+  // wind-up and active frames slide, holding forward keeps more speed, holding
+  // back brakes, the recovery plants. carry 0 plants at once.
+  _slide(intent) {
+    const a = this.attack, m = a.move, carry = m.carry ?? 1;
+    if (carry <= 0) return 0;
+    if (a.frame > (m.startup || 0) + (m.active || 0)) return null;
+    const dir = (intent.right ? 1 : 0) - (intent.left ? 1 : 0);
+    if (dir === -this.facing) return null;
+    return Math.pow(dir === this.facing ? PHYS.ATTACK_SLIDE_HOLD : PHYS.ATTACK_SLIDE, 1 / carry);
+  }
+
+  _guardSlide(x0) {
+    const b = this.body, sur = this._surface(), o = this.opp;
+    let lo = sur ? sur.x + 4 : -Infinity, hi = sur ? sur.x + sur.w - 4 : Infinity;
+    if (o && !o.chair && o.state !== 'ko' && Math.abs(o.y - this.y) < 60) {
+      if (this.facing > 0 && o.x > x0) hi = Math.min(hi, Math.max(x0, o.x - BODY_GAP));
+      if (this.facing < 0 && o.x < x0) lo = Math.max(lo, Math.min(x0, o.x + BODY_GAP));
+    }
+    b.x = Math.max(lo, Math.min(hi, b.x));
+    const nx = b.x + b.vx * (b.friction ?? PHYS.RUN_FRICTION);
+    if (nx < lo || nx > hi) b.vx = 0;
+  }
+
+  _surface() {
+    const b = this.body, st = this.world.stage;
+    for (const s of [...(st.slabs || []), ...(st.platforms || [])]) if (Math.abs(b.y - s.y) < 2 && b.x >= s.x - 2 && b.x <= s.x + s.w + 2) return s;
+    return null;
   }
 
   _readButtons(intent) {
@@ -388,7 +440,7 @@ export class Fighter {
     if (a.aerial && a.aim === 'u') return { x: b.x, y: b.y - h - 10, w: reach, h: 50, move: m, slot: a.slot };
     if (a.aerial && a.aim === 'd') return { x: b.x, y: b.y + 14, w: reach, h: 46, move: m, slot: a.slot };
     if (m.bothSides || (a.aerial && a.aim === 'n')) return { x: b.x, y: b.y - h * 0.5, w: reach * 1.7, h: 64, move: m, slot: a.slot };
-    return { x: b.x + b.facing * (reach * 0.55), y: b.y - h * 0.5, w: reach, h: 64, move: m, slot: a.slot };
+    return { x: b.x + b.facing * (reach * 0.55), y: b.y - h * 0.5, w: reach * 1.1, h: MELEE_H, move: m, slot: a.slot };
   }
   hurtbox() {
     const b = this.body;

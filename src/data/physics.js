@@ -43,4 +43,12 @@ export const PHYS = {
   STUN_LANDING_CLEARS: false,// hitstun is time-based; a landing keeps the remaining frames as ground flinch
   AIR_MOMENTUM_DECAY: 0.985, // per-frame decay of vx above AIR_MAX (dash-jump arc length)
   GROUND_DEADZONE: 0.05,    // |vx| snap-to-zero threshold under friction
+  // Attacks in motion (2026-09-28, Tim: "hit in motion, not stop and hit"). A
+  // ground move no longer plants the body: the entry momentum slides through the
+  // wind-up and active frames under a gentler friction, holding forward keeps
+  // more of it, holding back brakes, and the recovery plants. A move's `carry`
+  // (0..1, default 1) scales how much it keeps; `step` adds an eased step-in.
+  ATTACK_SLIDE: 0.88,       // per-frame vx multiplier, startup + active, stick neutral
+  ATTACK_SLIDE_HOLD: 0.95,  // ... holding the facing direction
+  ATTACK_CARRY_CAP: 1.15,   // entry speed is capped at runMax * this (a dash-attack doesn't fly)
 };

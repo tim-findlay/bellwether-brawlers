@@ -31,6 +31,7 @@ export class MovementBody {
     this.dodgeVec = null;        // {x,y} during step/air dodge
     this.dropT = 0;              // soft-platform collision ignored while > 0
     this.out = false;            // crossed a blast zone
+    this.friction = null;        // ground friction override (sliding attacks); null = RUN_FRICTION
     this.stun = 0;               // hitstun frames left: intent ignored, launch drag applies
     this.landed = false;         // true on the tick the body touched down (landing lag hook)
     this.consumedJump = false;   // adapter reads these to consume buffered presses
@@ -192,7 +193,7 @@ export class MovementBody {
         if (Math.abs(this.vx) > max && Math.sign(this.vx) === dir) this.vx = dir * max;
         this._setState('run');
       } else {
-        this.vx *= PHYS.RUN_FRICTION;
+        this.vx *= this.friction ?? PHYS.RUN_FRICTION;   // `friction`: set per frame by a sliding ground attack
         if (Math.abs(this.vx) < PHYS.GROUND_DEADZONE) this.vx = 0;
         this._setState('idle');
       }
