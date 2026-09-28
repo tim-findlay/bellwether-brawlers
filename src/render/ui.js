@@ -92,13 +92,34 @@ export function statBar(c, x, y, w, label, frac, color = NAVY) {
 // ---- keycaps + hint bar -----------------------------------------------------
 
 const glyphFont = (label) => (/^[\x20-\x7e]*$/.test(label) ? F.mono(10) : F.body(16, 700));
+
+// PlayStation face buttons, drawn as shapes (the body font's ✕ □ ○ △ glyphs are
+// tiny and uneven). Muted versions of the pad's own colours — paper, not neon.
+export const PAD_GLYPHS = { '✕': NAVY, '○': BRICK, '△': GREEN, '□': '#a35d6e' };
+export function padGlyph(c, g, cx, cy, r = 6, color = PAD_GLYPHS[g] || INK) {
+  c.save(); c.strokeStyle = color; c.lineWidth = Math.max(2, r / 3); c.lineCap = 'round'; c.lineJoin = 'round';
+  c.beginPath();
+  if (g === '✕') { c.moveTo(cx - r, cy - r); c.lineTo(cx + r, cy + r); c.moveTo(cx + r, cy - r); c.lineTo(cx - r, cy + r); }
+  else if (g === '○') c.arc(cx, cy, r, 0, Math.PI * 2);
+  else if (g === '□') c.rect(cx - r * 0.9, cy - r * 0.9, r * 1.8, r * 1.8);
+  else { c.moveTo(cx, cy - r * 1.05); c.lineTo(cx + r * 1.1, cy + r * 0.8); c.lineTo(cx - r * 1.1, cy + r * 0.8); c.closePath(); }
+  c.stroke(); c.restore();
+}
+// text that may be a lone face-button glyph: the shape if so, else plain text
+export function padLabel(c, label, x, y, { font = F.body(16, 700), color = INK, r = 7 } = {}) {
+  if (PAD_GLYPHS[label]) padGlyph(c, label, x, y - r + 1, r);
+  else text(c, label, x, y, { font, color });
+}
+
+const capW = (c, label) => { if (PAD_GLYPHS[label]) return 22; c.font = glyphFont(label); return Math.max(20, Math.ceil(c.measureText(label).width) + 12); };
 export function keycap(c, label, x, y, { font = glyphFont(label) } = {}) {
   c.font = font;
-  const w = Math.max(20, Math.ceil(c.measureText(label).width) + 12), h = 20;
+  const w = PAD_GLYPHS[label] ? 22 : Math.max(20, Math.ceil(c.measureText(label).width) + 12), h = 20;
   c.fillStyle = INK; c.fillRect(x, y + 3, w, h);
   c.fillStyle = CARD; c.fillRect(x, y, w, h - 1);
   c.strokeStyle = INK; c.lineWidth = 2; c.strokeRect(x + 1, y + 1, w - 2, h - 3);
-  text(c, label, x + w / 2, y + 14, { font, color: INK });
+  if (PAD_GLYPHS[label]) padGlyph(c, label, x + w / 2, y + 9.5, 4.5);
+  else text(c, label, x + w / 2, y + 14, { font, color: INK });
   return w;
 }
 
@@ -108,7 +129,7 @@ export function hints(c, items, y = 510, { color = INK } = {}) {
   let total = 0;
   for (const [keys, label] of items) {
     const ks = Array.isArray(keys) ? keys : [keys];
-    const kw = ks.reduce((a, k) => { c.font = glyphFont(k); return a + Math.max(20, Math.ceil(c.measureText(k).width) + 12) + 4; }, 0);
+    const kw = ks.reduce((a, k) => a + capW(c, k) + 4, 0);
     c.font = F.body(16);
     const lw = c.measureText(label).width;
     parts.push({ ks, label, w: kw + 4 + lw });
@@ -335,8 +356,8 @@ export function makeNav(G, dirs = DIRS, { first = 18, every = 6 } = {}) {
   };
 }
 
-export const confirmP1 = (G) => G.input.keyPressed('KeyF') || G.input.keyPressed('Space') || G.input.keyPressed('Pad1Start');
-export const confirmP2 = (G) => G.input.keyPressed('KeyK') || G.input.keyPressed('Enter') || G.input.keyPressed('Pad2Start');
+export const confirmP1 = (G) => ['KeyF', 'Space', 'Pad1Start', 'Pad1Cross'].some(k => G.input.keyPressed(k));
+export const confirmP2 = (G) => ['KeyK', 'Enter', 'Pad2Start', 'Pad2Cross'].some(k => G.input.keyPressed(k));
 
 // ---- transition --------------------------------------------------------------------
 

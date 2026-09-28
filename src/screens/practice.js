@@ -96,7 +96,7 @@ export function makePractice(G) {
       t++;
       if (flash) flash.t++;
       if (paused) { this.updatePause(); return; }
-      if (G.input.backPressed() || G.input.startPressed?.()) { paused = true; row = 0; G.audio.play('menuBack'); return; }
+      if (G.input.pausePressed()) { paused = true; row = 0; G.audio.play('menuBack'); return; }   // not ○: that's heavy
       if (G.input.keyPressed('KeyR')) reset();
       if (G.input.keyPressed('KeyT')) setDummy(DUMMY_MODES[(DUMMY_MODES.indexOf(o.dummy) + 1) % DUMMY_MODES.length]);
       if (G.input.keyPressed('KeyB')) { o.boxes = !o.boxes; note(o.boxes ? 'HITBOXES ON' : 'HITBOXES OFF'); }
@@ -123,7 +123,7 @@ export function makePractice(G) {
 
     updatePause() {
       const { dx, dy } = nav();
-      if (G.input.backPressed() || G.input.startPressed?.()) { paused = false; G.audio.play('menuConfirm'); return; }
+      if (G.input.backPressed() || G.input.startPressed()) { paused = false; G.audio.play('menuConfirm'); return; }
       if (dy) { row = (row + dy + ROWS.length) % ROWS.length; G.audio.play('menuMove'); }
       const r = ROWS[row], ok = G.input.confirmPressed() || G.input.keyPressed('Space');
       if (r.opt && (dx || ok)) {
@@ -233,7 +233,7 @@ export function makePractice(G) {
           chip(c, `◀ ${cur ? cur[1] : '?'} ▶`, x + w - 12, ry + 6, sel ? BRASS : NAVY, { align: 'right' });
         }
       });
-      hints(c, [[['W', 'S'], 'Move'], [['A', 'D'], 'Change'], [['ENTER', 'F'], 'Select'], ['ESC', 'Resume']], 524, { color: PAPER });
+      hints(c, [[['W', 'S'], 'Move'], [['A', 'D'], 'Change'], [['ENTER', '✕'], 'Select'], ['ESC', 'Resume']], 524, { color: PAPER });
     },
   };
 }

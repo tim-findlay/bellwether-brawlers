@@ -141,7 +141,7 @@ export function makeTournament(G) {
       });
       const humans = slots.slice(0, size).filter(s => s.human).length;
       text(c, humans ? `${humans} player${humans > 1 ? 's' : ''}: a lone player is always P1; two players meeting take P1 and P2` : 'All CPUs: watch it or sim it', 480, 492, { font: F.body(15), color: MUTED });
-      hints(c, [[['W', 'S'], 'Move'], [['A', 'D'], 'Fighter / size'], ['ENTER', 'Player / CPU'], ['ESC', 'Back']], 522);
+      hints(c, [[['W', 'S'], 'Move'], [['A', 'D'], 'Fighter / size'], ['ENTER', 'Player / CPU'], [['ESC', '○'], 'Back']], 522);
     },
 
     drawBracket(c) {

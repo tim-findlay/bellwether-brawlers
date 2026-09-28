@@ -67,7 +67,7 @@ export function makeSelect(G) {
     },
 
     updateFighters() {
-      if (G.input.keyPressed('KeyM')) { showMoves = !showMoves; G.audio.play('menuMove'); return; }   // M: the hovered fighter's move list
+      if (['KeyM', 'Pad1Triangle', 'Pad2Triangle'].some(k => G.input.keyPressed(k))) { showMoves = !showMoves; G.audio.play('menuMove'); return; }   // M / △: the hovered fighter's move list
       if (showMoves) { if (G.input.backPressed() || G.input.confirmPressed()) { showMoves = false; G.audio.play('menuBack'); } return; }
       if (solo()) {
         const side = active(), { dx } = navAny();
@@ -141,8 +141,8 @@ export function makeSelect(G) {
       let fs = 15; c.font = F.body(fs); while (fs > 11 && c.measureText(tip).width > 884) c.font = F.body(--fs);
       text(c, tip, 480, 506, { font: F.body(fs), color: PAPER });
       const keys = solo()
-        ? [[['A', 'D'], 'Choose'], [['ENTER', 'F'], 'Lock in'], ['R', 'Random'], ['M', 'Moves'], ['ESC', 'Back']]
-        : [[['A', 'D'], 'P1'], ['F', 'Lock'], [['←', '→'], 'P2'], ['K', 'Lock'], [['R', '\\'], 'Random'], ['M', 'Moves'], ['ESC', 'Back']];
+        ? [[['A', 'D'], 'Choose'], [['ENTER', '✕'], 'Lock in'], ['R', 'Random'], [['M', '△'], 'Moves'], [['ESC', '○'], 'Back']]
+        : [[['A', 'D'], 'P1'], ['F', 'Lock'], [['←', '→'], 'P2'], ['K', 'Lock'], [['R', '\\'], 'Random'], [['M', '△'], 'Moves'], [['ESC', '○'], 'Back']];
       hints(c, keys, 532);
     },
 
@@ -234,7 +234,7 @@ export function makeSelect(G) {
       chip(c, 'P1', 96, 300, NAVY, { align: 'center' });
       chip(c, mode === 'practice' ? 'DUMMY' : solo() ? 'CPU' : 'P2', 864, 300, BRICK, { align: 'center' });
 
-      hints(c, [[['A', 'D'], 'Choose'], [['ENTER', 'F'], 'Fight!'], ['R', 'Random'], ['ESC', 'Back']], 528);
+      hints(c, [[['A', 'D'], 'Choose'], [['ENTER', '✕'], 'Fight!'], ['R', 'Random'], [['ESC', '○'], 'Back']], 528);
     },
   };
 }

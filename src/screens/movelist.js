@@ -26,7 +26,7 @@ export const frames = (m) => {
 };
 
 const short = (m) => `${m.startup ?? 0} · ${m.active ?? 0} · ${m.recover ?? 0}${m.landLag ? ` · ${m.landLag}` : ''}`;
-const KEYS = { 'SPECIAL 1': 'H / RB', 'SPECIAL 2': 'J / LB', SUPER: 'SPACE / △' };
+const KEYS = { 'SPECIAL 1': 'H / R1', 'SPECIAL 2': 'J / L1', SUPER: 'SPACE / △' };
 
 export function drawMoveList(c, cfg, { cur = null, hint = 'M to close' } = {}) {
   const x = 24, y = 58, W = 912, H = 440;

@@ -2,7 +2,7 @@
 // main menu and the in-fight pause menu (which stops before TV SETUP); the
 // caller owns the tab index. TV SETUP is a live input check for two players.
 
-import { plaque, text, keycap, chip, wrap, F, INK, PAPER, BRICK, NAVY, BRASS, GREEN, CARD, MUTED, RULE } from '../render/ui.js';
+import { plaque, text, keycap, chip, padLabel, wrap, F, INK, PAPER, BRICK, NAVY, BRASS, GREEN, CARD, MUTED, RULE } from '../render/ui.js';
 import { P1MAP, P2MAP } from '../engine/input.js';
 
 export const HELP_TABS = ['CONTROLS', 'RULES', 'TV SETUP'];
@@ -10,13 +10,13 @@ export const HELP_TABS = ['CONTROLS', 'RULES', 'TV SETUP'];
 const CONTROLS = [
   // [action, detail, P1 keys, P2 keys, pad]
   ['MOVE', 'double-tap: dash · swing on the run: lunge', ['A', 'D'], ['←', '→'], 'STICK'],
-  ['JUMP', 'twice more in the air', ['W'], ['↑'], 'A / ✕'],
+  ['JUMP', 'twice more in the air · off a wall', ['W'], ['↑'], '✕'],
   ['FAST-FALL / DROP', 'hold / tap on a platform', ['S'], ['↓'], 'DOWN'],
-  ['LIGHT', '+ direction · on hit: cancel into more', ['F'], ['K'], 'X / □'],
-  ['HEAVY', 'signatures · in the air: recovery', ['G'], ['L'], 'B / ○'],
-  ['SPECIAL 1 / 2', 'cooldown pips under your bar', ['H', 'J'], [';', "'"], 'RB / LB'],
-  ['DODGE', 'i-frames · after a hit lands: chase', ['V'], ['/'], 'TRIGGERS'],
-  ['SUPER', 'needs a full gold meter', ['SPACE'], ['ENTER'], 'Y / △'],
+  ['LIGHT', '+ direction · on hit: cancel into more', ['F'], ['K'], '□'],
+  ['HEAVY', 'signatures · in the air: recovery', ['G'], ['L'], '○'],
+  ['SPECIAL 1 / 2', 'cooldown pips under your bar', ['H', 'J'], [';', "'"], 'R1 / L1'],
+  ['DODGE', '+ direction: dash · after a hit: chase', ['V'], ['/'], 'L2 / R2'],
+  ['SUPER', 'needs a full gold meter', ['SPACE'], ['ENTER'], '△'],
 ];
 
 const RULES = [
@@ -51,7 +51,7 @@ function drawControls(c, top) {
     text(c, detail, colX.detail, y + 12, { font: F.body(16), color: MUTED, align: 'left' });
     let x = colX.p1; for (const k of k1) x += keycap(c, k, x, y - 2) + 4;
     x = colX.p2; for (const k of k2) x += keycap(c, k, x, y - 2) + 4;
-    text(c, pad, colX.pad + 40, y + 12, { font: F.body(16, 700), color: INK });
+    padLabel(c, pad, colX.pad + 40, y + 12, { r: 7 });
   });
   c.fillStyle = RULE; c.fillRect(60, top + 352, 840, 2);
 }
@@ -81,7 +81,7 @@ function drawTV(c, top, G) {
     const pad = pads[s];
     text(c, pad ? `PAD: ${pad.id.replace(/\s*\(.*$/, '').slice(0, 30).toUpperCase()}` : 'KEYBOARD', x + 392, y + 20, { font: F.mono(10), color: PAPER, align: 'right' });
     CHECK.forEach(([label, act], i) => {
-      const bx = x + (i % 5) * 81, by = y + 40 + Math.floor(i / 5) * 44, on = G.input.keyHeld(map[act]);
+      const bx = x + (i % 5) * 81, by = y + 40 + Math.floor(i / 5) * 44, on = G.input.keyHeld(map[act]) || (!!map.pad?.[act] && G.input.keyHeld(map.pad[act]));
       c.fillStyle = INK; c.fillRect(bx, by, 76, 38);
       c.fillStyle = on ? col : '#efe7d3'; c.fillRect(bx + 2, by + 2, 72, 34);
       text(c, label, bx + 38, by + 25, { font: F.head(label.length > 2 ? 15 : 20), color: on ? PAPER : MUTED });
@@ -91,7 +91,7 @@ function drawTV(c, top, G) {
   const tips = [
     ['TWO KEYBOARDS', 'Plug both into the conference-room PC. P1 uses the WASD side of one, P2 the arrow side of the other — no ghosting when two people mash one board.', NAVY],
     ['TWO PADS (best)', `Xbox / PlayStation pads: first connected = P1, second = P2. Press any button to wake one. ${pads.length ? pads.length + ' connected now.' : 'None connected yet.'}`, BRICK],
-    ['THE TV', 'Settings → Full Screen (or F11) fills the screen. Esc / Back pauses a fight; either pad\'s Start pauses too.', GREEN],
+    ['THE TV', 'Settings → Full Screen (or F11) fills the screen. Esc or a pad\'s OPTIONS pauses a fight. In menus ✕ selects, ○ goes back.', GREEN],
   ];
   tips.forEach(([title, body, col], i) => {
     const y = top + 180 + i * 60;

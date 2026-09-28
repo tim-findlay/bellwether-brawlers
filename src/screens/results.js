@@ -117,7 +117,7 @@ export function makeResults(G) {
         text(c, o, x + w / 2, y + 30 - (sel ? 4 : 0), { font: F.head(21), color: sel ? PAPER : INK });
       });
       c.fillStyle = INK; c.fillRect(0, 504, 960, 36);
-      hints(c, params.tour ? [[['ENTER', 'F'], 'Back to the bracket']] : [[['A', 'D'], 'Choose'], [['ENTER', 'F'], 'Select'], ['ESC', 'Fighters']], 527, { color: PAPER });
+      hints(c, params.tour ? [[['ENTER', 'F'], 'Back to the bracket']] : [[['A', 'D'], 'Choose'], [['ENTER', '✕'], 'Select'], ['ESC', 'Fighters']], 527, { color: PAPER });
     },
   };
 }

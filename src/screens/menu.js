@@ -100,7 +100,7 @@ export function makeMenu(G) {
       else {
         header(c, 'HOW TO PLAY', { sub: 'BELLWETHER BRAWLERS' });
         drawHelp(c, tab, { G });
-        hints(c, HELP_TABS[tab] === 'TV SETUP' ? [['ESC', 'Back (every other key is a test press)']] : [[['←', '→'], 'Tab'], ['ESC', 'Back']], 520);
+        hints(c, HELP_TABS[tab] === 'TV SETUP' ? [['ESC', 'Back (every other key is a test press)']] : [[['←', '→'], 'Tab'], [['ESC', '○'], 'Back']], 520);
       }
     },
 
@@ -132,7 +132,7 @@ export function makeMenu(G) {
       // selected item blurb
       plaque(c, 64, 478, 832, 30, { fill: INK, shadow: 0, lw: 0 });
       text(c, ITEMS[idx].sub, 480, 499, { font: F.body(17), color: PAPER });
-      hints(c, [[['W', 'S'], 'Move'], [['ENTER', 'F'], 'Select'], ['ESC', 'Title']], 530);
+      hints(c, [[['W', 'S'], 'Move'], [['ENTER', '✕'], 'Select'], ['ESC', 'Title']], 530);
     },
 
     drawSettings(c) {
@@ -161,7 +161,7 @@ export function makeMenu(G) {
           chip(c, on ? 'ON — PRESS TO EXIT' : 'PRESS ENTER', 880, y + 13, on ? GREEN : (sel ? BRASS : MUTED), { align: 'right' });
         }
       });
-      hints(c, [[['W', 'S'], 'Move'], [['A', 'D'], 'Change'], ['ENTER', 'Toggle'], ['ESC', 'Back']], 520);
+      hints(c, [[['W', 'S'], 'Move'], [['A', 'D'], 'Change'], ['ENTER', 'Toggle'], [['ESC', '○'], 'Back']], 520);
     },
 
     drawRecords(c) {
@@ -185,7 +185,7 @@ export function makeMenu(G) {
         if (cups) chip(c, `${cups} CUP${cups === 1 ? '' : 'S'}`, x + 184, y + 14, BRICK, { align: 'right' });   // tournament wins
       });
       text(c, total ? `${total} match${total === 1 ? '' : 'es'} settled on this machine` : 'No matches yet — go and settle something.', 480, 492, { font: F.body(18), color: INK });
-      hints(c, [['ESC', 'Back']], 522);
+      hints(c, [[['ESC', '○'], 'Back']], 522);
     },
   };
 }

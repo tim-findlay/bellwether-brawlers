@@ -3,14 +3,18 @@
 
 import { PHYS } from '../data/physics.js';
 
-export const P1MAP = { left: 'KeyA', right: 'KeyD', up: 'KeyW', down: 'KeyS', light: 'KeyF', heavy: 'KeyG', s1: 'KeyH', s2: 'KeyJ', super: 'Space', dodge: 'KeyV', start: 'Pad1Start' };
-export const P2MAP = { left: 'ArrowLeft', right: 'ArrowRight', up: 'ArrowUp', down: 'ArrowDown', light: 'KeyK', heavy: 'KeyL', s1: 'Semicolon', s2: 'Quote', super: 'Enter', dodge: 'Slash', start: 'Pad2Start' };
+export const P1MAP = { left: 'KeyA', right: 'KeyD', up: 'KeyW', down: 'KeyS', light: 'KeyF', heavy: 'KeyG', s1: 'KeyH', s2: 'KeyJ', super: 'Space', dodge: 'KeyV', start: 'Pad1Start',
+  pad: { up: 'Pad1Cross', light: 'Pad1Square', heavy: 'Pad1Circle', s1: 'Pad1R1', s2: 'Pad1L1', super: 'Pad1Triangle', dodge: 'Pad1Dodge' } };
+export const P2MAP = { left: 'ArrowLeft', right: 'ArrowRight', up: 'ArrowUp', down: 'ArrowDown', light: 'KeyK', heavy: 'KeyL', s1: 'Semicolon', s2: 'Quote', super: 'Enter', dodge: 'Slash', start: 'Pad2Start',
+  pad: { up: 'Pad2Cross', light: 'Pad2Square', heavy: 'Pad2Circle', s1: 'Pad2R1', s2: 'Pad2L1', super: 'Pad2Triangle', dodge: 'Pad2Dodge' } };
 
-export const CONFIRM_CODES = ['KeyF', 'KeyK', 'Enter', 'Pad1Start', 'Pad2Start'];
+// Menus: Enter / F / K, a pad's ✕ (Cross — Brawlhalla's select) or Start. Back: Esc, a pad's ○ (Circle) or Create.
+export const CONFIRM_CODES = ['KeyF', 'KeyK', 'Enter', 'Pad1Start', 'Pad2Start', 'Pad1Cross', 'Pad2Cross'];
+export const PAD_BACK_CODES = ['Pad1Circle', 'Pad2Circle'];
 export const START_CODES = ['Pad1Start', 'Pad2Start'];   // virtual: a pad's Start (confirm / pause) — never a fighter key
 export const BACK_CODE = 'Escape';
 
-const PREVENT = new Set([...Object.values(P1MAP), ...Object.values(P2MAP), 'Escape']);
+const PREVENT = new Set([...Object.values(P1MAP), ...Object.values(P2MAP), 'Escape'].filter(v => typeof v === 'string'));
 
 export const BUFFER_FRAMES = PHYS.INPUT_BUFFER;
 
@@ -66,7 +70,8 @@ export class Input {
   keyHeld(code) { return !!this.held[code]; }
   keyPressed(code) { return this.pressedNow.has(code); }
   confirmPressed() { return CONFIRM_CODES.some(c => this.keyPressed(c)); }
-  backPressed() { return this.keyPressed(BACK_CODE); }
+  backPressed() { return this.keyPressed(BACK_CODE) || PAD_BACK_CODES.some(c => this.keyPressed(c)); }   // menus (○ backs out)
+  pausePressed() { return this.keyPressed(BACK_CODE) || this.startPressed(); }   // in a fight: Esc, Create or Start — never ○, that's heavy
   startPressed() { return START_CODES.some(c => this.keyPressed(c)); }
   anyPressed() { return this.pressedNow.size > 0; }   // any key or pad button this tick (attract mode)
 
@@ -99,14 +104,16 @@ export class PlayerController {
     this.reversed = false;
     this.isCPU = false;
   }
+  // an action's codes: its key, plus its pad button (map.pad) when it has one
+  codes(action) { const p = this.map.pad?.[action]; return p ? [this.map[action], p] : [this.map[action]]; }
   held(action) {
     let a = action;
     if (this.reversed && (a === 'left' || a === 'right')) a = a === 'left' ? 'right' : 'left';
-    return this.input.keyHeld(this.map[a]);
+    return this.codes(a).some(c => this.input.keyHeld(c));
   }
-  buffered(action) { return this.input.buffered(this.map[action]); }
-  consume(action) { this.input.consume(this.map[action]); }
-  pressed(action) { return this.input.keyPressed(this.map[action]); }
+  buffered(action, win) { return this.codes(action).some(c => this.input.buffered(c, win)); }
+  consume(action) { for (const c of this.codes(action)) this.input.consume(c); }
+  pressed(action) { return this.codes(action).some(c => this.input.keyPressed(c)); }
   update() {}
   // v3: one MovementBody intent per logic tick (see buildIntent below).
   intent() { return buildIntent(this, this.input, this.map); }
@@ -121,22 +128,23 @@ export function buildIntent(ctl, input, map) {
   return {
     left: ctl.held('left'), right: ctl.held('right'), down: ctl.held('down'),
     downTapped: ctl.pressed('down'),
-    jump: input.buffered(map.up, PHYS.INPUT_BUFFER),
-    dodge: input.buffered(map.dodge, PHYS.INPUT_BUFFER),
+    jump: ctl.buffered ? ctl.buffered('up', PHYS.INPUT_BUFFER) : input.buffered(map.up, PHYS.INPUT_BUFFER),
+    dodge: ctl.buffered ? ctl.buffered('dodge', PHYS.INPUT_BUFFER) : input.buffered(map.dodge, PHYS.INPUT_BUFFER),
     dashLeft: input.doubleTapped(map.left, PHYS.DASH_TAP_WINDOW),
     dashRight: input.doubleTapped(map.right, PHYS.DASH_TAP_WINDOW),
   };
 }
 
 // ---- gamepads ---------------------------------------------------------------------
-// Standard-mapping pads (Xbox / PlayStation / most USB pads) drive the SAME key
-// codes as the keyboard: pad 0 presses P1's keys, pad 1 presses P2's keys, so
-// menus, the fight and the dev harnesses need no other changes. Polled once
-// per logic tick (Gamepad API is state-based, not event-based).
-//   stick / d-pad -> left right up down · A/Cross jump · X/Square light ·
-//   B/Circle heavy · RB special 1 · LB special 2 · Y/Triangle super ·
-//   RT/LT dodge · Start = its seat's virtual start code (confirm / pause —
-//   it used to send Enter, which is P2's super) · Back/Select = Escape
+// Standard-mapping pads (PlayStation / Xbox / most USB pads), Brawlhalla's default
+// layout. The stick / d-pad press the player's direction KEYS (so menus navigate
+// and up still jumps, as in Brawlhalla); the buttons press per-seat pad codes
+// (map.pad) that PlayerController reads alongside the keys — so ✕ can be jump in
+// a fight and select in a menu, and ○ heavy in a fight and back in a menu.
+//   ✕ Cross jump / select · □ Square light · ○ Circle heavy / back · △ Triangle super
+//   R1 special 1 · L1 special 2 · L2 / R2 dodge (+ direction on the ground = dash)
+//   Options (Start) confirm / pause · Create (Back) = Esc
+// Pad 0 is P1, pad 1 P2. Polled once per logic tick (the Gamepad API is state-based).
 export const PAD_BUTTONS = { jump: 0, heavy: 1, light: 2, super: 3, s2: 4, s1: 5, dodgeL: 6, dodgeR: 7, back: 8, start: 9, up: 12, down: 13, left: 14, right: 15 };
 const PAD_MAPS = [P1MAP, P2MAP];
 const DEAD = 0.5;
@@ -152,13 +160,15 @@ export class GamepadInput {
     if (pressed(PAD_BUTTONS.left) || ax < -DEAD) on.add(map.left);
     if (pressed(PAD_BUTTONS.right) || ax > DEAD) on.add(map.right);
     if (pressed(PAD_BUTTONS.down) || ay > DEAD) on.add(map.down);
-    if (pressed(PAD_BUTTONS.up) || ay < -DEAD || pressed(PAD_BUTTONS.jump)) on.add(map.up);
-    if (pressed(PAD_BUTTONS.light)) on.add(map.light);
-    if (pressed(PAD_BUTTONS.heavy)) on.add(map.heavy);
-    if (pressed(PAD_BUTTONS.s1)) on.add(map.s1);
-    if (pressed(PAD_BUTTONS.s2)) on.add(map.s2);
-    if (pressed(PAD_BUTTONS.super)) on.add(map.super);
-    if (pressed(PAD_BUTTONS.dodgeL) || pressed(PAD_BUTTONS.dodgeR)) on.add(map.dodge);
+    if (pressed(PAD_BUTTONS.up) || ay < -DEAD) on.add(map.up);                 // stick / d-pad up: jump (and menu up)
+    const P = map.pad || map;
+    if (pressed(PAD_BUTTONS.jump)) on.add(P.up);
+    if (pressed(PAD_BUTTONS.light)) on.add(P.light);
+    if (pressed(PAD_BUTTONS.heavy)) on.add(P.heavy);
+    if (pressed(PAD_BUTTONS.s1)) on.add(P.s1);
+    if (pressed(PAD_BUTTONS.s2)) on.add(P.s2);
+    if (pressed(PAD_BUTTONS.super)) on.add(P.super);
+    if (pressed(PAD_BUTTONS.dodgeL) || pressed(PAD_BUTTONS.dodgeR)) on.add(P.dodge);
     if (pressed(PAD_BUTTONS.start)) on.add(map.start);
     if (pressed(PAD_BUTTONS.back)) on.add('Escape');
     return on;

@@ -59,7 +59,7 @@ export function makeFight(G) {
       t++;
       if (params.demo && t > 20 && G.input.anyPressed()) { G.go('title'); return; }   // attract mode: any key hands the TV back
       if (paused) { this.updatePause(); return; }
-      if ((G.input.backPressed() || G.input.startPressed?.()) && phase !== 'outro') {   // Esc, or a pad's Back / Start
+      if (G.input.pausePressed() && phase !== 'outro') {   // Esc, or a pad's Create / Options (○ is heavy here)
         paused = true; pIdx = 0; pPage = 'list'; G.audio.play('menuBack');
         return;
       }
@@ -155,7 +155,7 @@ export function makeFight(G) {
         c.fillStyle = PAPER; c.fillRect(0, 0, 960, 540);
         header(c, 'HOW TO PLAY', { sub: 'PAUSED' });
         drawHelp(c, pTab);
-        hints(c, [[['←', '→'], 'Tab'], ['ESC', 'Back']], 520);
+        hints(c, [[['←', '→'], 'Tab'], [['ESC', '○'], 'Back']], 520);
         return;
       }
       plaque(c, 300, 96, 360, 380, { fill: PAPER, shadow: 8 });
@@ -163,7 +163,7 @@ export function makeFight(G) {
       c.fillStyle = BRASS; c.fillRect(303, 151, 354, 4);
       text(c, 'PAUSED', 480, 136, { font: F.head(32), color: PAPER });
       menuList(c, PAUSE_ITEMS, pIdx, 340, 170, { w: 280, h: 46, gap: 10, anim: pAnim });
-      hints(c, [[['W', 'S'], 'Move'], [['ENTER', 'F'], 'Select'], ['ESC', 'Resume']], 500, { color: PAPER });
+      hints(c, [[['W', 'S'], 'Move'], [['ENTER', '✕'], 'Select'], ['ESC', 'Resume']], 500, { color: PAPER });
     },
 
     draw() {
