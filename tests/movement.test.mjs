@@ -253,6 +253,18 @@ test('wall slide (Brawlhalla): cling below the ledge zone, slow slide, wall jump
   assert.notEqual(c.state, 'wall', 'holding down falls past the wall');
 });
 
+test('taller walls: caught deep on the wall with no air jumps, wall jumps climb back to the ledge and onto the stage', async () => {
+  const { geometryOf } = await import('../src/data/stages.js');
+  for (const id of ['office', 'palace', 'tube']) {
+    const st = geometryOf(id), s = st.slabs[0];
+    const b = new MovementBody({ runMax: 5.5, jumpImpulse: 16, fallMax: 12, weight: 1 }, { x: 0, y: 0 });
+    b.x = s.x - b.w / 2 - 1; b.y = s.y + 250; b.vy = 1; b.airJumps = 0; b.grounded = false; b._setState('air');
+    let home = false;
+    for (let t = 0; t < 200 && !home; t++) { step(b, { right: true, jump: b.state === 'wall' && b.stateT >= 6 }, 1, st); home = b.grounded && b.y === s.y; }
+    assert.ok(home, `${id}: climbed back from 250 px down the wall`);
+  }
+});
+
 test('dash-jump carries full dash speed into the air', () => {
   const b = landed();
   step(b, { dashRight: true, right: true }, 3);

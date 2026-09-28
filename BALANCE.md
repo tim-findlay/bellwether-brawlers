@@ -15,7 +15,7 @@
 
 ## Numbers doctrine
 
-- **Gauge band:** 96 (Nick) – 110 (Richy) (pass 14). **Weight band:** 0.97 (Nick/Adrian) – 1.06 (Ben) (pass 12; was 1.10, Mike). **Jump / fall (pass 13):** every fighter jumps 16 and falls at 12 — one generous, floaty air class (Tim: "same jump height (generous) and fall speeds (floaty) for better recovery"); weight is the only thing that separates how fighters fly. — narrowed in the Phase-3 pass (the bands were restated from the data in pass 3; the old 85–110 / 0.9–1.08 text had gone stale after pass 2): weight divides the launch speed linearly, so the old 0.85–1.45 spread alone swung kill thresholds by ~70 %. **Run band:** 5.2 (Mike) – 5.85 (Nick) px/frame at base zoom — pass 12 narrowed it from 4.4–6.2 (Tim: "the characters should not differ this much in speed"; Brawlhalla's speed stat moves run speed only a little). Speed is no longer a balancing lever: pay for strengths with gauge, weight and frame data. Fall speed correlates with weight (floaties live longer upward, die earlier sideways). Per-character values live in `src/data/characters/<id>.js`, inside these bands; `physics.js` holds the universal constants and formulas.
+- **Gauge band:** 96 (Nick) – 110 (Richy) (pass 15; Adrian 108, Ben 100). **Weight band:** 0.97 (Nick/Adrian) – 1.06 (Ben) (pass 12; was 1.10, Mike). **Jump / fall (pass 13):** every fighter jumps 16 and falls at 12 — one generous, floaty air class (Tim: "same jump height (generous) and fall speeds (floaty) for better recovery"); weight is the only thing that separates how fighters fly. — narrowed in the Phase-3 pass (the bands were restated from the data in pass 3; the old 85–110 / 0.9–1.08 text had gone stale after pass 2): weight divides the launch speed linearly, so the old 0.85–1.45 spread alone swung kill thresholds by ~70 %. **Run band:** 5.2 (Mike) – 5.85 (Nick) px/frame at base zoom — pass 12 narrowed it from 4.4–6.2 (Tim: "the characters should not differ this much in speed"; Brawlhalla's speed stat moves run speed only a little). Speed is no longer a balancing lever: pay for strengths with gauge, weight and frame data. Fall speed correlates with weight (floaties live longer upward, die earlier sideways). Per-character values live in `src/data/characters/<id>.js`, inside these bands; `physics.js` holds the universal constants and formulas.
 - **Knockback (canonical formula):**
   `kb = (move.kb × KB_BASE_MULT + move.kbScale × KB_SCALE_MULT × emptiness) / weight`, where `emptiness = 1 − gauge/maxGauge` (multipliers 0.8 / 2.0 since the Phase-3b feel pass: early hits flinch, late hits kill).
   **kb is the launch speed in px/frame at base zoom, set (not added) along `kbAngle`** (per-move data, degrees; spikes use 270 ± 15) on the frame the hit lands. Hitstun = `round(kb × HITSTUN_PER_KB)` frames.
@@ -99,7 +99,26 @@ Two independent samples before shipping a tuning pass: n ≈ 420–560 games per
 
 ## Current results
 
-**v3 balance pass 14 — two new stages (2026-09-28) — all five gates PASS on two independent seeds at N = 30; every route passes, every step ≥ 9 f lenient.**
+**v3 balance pass 15 — taller walls (2026-09-28) — all five gates PASS on two independent seeds at N = 30; every route passes, every step ≥ 9 f lenient.**
+
+| Fighter | seed 1337 | seed 2024 |
+|---|---|---|
+| Ben | 52.1 % | 51.1 % |
+| Tim | 52.1 % | 56.9 % |
+| Adrian | 52.1 % | 42.9 % |
+| Richy | 46.4 % | 47.5 % |
+| Nick | 51.2 % | 52.1 % |
+| Abi | 48.1 % | 49.3 % |
+| Mike | 52.9 % | 53.1 % |
+| Seelye | 45.0 % | 47.1 % |
+| **camp (≤ 55)** | 12.9 % | 12.6 % |
+| **stall (≤ 45)** | 0 % | 0.1 % |
+| **engagement flags (< 2 %)** | 0.18 % | 0.24 % |
+| **recovery dishonest (< 10 %)** | 2.25 % | 2.44 % |
+
+Avg match 5752 / 5800 f (~96 s); 2 / 4 capped, 0 stuck. **Data change (Tim: "make the walls taller so we can catch and then climb back up"):** every main slab's `h` (the wall) is 240 px on every stage (was 70–155, the art's straight side). Caught 250 px down with no air jumps left, two wall jumps and a ledge grab put you back on the stage (tests/movement.test.mjs pins it on three stages). The arena art is drawn that deep by `src/render/slabart.js` (render only): it finds each piece's straight side from its alpha and repeats a band of those rows, so the taper hangs below the wall. Walls favoured the heavy fighters with weak recoveries: Mike beat Adrian 26–4. **Tuning:** Adrian gauge 105 → 108, Toothbrush Jab 4.5 → 5 dmg, Pivot Table 10 → 11 dmg, Clumsy Charge kbScale 11 → 12; Ben gauge 102 → 100. **Soft spots:** Adrian swings 9 points between seeds (52.1 / 42.9 %); Tim 56.9 % on seed 2024.
+
+**v3 balance pass 14 — two new stages (2026-09-28, superseded) — all five gates PASS on two independent seeds at N = 30; every route passes, every step ≥ 9 f lenient.**
 
 | Fighter | seed 1337 | seed 2024 |
 |---|---|---|

@@ -8,6 +8,7 @@
 
 import { drawStageLayers } from '../data/stages.js';
 import { INK, PAPER, BRASS, GREEN, shade } from './palette.js';
+import { tallSlab } from './slabart.js';
 
 const BUF_W = 480, BUF_H = 270, BUF_SCALE = 4;
 const BUF_GROUND = 232;           // v2 art-space ground line of the buffer
@@ -101,9 +102,10 @@ export function drawStageWorld(ctx, stage, geometry, camera, t, opts = {}) {
 // below as the art goes; the geometry never changes with the art.
 function drawSlabArt(ctx, s, img) {
   const w = s.w + 2 * SLAB_ART_INSET;
-  const h = Math.round(img.height * (w / img.width));
+  const art = s.h ? tallSlab(img, w, s.h, SLAB_ART_INSET) : img;     // the wall drawn as deep as it is (render/slabart.js)
+  const h = Math.round(art.height * (w / art.width));
   ctx.imageSmoothingEnabled = false;
-  ctx.drawImage(img, Math.round(s.x - SLAB_ART_INSET), Math.round(s.y - SLAB_ART_INSET), w, h);
+  ctx.drawImage(art, Math.round(s.x - SLAB_ART_INSET), Math.round(s.y - SLAB_ART_INSET), w, h);
 }
 
 function drawSlab(ctx, s, stage) {
