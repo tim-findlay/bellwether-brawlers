@@ -51,6 +51,7 @@ export function makeFight(G) {
       camera = new Camera(960, 540, world.stage.cameraBounds);
       camera.update(targets()); camera.update(targets());
       combos = [new ComboTracker(world, world.fighters[0], world.fighters[1]), new ComboTracker(world, world.fighters[1], world.fighters[0])];
+      this.world = world;                              // dev: inspectable from the drive harness
       phase = 'intro'; phaseT = 0; paused = false; t = 0; ko = null; shownOverride = null;
       G.audio.play('roundGo');
     },
