@@ -137,29 +137,31 @@ Five phases, small rollbackable commits throughout; the page must load clean aft
 
 ### BEN — "The Big Boss" — long-range bully
 110 / 4.8 / 1.06 (fast-faller) — Paynter trench coat, Chelsea boots. Decides where the fight happens.
-- **My Office. Now.** (s1, air-usable): a slow straight memo that **drags the target toward Ben** (angle 150°, replaces the Hawk Toss lob). **Off the Lip** (chair-surf lunge — his air recovery special), **TWELFTH MAN** (unparryable roar cone; grounded, whiffs vs airborne — jump the roar), Pistachio Flick, Wingspan.
+- **Skip Shot** (s1, air-usable): a slow, straight water polo ball that **drags the target toward Ben** (angle 150°; was the My Office. Now. memo, same numbers). **Off the Lip** (chair-surf lunge — his air recovery special), **TWELFTH MAN** (unparryable roar cone; grounded, whiffs vs airborne — jump the roar), Pistachio Flick, Wingspan.
 - Signatures: **Corner Office** (side — the longest ground reach in the game, 100 px, and the slowest, 18f) · *Bottom Line* (down). Recovery **Chair Surf**: a long, flat, readable diagonal (110 px travel, low lift).
 - Aerials: *Air Clearance* (nair sweep) · *Long Reach* (the game's longest side-air) · *Pistachio Pop* (uair) · **L-Plate Drop** (dair spike — the London licence is in progress).
-- *Counterplay:* huge but slow; get inside the wingspan and stay there. Jump the memo or it drags you in. Both his recoveries are long straight lines — wait for them.
+- *Counterplay:* huge but slow; get inside the wingspan and stay there. Jump the polo ball or it drags you in. Both his recoveries are long straight lines — wait for them.
 
 ### TIM — "The Operator" — tempo all-rounder
 104 / 5.7 / 1.0 — brown satchel cross-body over the suit; clean-shaven. Steals turns, not stocks.
-- **Scheduled Send** (s1, air-usable): marks the floor under the target and strikes 34 frames later (replaces Prompt Injection — no roster move reverses controls any more). **Zulu Time** (rewinds Scheduled Send, next hit +2; 8 s cooldown), **RUN FLOW** (the dash-through auto-combo, renamed from AGI Moment; jump the dash), Quick Sync, Hard Deadline.
+- **Scheduled Send** (s1, air-usable): marks the floor under the target and strikes 34 frames later (replaces Prompt Injection — no roster move reverses controls any more). **Zulu Time** (rewinds Scheduled Send, next hit +2; 8 s cooldown), Quick Sync, Hard Deadline.
+- **ASK CLAUDE** (super, replaces Run Flow): summons **Claude** — an all-terracotta helper in a suit with a cream shirt, round head, no logo — as a second fighter for 4.5 s. It runs at the opponent (hops up after them), throws jab-jab-push (3 / 3 / 8), rests, and goes again. **Any hit sends it home** ("BOOTED!"), a parry declines it, a blast zone puts it out of scope. Sprite sheet `claude` (idle / run / attack) with a drawn stand-in.
 - Recovery **Escalation** hits hard (8 dmg, kbScale 10) — he has no recovery special.
 - Aerials: *Sync Spin* (satchel 360 nair) · *Satchel Swing* (sair) · **The Drop** (uair bass pulse — EDM canon) · *Deadline Drop* (dair spike).
-- *Counterplay:* no recovery special — his jumps are honest; edge-guard him hard. Step off the marker: Scheduled Send only punishes standing still.
+- *Counterplay:* no recovery special — his jumps are honest; edge-guard him hard. Step off the marker: Scheduled Send only punishes standing still. When he asks Claude, one hit on the helper ends it.
 
 ### ADRIAN — "The Walking Hazard" — chaos rushdown
 94 / 5.8 / 0.97 — fuelled by Nero flat whites.
 - **Happy Accident:** when a whiffed move trips him (Clumsy Charge, Faceplant, Overshoot, Facedown), the fall itself hits whoever is at arm's reach (6 dmg, pop-up). The 30f self-stagger still runs in full.
-- Kept: Toothbrush Jab, Pivot Table, **Clumsy Charge** (air-usable lunge recovery — self-staggers on a botched landing), **Nero Spill** (the coffee puddle, on whichever platform it lands; Adrian immune), **FULL AUDIT** (multi-hit flail; self-staggers at the end even on hit — that planned trip never triggers Happy Accident).
+- **Toothbrush Toss** (s2, air-usable lob, replaces the placed Nero Spill): a toothbrush that lands in his flat white — a coffee puddle where it hits (Adrian immune).
+- Kept: Toothbrush Jab, Pivot Table, **Clumsy Charge** (air-usable lunge recovery — self-staggers on a botched landing), **FULL AUDIT** (multi-hit flail; self-staggers at the end even on hit — that planned trip never triggers Happy Accident).
 - Recovery **Overshoot**: the furthest sideways and the lowest (140 px travel), and lands in a heap if it whiffs. Ground pound **Facedown** whiff-staggers like Faceplant.
 - Aerials: *Panic Flail* (nair, both sides) · *Overreach* (sair) · *Up-and-Over* (uair) · **Faceplant** (dair spike; self-stagger on a whiffed landing).
 - *Counterplay:* whiff-bait everything, but stand just outside arm's reach of the fall, then punish the stagger. His own kit still fights him.
 
-### RICHY — "The Market" — dual-candle zoner
-104 / 5.4 / 1.05 — meme connoisseur, Excel macro artisan. The candles oppose: **dodge the Bull, jump the Bear.**
-- Kept (the best-designed system in the roster, unchanged): Bid, Short Squeeze (drags closer), **Bull Run** (air-usable, angled up), **Bear Raid** (rolls along its surface), the candle lock (**both candles share one 40-frame lock** — there is always a walk-forward window), **Diversified Portfolio** (+1 gauge damage per landed Bull/Bear alternation, cap +3), **RATE HIKES** (renamed from To The Moon: three rising columns from the main stage; first connecting column only).
+### RICHY — "The Market" — Rolex zoner
+104 / 5.4 / 1.05 — meme connoisseur, Excel macro artisan. A Rolex man: the candles are watches now, and they still oppose — **dodge the Daytona (Bull), jump the Submariner (Bear).**
+- Kept (the best-designed system in the roster, unchanged): Bid, Short Squeeze (drags closer), **Daytona** (was Bull Run — a thrown gold Daytona, air-usable, angled up), **Submariner** (was Bear Raid — a steel Sub skimming along its surface), the watch lock (**both watches share one 40-frame lock** — there is always a walk-forward window), **Diversified Portfolio** (+1 gauge damage per landed Bull/Bear alternation, cap +3), **RATE HIKES** (renamed from To The Moon: three rising columns from the main stage; first connecting column only).
 - Aerials: *Portfolio Spin* (nair) · **Macro Slap** (sair — he is the Excel macro artisan) · *Uptick* (uair mini-candle) · *Crash Out* (dair spike). The 2021 crypto names are retired.
 - *Counterplay:* no recovery special and average air speed — get him off stage and the market closes.
 
@@ -174,7 +176,8 @@ Five phases, small rollbackable commits throughout; the page must load clean aft
 ### ABI — "The Gatekeeper" — defensive counter-puncher
 100 / 5.6 / 1.0 — long blonde hair, brick-red blazer, cream blouse, **white trousers**; no bag (Tim's note — the tote is gone from the art; the Tote Swing / Baggage Drop names stay as the joke). Renders just shorter than Tim.
 - **Calendar Block** (s1): melee-only parry, **now air-usable**. A parry answers with **Declined** (12 dmg, riposte data on the move) and **locks the attacker's specials for 1.5 s**. Projectiles and grabs pass through.
-- Kept: Reschedule, Double-Booked, **House Rosé** (air-usable lob, 20 % slow — now the roster's only slowing lob), **PUB O'CLOCK** (banner **"LAST ORDERS!"** — shove + opponent's specials locked 3.5 s + composure regen 2/s for 5 s, cancelled by any hit. *The one exception to "refills only on stock loss"; see core rules.*).
+- **HOLLIBOBS** (s2, air-usable, replaces House Rosé — she is always on holiday): Abi goes **Out of Office** — off the board and untouchable for 72 frames while a beach-umbrella marker tracks her opponent; it **locks 26 frames before she returns** (turns brick, a suitcase appears overhead), then **Home Time**: she drops onto the mark with a diving stomp (11 dmg, 2 s slow). Move off the locked mark.
+- Kept: Reschedule, Double-Booked, **PUB O'CLOCK** (banner **"LAST ORDERS!"** — shove + opponent's specials locked 3.5 s + composure regen 2/s for 5 s, cancelled by any hit. *The one exception to "refills only on stock loss"; see core rules.*).
 - Recovery **RSVP** slows on hit.
 - Aerials: **Wristband Whirl** (nair) · *Tote Swing* (sair) · *Confetti Pop* (uair) · **Baggage Drop** (dair suitcase spike).
 - *Counterplay:* pressure through Last Orders — one hit cancels the regen; bait the parry with a grab or a projectile, it does nothing to either.

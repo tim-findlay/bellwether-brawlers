@@ -48,6 +48,7 @@ export function hasLineOfFire(f, m, opp) {
   if (m.kind === 'lob') return Math.abs(opp.x - f.x) > 90 && dy > -180 && dy < 220;
   if (m.kind === 'groundProjectile') return Math.abs(dy) < 30;
   if (m.kind === 'columns') return opp.grounded || Math.abs(dy) < 120;             // marked strike under the target
+  if (m.kind === 'holiday') return opp.grounded && Math.abs(opp.x - f.x) > 120;     // Hollibobs: drop on a grounded target from range
   return Math.abs(dy) < 100;
 }
 
@@ -87,6 +88,12 @@ export function hazardResponse(f, world) {
       const side = a.t < d.half ? d.first : -d.first, mid = slab.x + slab.w / 2;
       if (Math.sign(f.x - mid) === side) return { kind: 'goto', x: mid - side * slab.w * 0.22, to: slab };
     }
+  }
+  const opp = world.other(f), hol = opp?.statuses?.get?.('holiday');   // Hollibobs: get off the mark once it locks
+  if (hol?.data?.locked && Math.abs(hol.data.x - f.x) < 110 && f.grounded) {
+    const here = standingSurface(stage, f) || slab, dir = f.x >= hol.data.x ? 1 : -1;
+    const x = Math.max(here.x + 30, Math.min(here.x + here.w - 30, hol.data.x + dir * 150));
+    return { kind: 'goto', x: Math.abs(x - hol.data.x) < 90 ? hol.data.x - dir * 150 : x, to: here };
   }
   for (const h of world.hazards) {                            // bikes and the wrecking ball's low return
     const approaching = Math.sign(f.x - h.x) === Math.sign(h.vx);
@@ -253,9 +260,10 @@ function neutral(ai, f, opp, world, { dist, dy, r, sameLevel, untouchable }) {
     if (canSpecial(f, 's1') && f.cfg.s1.kind === 'lunge' && lungeReaches(f, f.cfg.s1, opp) && (!f.cfg.s1.whiffTrip || committed(opp)) && r < 0.5) return { kind: 'press', slot: 's1' };
     if (dist > 170 && canSpecial(f, 's1') && f.cfg.s1.kind === 'teleport' && r < 0.4) return { kind: 'press', slot: 's1' };
     if (close) {
-      if (canSpecial(f, 's2') && r > 0.85) return { kind: 'press', slot: 's2' };
+      if (canSpecial(f, 's2') && !RANGED.includes(f.cfg.s2.kind) && r > 0.85) return { kind: 'press', slot: 's2' };
       return { kind: 'poke', heavyBias: 0.35 };
     }
+    if (dist > 150 && canSpecial(f, 's2') && RANGED.includes(f.cfg.s2.kind) && hasLineOfFire(f, f.cfg.s2, opp) && r < 0.35) return { kind: 'press', slot: 's2' };   // Adrian's toothbrush from range
     if (dist < 220 && dist > 90 && sameLevel && r < P.mixup * 0.5) return jumpIn;
     return { kind: 'approach', dash };
   }

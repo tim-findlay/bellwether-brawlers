@@ -6,7 +6,7 @@
 import { INK, PAPER, BRICK } from './palette.js';
 
 const r = (g, x, y, w, h) => g.fillRect(Math.round(x), Math.round(y), w, h);
-const SPIN = new Set(['memo', 'binder', 'card', 'football', 'glass', 'bomb']);   // tumbling throwables
+const SPIN = new Set(['memo', 'binder', 'card', 'football', 'glass', 'bomb', 'polo', 'toothbrush']);   // tumbling throwables
 
 export function drawProjectiles(g, world, t) {
   for (const p of world.projectiles ?? []) {
@@ -46,7 +46,30 @@ export function drawProjectiles(g, world, t) {
       case 'bomb':
         r(g, -8, -8, 18, 18); g.fillStyle = BRICK; r(g, 4, -12, 4, 4);
         break;
-      case 'memo':                                              // Ben's "My Office. Now." — a folded memo
+      case 'polo': {                                            // Ben's Skip Shot — a water polo ball: yellow with navy seams
+        g.fillStyle = INK; r(g, -9, -11, 18, 22); r(g, -11, -9, 22, 18);
+        g.fillStyle = p.color; r(g, -8, -9, 16, 18); r(g, -9, -8, 18, 16);
+        g.fillStyle = '#27425f'; r(g, -9, -1, 18, 2); r(g, -1, -9, 2, 18);
+        g.fillStyle = PAPER; r(g, -6, -7, 3, 3);
+        break;
+      }
+      case 'rolex': case 'sub': {                               // Richy's watches: bracelet up and down, face in the middle
+        const metal = p.color, dial = p.dial || INK, half = h / 2;
+        g.fillStyle = INK; r(g, -7, -half, 14, h);
+        g.fillStyle = metal; for (let yy = -half + 2; yy < half - 2; yy += 5) r(g, -5, yy, 10, 3);   // links
+        g.fillStyle = INK; r(g, -10, -10, 20, 20);
+        g.fillStyle = metal; r(g, -9, -9, 18, 18);                                          // bezel
+        g.fillStyle = dial; r(g, -6, -6, 12, 12);
+        g.fillStyle = PAPER; r(g, -1, -5, 2, 5); r(g, 0, -1, 4, 2);                         // hands
+        g.fillStyle = metal; r(g, 9, -2, 3, 4);                                             // crown
+        break;
+      }
+      case 'toothbrush':                                        // Adrian's Toothbrush Toss
+        g.fillStyle = INK; r(g, -13, -3, 26, 6);
+        g.fillStyle = p.color; r(g, -12, -2, 18, 4);
+        g.fillStyle = PAPER; r(g, 6, -6, 7, 4); g.fillStyle = '#9fd3c7'; r(g, 6, -6, 7, 2);   // bristles + a blob of paste
+        break;
+      case 'memo':                                              // a folded memo (Ben's old My Office. Now.; kept for content)
         r(g, -13, -9, 26, 18); g.fillStyle = INK; r(g, -9, -4, 18, 2); r(g, -9, 1, 12, 2);
         g.fillStyle = BRICK; r(g, 7, -9, 6, 6);
         break;

@@ -43,6 +43,8 @@ export const SPRITES = {
   abi:    { cell: 64, scale: 0.93, anims: KIT() },
   mike:   { cell: 64, scale: 0.96, anims: KIT({ special: { key: 4 } }) },   // his special peaks on the ground slam
   seelye: { cell: 64, anims: KIT() },
+  // not a fighter: Tim's summoned helper (engine/specials.js assist), drawn by render/specials.js
+  claude: { cell: 64, scale: 0.94, anims: { idle: { frames: 6, fps: 6, loop: true }, run: { frames: 8, fps: 16, loop: true }, attack: { frames: 6, fps: 16, loop: false, key: 4, cell: 80 } } },
 };
 
 export const SPRITE_SCALE = 1.5;   // 64 px cell -> 96 world px (= MovementBody.h)

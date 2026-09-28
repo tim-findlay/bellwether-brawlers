@@ -171,6 +171,7 @@ export const STATUS_LABEL = {
   dmgUp: ['+DMG', BRASS],
   nextHit: ['NEXT HIT +', BRASS],
   regen: ['LAST ORDERS', GREEN],
+  holiday: ['ON HOLLIBOBS', BRASS],
   berlin: ['HOME TURF', NAVY],
   noMeter: ['NO METER', BRASS],
   borrowed: ['ON LOAN', NAVY],

@@ -13,6 +13,7 @@ import { drawFallbackBody, drawKoBurst, drawChair, poseFor } from './body.js';
 import { drawProjectiles, drawZones, drawStrikes, drawHazards } from './objects.js';
 import { animFor, attackFrame, aerialRot, drawMoveFX, recordTrail, drawLaunchTrail, motionPose, FALLBACK } from './moves.js';
 import { INK, PAPER, shade } from './palette.js';
+import { drawHolidayMark, drawAssists } from './specials.js';
 
 export { shade };
 export const WORLD_W = 480;        // v2 buffer size — title/select previews only
@@ -60,7 +61,12 @@ export class Renderer {
     drawStrikes(c, world, t);
     events?.drawWorld?.(c);
     const fighters = [...(world?.fighters ?? [])].sort((a, b) => (a.y ?? a.body?.y ?? 0) - (b.y ?? b.body?.y ?? 0));
-    for (const f of fighters) this.drawFighter(c, f, sprites?.get?.(f.cfg?.id) ?? null, heads?.get?.(f.cfg?.id) ?? null);
+    for (const f of fighters) {
+      if (f.statuses?.has?.('holiday')) continue;                                       // Abi is on her hollibobs
+      this.drawFighter(c, f, sprites?.get?.(f.cfg?.id) ?? null, heads?.get?.(f.cfg?.id) ?? null);
+    }
+    for (const f of fighters) if (f.statuses?.has?.('holiday')) drawHolidayMark(c, f, world, t);   // over the target, so it reads
+    drawAssists(c, world, sprites?.get?.('claude') ?? null, t);
     drawHazards(c, world, t);
     drawProjectiles(c, world, t);
     fx?.drawWorld?.(c);

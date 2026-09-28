@@ -106,8 +106,11 @@ test('difficulty profiles differ: reaction knobs are ordered and behaviour diver
 });
 
 test('the stall profile loiters off-stage on purpose; the normal profile does not', () => {
-  const loiter = (profile) => {
-    const { w } = mk('tim', 'seelye', 'pub', [profile, 'normal'], 11);
+  // summed over 8 seeded matches: one match flips on any kit change (it did twice in
+  // the 2026-09-28 passes) while the 8-seed totals stay far apart (e.g. 2725 v 1520)
+  const loiter = (profile) => [11, 12, 13, 14, 15, 16, 17, 18].reduce((sum, seed) => sum + loiterOne(profile, seed), 0);
+  const loiterOne = (profile, seed) => {
+    const { w } = mk('tim', 'seelye', 'pub', [profile, 'normal'], seed);
     let off = 0;
     for (let t = 0; t < 2400 && !w.over; t++) { step(w); const f = w.fighters[0]; if (!f.chair && f.state === 'normal' && f.body.stun === 0 && isOffStage(w.stage, f)) off++; }
     return off;

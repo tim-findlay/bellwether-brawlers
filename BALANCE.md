@@ -86,7 +86,26 @@ Two independent samples before shipping a tuning pass: n ≈ 420–560 games per
 
 ## Current results
 
-**v3 balance pass 6 — hit-confirm cancels (2026-09-28) — all five gates PASS on two independent seeds at N = 30.**
+**v3 balance pass 7 — roster requests (2026-09-28) — all five gates PASS on two independent seeds at N = 30.**
+
+| Fighter | seed 1337 | seed 2024 |
+|---|---|---|
+| Ben | 49.8 % | 53.6 % |
+| Tim | 49.5 % | 50.5 % |
+| Adrian | 54.8 % | 53.3 % |
+| Richy | 48.6 % | 46.1 % |
+| Nick | 51.2 % | 51.0 % |
+| Abi | 46.9 % | 44.5 % |
+| Mike | 51.2 % | 51.1 % |
+| Seelye | 48.1 % | 50.0 % |
+| **camp (≤ 55)** | 19.2 % | 16.2 % |
+| **stall (≤ 45)** | 0.4 % | 0.4 % |
+| **engagement flags (< 2 %)** | 0.12 % | 0.24 % |
+| **recovery dishonest (< 10 %)** | 0.74 % | 0.72 % |
+
+Spread 44.5–54.8 %. Avg match 6026 / 6051 f (~100 s); 1 / 4 capped, 0 stuck. **What changed (Tim's brief — his explicit sign-off for the two new move kinds):** Ben's memo is a water polo ball (**Skip Shot**, same numbers); Richy's candles are watches (**Daytona** = the Bull, **Submariner** = the Bear — same numbers, same shared lock); Adrian's s2 is **Toothbrush Toss**, a lob that leaves his Nero spill where it lands (replaces the placed puddle); Abi's s2 is **Hollibobs** (new kind `holiday`, replaces House Rosé); Tim's super is **Ask Claude** (new kind `assist`, replaces Run Flow). Tuning to recentre: Toothbrush Toss started at dmg 6 / kb 5 / kbScale 5 / cooldown 360 and put Adrian at 58.6 % on seed 2024 → 5 / 4.5 / 4 / 420; Abi fell to 42.7 % with a 420f Hollibobs cooldown → 360. **Defect fix, called out:** a fighter grabbed by Mike stayed in the `grabbed` state for good if Mike was hit out of the grab (repro: tests/kits.test.mjs "a grab broken by a hit releases the victim" — fails without the fix, passes with it); the victim now releases itself when its grabber no longer holds it. **Test change, called out:** tests/ai.test.mjs's loiter check compared the CPU's voluntary off-stage time on one seed and failed after these kit changes on noise (one seed moved it across the line both ways); it now sums seeds 11–18 (2725 vs 1520 frames, stall profile vs normal) — the claim it checks is unchanged. **Soft spots:** Abi sits lowest on both seeds (44.5–46.9 %) — Hollibobs is a readable dodge, which a human may well find stronger than the bot does; Adrian is top on both seeds.
+
+**v3 balance pass 6 — hit-confirm cancels (2026-09-28, superseded) — all five gates PASS on two independent seeds at N = 30.**
 
 | Fighter | seed 1337 | seed 2024 |
 |---|---|---|

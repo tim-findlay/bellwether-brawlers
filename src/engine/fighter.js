@@ -7,6 +7,7 @@
 
 import { MovementBody } from './movement.js';
 import { PHYS } from '../data/physics.js';
+import { holidayTick, homeTime } from './specials.js';
 
 export const STOCKS = 3;
 export const CHAIR_DESCENT = 60;     // frames: bounds-top -> respawn hover point
@@ -52,11 +53,12 @@ export class Fighter {
   get airborne() { return !this.body.grounded; }
   get opp() { return this.world.other(this); }
   get actionable() {
-    return this.state === 'normal' && !this.attack && this.landLag === 0 && !this.body.dodging && this.body.stun === 0 && this.body.state !== 'ledge';
+    return this.state === 'normal' && !this.attack && this.landLag === 0 && !this.body.dodging && this.body.stun === 0 && this.body.state !== 'ledge' && !this.statuses.has('holiday');
   }
   get invulnerable() {
     if (this.state === 'chair' || this.state === 'ko') return true;
     if (this.hazardInv > 0) return true;
+    if (this.statuses.has('holiday')) return true;                  // Hollibobs: off the board
     if (this.body.invulnerable()) return true;
     return !!(this.attack && this.attack.move.iframes && this.attack.frame < this.attack.move.iframes);
   }
@@ -74,7 +76,9 @@ export class Fighter {
     if (name === 'lien') fx.text(this.x, this.y - 130, 'LIEN!', '#c9a227');
   }
   clearStatus(name) {
+    const s = this.statuses.get(name);
     this.statuses.delete(name);
+    if (name === 'holiday' && s && this.state !== 'ko') homeTime(this, s.data);
     if (name === 'reversed') this.controller.reversed = false;
   }
   effRunMax() {
@@ -284,7 +288,9 @@ export class Fighter {
 
     if (this.state === 'ko') { this._tickAnim(); return; }
     if (this.state === 'chair') { this._chair(); this._tickAnim(); return; }
+    if (this.state === 'grabbed' && this.opp?.attack?.victim !== this) { this.state = 'normal'; this.stateT = 0; }   // the holder was hit mid-grab: let go
     if (this.state === 'frozen' || this.state === 'grabbed') { this._tickAnim(); return; }
+    if (this.statuses.has('holiday')) { holidayTick(this); this._tickAnim(); return; }
 
     const intent = this.controller.intent(this);
     if (this.state === 'stagger') {

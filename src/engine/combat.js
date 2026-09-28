@@ -5,13 +5,14 @@
 // Special-move behavior is dispatched by move.kind, so characters stay data.
 
 import { Fighter } from './fighter.js';
+import { EXTRA_BEHAVIORS, updateAssists, assistBox, dismissAssist } from './specials.js';
 
 export class FightWorld {
   constructor({ cfgs, controllers, stage, fx, audio, rng, settings }) {
     this.stage = stage;                 // geometry: slabs, platforms, spawns, respawn, cameraBounds, blast
     this.fx = fx; this.audio = audio; this.rng = rng; this.settings = settings;
     this.frame = 0;
-    this.projectiles = []; this.zones = []; this.strikes = []; this.hazards = [];
+    this.projectiles = []; this.zones = []; this.strikes = []; this.hazards = []; this.assists = [];
     this.events = [];                   // drained by the screen: 'ko' | 'gameover'
     this.over = false; this.winner = -1;
     this.fighters = [
@@ -43,7 +44,7 @@ export class FightWorld {
       f.body.x = geometry.slabs[0].x + Math.min(0.95, Math.max(0.05, k)) * geometry.slabs[0].w;
       f.body.y = geometry.slabs[0].y; f.body.vx = 0; f.body.vy = 0;
     }
-    this.projectiles = []; this.zones = []; this.strikes = []; this.hazards = [];
+    this.projectiles = []; this.zones = []; this.strikes = []; this.hazards = []; this.assists = [];
   }
 
   update() {
@@ -55,6 +56,7 @@ export class FightWorld {
     this.updateZones();
     this.updateStrikes();
     this.updateHazards();
+    updateAssists(this);
     this.resolveGrabs();
     this.resolveRingOuts();
   }
@@ -87,6 +89,7 @@ export class FightWorld {
     for (const att of this.fighters) {
       const hb = att.hitbox();
       if (!hb) continue;
+      for (const a of this.assists) if (a.owner !== att && overlap(hb, assistBox(a))) dismissAssist(this, a, 'BOOTED!');   // any hit sends a helper home
       const def = this.other(att);
       if (def.state === 'ko' || def.chair) continue;
       if (!overlap(hb, def.hurtbox())) continue;
@@ -144,7 +147,7 @@ export class FightWorld {
     this.projectiles.push({
       x: f.x + f.facing * 30, y: f.y - (e.height ?? 60),
       vx: f.facing * e.speed, vy: e.vy || 0, grav: e.grav || 0,
-      w: e.w || 24, h: e.h || 20, color: e.color || '#2b2620', shape: e.shape || 'rect',
+      w: e.w || 24, h: e.h || 20, color: e.color || '#2b2620', shape: e.shape || 'rect', dial: e.dial || null,
       dmg, kb: e.kb ?? 5, kbScale: e.kbScale ?? 6, kbAngle: e.kbAngle ?? 40, owner: f,
       status: e.applyStatus || null, instance: over.instance ?? a_id(), tag: e.tag || null,
       dead: false, t: 0, groundHug: !!e.groundHug, surface: e.surface || null, move: m, name: m.name,
@@ -155,7 +158,7 @@ export class FightWorld {
     for (const p of this.projectiles) {
       p.t++;
       p.x += p.vx;
-      if (p.groundHug) {                                   // Bear Raid: rolls along its surface, falls off the end
+      if (p.groundHug) {                                   // Submariner (Bear): rolls along its surface, falls off the end
         if (p.surface && (p.x < p.surface.x || p.x > p.surface.x + p.surface.w)) { p.groundHug = false; p.grav = 0.5; }
         else if (p.surface) p.y = p.surface.y - p.h / 2;
       }
@@ -429,6 +432,7 @@ const BEHAVIORS = {
     w.fx.shake(2, 20);
   },
   shout() {}, dashCombo() {}, flurry() {}, melee() {}, aerial() {},
+  ...EXTRA_BEHAVIORS,
 };
 
 function overlap(a, b) {
